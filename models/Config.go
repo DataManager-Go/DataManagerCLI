@@ -9,8 +9,13 @@ import (
 
 //Config Configuration structure
 type Config struct {
+	File   string
 	Server serverConfig
 	Client clientConfig
+	User   struct {
+		Username     string
+		SessionToken string
+	}
 }
 
 type serverConfig struct {
@@ -80,6 +85,7 @@ func InitConfig(defaultFile, file string) (*Config, error) {
 		return nil, err
 	}
 
+	config.File = file
 	return &config, nil
 }
 
@@ -87,4 +93,9 @@ func InitConfig(defaultFile, file string) (*Config, error) {
 func (config *Config) Validate() error {
 	//Put in your validation logic here
 	return nil
+}
+
+//IsLoggedIn return true if sessiondata is available
+func (config *Config) IsLoggedIn() bool {
+	return len(config.User.Username) > 0 && len(config.User.SessionToken) == 64
 }

@@ -46,6 +46,11 @@ const (
 	//Ping
 	EPPing Endpoint = "/ping"
 
+	//User
+	EPUser     Endpoint = "/user"
+	EPLogin    Endpoint = EPUser + "/login"
+	EPRegister Endpoint = EPUser + "/register"
+
 	//Files
 	EPFile       Endpoint = "/file"
 	EPFileList   Endpoint = EPFile + "/list"
@@ -86,6 +91,12 @@ type UploadStruct struct {
 	Sum        string                `json:"sum"`
 	Name       string                `json:"name"`
 	Attributes models.FileAttributes `json:"attributes"`
+}
+
+//CredentialsRequest request containing credentials
+type CredentialsRequest struct {
+	Username string `json:"username"`
+	Password string `json:"pass"`
 }
 
 //NewRequest creates a new post request

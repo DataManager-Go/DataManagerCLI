@@ -19,6 +19,11 @@ const (
 	HeaderStatusMessage string = "X-Response-Message"
 )
 
+//LoginResponse response for login
+type LoginResponse struct {
+	Token string `json:"token"`
+}
+
 //RestRequestResponse the response of a rest call
 type RestRequestResponse struct {
 	HTTPCode int

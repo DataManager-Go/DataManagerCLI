@@ -36,11 +36,18 @@ var (
 	app = kingpin.New(appName, "A DataManager")
 
 	// Global flags
+	appYes     = app.Flag("yes", "Skip confirmations").Bool()
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.
 			Flag("config", "the configuration file for the app").
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
+
+	//UserCommands
+	loginCmd     = app.Command("login", "Login")
+	loginCmdUser = loginCmd.Flag("username", "Your username").String()
+
+	registerCmd = app.Command("register", "Create an account").FullCommand()
 
 	// File commands
 	fileCMD       = app.Command("file", "Commands for handling files")
@@ -106,6 +113,7 @@ func main() {
 
 	// Execute the desired command
 	switch parsed {
+	//File commands
 	case fileDownload.FullCommand():
 		DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
 
@@ -118,8 +126,15 @@ func main() {
 	case fileList.FullCommand():
 		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
+	//Ping
 	case appPing.FullCommand():
 		pingServer(config)
+
+	//User
+	case loginCmd.FullCommand():
+		LoginCommand(config, *loginCmdUser)
+	case registerCmd:
+		RegisterCommand(config)
 	}
 }
 

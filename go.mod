@@ -9,5 +9,6 @@ require (
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
 	github.com/fatih/color v1.9.0
 	github.com/sirupsen/logrus v1.4.2
+	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
