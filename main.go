@@ -98,6 +98,7 @@ func main() {
 		return
 	}
 
+	// Execute the desired command
 	switch parsed {
 	case fileUpload.FullCommand():
 		UploadFile(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
