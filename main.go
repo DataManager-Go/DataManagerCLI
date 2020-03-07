@@ -6,8 +6,11 @@ import (
 	"path"
 	"time"
 
+	"github.com/Yukaru-san/DataManager_Client/commands"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
+
+	_ "github.com/Yukaru-san/DataManager_Client/commands"
 
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -33,7 +36,8 @@ var (
 
 //App commands
 var (
-	app = kingpin.New(appName, "A DataManager")
+	app     = kingpin.New(appName, "A DataManager")
+	appPing = app.Command("ping", "pings the server and checks connectivity")
 
 	// Global flags
 	appYes     = app.Flag("yes", "Skip confirmations").Bool()
@@ -43,7 +47,7 @@ var (
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
 
-	//UserCommands
+	// UserCommands
 	loginCmd     = app.Command("login", "Login")
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
 
@@ -56,14 +60,14 @@ var (
 	fileGroups    = app.Flag("group", "Set the group the file should belong to").Short('g').Strings()
 	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Int()
 
-	//child Commands
+	// Child Commands
 	// -- File child commands
 	fileUpload   = fileCMD.Command("upload", "Upload the given file")
 	fileDelete   = fileCMD.Command("delete", "Delete a file stored on the server")
 	fileList     = fileCMD.Command("list", "List files stored on the server")
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
 
-	//Args/Flags
+	// Args/Flags
 	// -- -- Upload specifier
 	fileUploadPath = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	// -- -- Delete specifier
@@ -73,8 +77,6 @@ var (
 	// -- -- Download specifier
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
 	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
-
-	appPing = app.Command("ping", "pings the server and checks connectivity")
 )
 
 var (
@@ -111,9 +113,13 @@ func main() {
 		return
 	}
 
+	// Set vars in packages
+	commands.AppYes = *appYes
+	commands.Config = config
+
 	// Execute the desired command
 	switch parsed {
-	//File commands
+	// File commands
 	case fileDownload.FullCommand():
 		DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
 
@@ -126,19 +132,19 @@ func main() {
 	case fileList.FullCommand():
 		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
-	//Ping
+	// Ping
 	case appPing.FullCommand():
 		pingServer(config)
 
-	//User
+	// User
 	case loginCmd.FullCommand():
-		LoginCommand(config, *loginCmdUser)
+		LoginCommand(config, *loginCmdUser, *appYes)
 	case registerCmd:
 		RegisterCommand(config)
 	}
 }
 
-//Env vars
+// Env vars
 const (
 	//EnVarPrefix prefix of all used env vars
 	EnVarLogLevel   = "LOG_LEVEL"
@@ -146,7 +152,7 @@ const (
 	EnVarConfigFile = "CONFIG"
 )
 
-//Return the variable using the server prefix
+// Return the variable using the server prefix
 func getEnVar(name string) string {
 	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
 }
@@ -155,7 +161,7 @@ func pingServer(config *models.Config) {
 	var response server.StringResponse
 	authorization := server.Authorization{}
 
-	//Use session if available
+	// Use session if available
 	if config.IsLoggedIn() {
 		authorization.Type = server.Bearer
 		authorization.Palyoad = config.User.SessionToken
