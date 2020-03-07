@@ -36,14 +36,7 @@ func UploadFile(path *string, namespace *string, groups *[]string, tags *[]strin
 // DeleteFile deletes the desired file(s)
 func DeleteFile(name *string, namespace *string, groups *[]string, tags *[]string, id *int) {
 
-	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
-		Name:      *name,
-		Namespace: *namespace,
-		Groups:    *groups,
-		Tags:      *tags,
-		ID:        *id,
-		Task:      "Delete",
-	}, config).Do(nil)
+	response, err := sendRequest(name, namespace, groups, tags, id, nil, "Delete")
 
 	if err != nil || response.Status == server.ResponseError {
 		println("Error trying to delete your file.\n" + response.Message)
@@ -66,14 +59,7 @@ func ListFiles(name *string, namespace *string, groups *[]string, tags *[]string
 	var listedFiles returnInfo
 
 	// Send a Request to the server
-	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
-		Name:      *name,
-		Namespace: *namespace,
-		Groups:    *groups,
-		Tags:      *tags,
-		ID:        *id,
-		Task:      "List",
-	}, config).Do(&listedFiles)
+	response, err := sendRequest(name, namespace, groups, tags, id, &listedFiles, "List")
 
 	if err != nil {
 		println("Error trying to delete your file.\n" + response.Message)
@@ -81,7 +67,6 @@ func ListFiles(name *string, namespace *string, groups *[]string, tags *[]string
 	}
 
 	// Output
-
 	fmt.Printf("There were %d files found\n", len(listedFiles.filesFound))
 
 	printFiles := true
@@ -111,14 +96,7 @@ func DownloadFile(name *string, namespace *string, groups *[]string, tags *[]str
 	}
 	var foundFile returnInfo
 
-	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
-		Name:      *name,
-		Namespace: *namespace,
-		Groups:    *groups,
-		Tags:      *tags,
-		ID:        *id,
-		Task:      "Download",
-	}, config).Do(&foundFile)
+	response, err := sendRequest(name, namespace, groups, tags, id, &foundFile, "Download")
 
 	if err != nil || response.Status == server.ResponseError {
 		println("File was not downloaded:\n" + response.Message)
@@ -127,6 +105,19 @@ func DownloadFile(name *string, namespace *string, groups *[]string, tags *[]str
 
 	// TODO Make it pretty and fix obvious issues here
 	ioutil.WriteFile(*savePath+"/"+foundFile.FileName, foundFile.FileData, 6400)
+}
+
+func sendRequest(name *string, namespace *string, groups *[]string, tags *[]string, id *int, retVar interface{}, task string) (*server.RestRequestResponse, error) {
+	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
+		Name:      *name,
+		Namespace: *namespace,
+		Groups:    *groups,
+		Tags:      *tags,
+		ID:        *id,
+		Task:      task,
+	}, config).Do(&retVar)
+
+	return response, err
 }
 
 func readInput() string {
