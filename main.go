@@ -112,10 +112,6 @@ func main() {
 		return
 	}
 
-	// Set vars in packages
-	commands.AppYes = *appYes
-	commands.Config = config
-
 	// Execute the desired command
 	switch parsed {
 	// File commands
@@ -129,7 +125,7 @@ func main() {
 		commands.DeleteFile(config, *fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileDeleteID)
 
 	case fileList.FullCommand():
-		commands.ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		commands.ListFiles(config, *fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	// Ping
 	case appPing.FullCommand():

@@ -5,16 +5,9 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
 )
-
-// AppYes - whether the program was initialized with --yes
-var AppYes bool
-
-// Config - program's config
-var Config *models.Config
 
 //GetMD5Hash return hash of input
 func GetMD5Hash(text []byte) string {

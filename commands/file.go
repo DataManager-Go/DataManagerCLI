@@ -66,7 +66,7 @@ func DeleteFile(config *models.Config, name string, namespace string, groups []s
 		},
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: Config.User.SessionToken,
+		Palyoad: config.User.SessionToken,
 	}).Do(nil)
 
 	if err != nil {
@@ -86,7 +86,7 @@ func DeleteFile(config *models.Config, name string, namespace string, groups []s
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(name string, namespace string, groups []string, tags []string, id int) {
+func ListFiles(config *models.Config, name string, namespace string, groups []string, tags []string, id int) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileRequest{
 		FileID: id,
@@ -96,9 +96,9 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 			Namespace: namespace,
 			Tags:      tags,
 		},
-	}, Config).WithAuth(server.Authorization{
+	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: Config.User.SessionToken,
+		Palyoad: config.User.SessionToken,
 	}).Do(&filesResponse)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	// Output
 	fmt.Printf("There were %s found\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"))
 
-	if uint16(len(filesResponse.Files)) > Config.Client.MinFilesToDisplay {
+	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return

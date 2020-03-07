@@ -18,8 +18,8 @@ import (
 )
 
 //LoginCommand login into the server
-func LoginCommand(config *models.Config, usernameArg string, args ...bool) {
-	if config.IsLoggedIn() && !AppYes && len(args) == 0 {
+func LoginCommand(config *models.Config, usernameArg string, appYes bool, args ...bool) {
+	if config.IsLoggedIn() && !appYes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
 		if !i {
 			return
