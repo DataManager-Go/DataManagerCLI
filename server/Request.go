@@ -11,7 +11,6 @@ import (
 	"path"
 	"strconv"
 
-
 	"github.com/Yukaru-san/DataManager_Client/models"
 )
 
@@ -44,12 +43,17 @@ type Endpoint string
 
 //Remote endpoints
 const (
-	//User
-	EPPing     Endpoint = "/ping"
-	File       Endpoint = "/file"
-	UploadFile Endpoint = "/file/upload"
-	DeleteFile Endpoint = "/file/delete"
-	List       Endpoint = "/file/list"
+	//Ping
+	EPPing Endpoint = "/ping"
+
+	//Files
+	EPFile       Endpoint = "/file"
+	EPFileList   Endpoint = EPFile + "/list"
+	EPFileUpload Endpoint = EPFile + "/upload"
+
+	//Update file
+	EPFileUpdate Endpoint = "/file/update"
+	EPFileDelete Endpoint = EPFileUpdate + "/delete"
 )
 
 //Request a rest server request
@@ -62,22 +66,17 @@ type Request struct {
 	Authorization *Authorization
 }
 
-// UploadStruct contains file info (and a file)
-type UploadStruct struct {
-	Data      []byte
-	Namespace string
-	Groups    []string
-	Tags      []string
+// FileRequest contains file info (and a file)
+type FileRequest struct {
+	FileID     int
+	Attributes models.FileAttributes `json:"attributes"`
 }
 
-// HandleStruct contains file info
-type HandleStruct struct {
-	Name      string
-	Namespace string
-	Groups    []string
-	Tags      []string
-	ID        int
-	Task      string
+// UploadStruct contains file info (and a file)
+type UploadStruct struct {
+	Data       []byte                `json:"data"`
+	Name       string                `json:"name"`
+	Attributes models.FileAttributes `json:"attributes"`
 }
 
 //NewRequest creates a new post request
@@ -134,27 +133,31 @@ func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
 		return nil, err
 	}
 
+	var response *RestRequestResponse
+
+	if resp != nil {
+		response = &RestRequestResponse{
+			HTTPCode: resp.StatusCode,
+		}
+	}
+
 	//Read and validate headers
 	statusStr := resp.Header.Get(HeaderStatus)
 	statusMessage := resp.Header.Get(HeaderStatusMessage)
 
 	if len(statusStr) == 0 {
-		return nil, ErrInvalidResponseHeaders
+		return response, ErrInvalidResponseHeaders
 	}
 	statusInt, err := strconv.Atoi(statusStr)
 	if err != nil || (statusInt > 1 || statusInt < 0) {
-		return nil, ErrInvalidResponseHeaders
+		return response, ErrInvalidResponseHeaders
 	}
-	status := (ResponseStatus)(uint8(statusInt))
 
-	response := &RestRequestResponse{
-		HTTPCode: resp.StatusCode,
-		Message:  statusMessage,
-		Status:   status,
-	}
+	response.Status = (ResponseStatus)(uint8(statusInt))
+	response.Message = statusMessage
 
 	//Only fill retVar if response was successful
-	if status == ResponseSuccess && retVar != nil {
+	if response.Status == ResponseSuccess && retVar != nil {
 		//Read response
 		d, err := ioutil.ReadAll(resp.Body)
 		if err != nil {

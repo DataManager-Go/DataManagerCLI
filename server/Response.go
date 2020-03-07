@@ -1,5 +1,7 @@
 package server
 
+import "github.com/Yukaru-san/DataManager_Client/models"
+
 //ResponseStatus the status of response
 type ResponseStatus uint8
 
@@ -27,4 +29,9 @@ type RestRequestResponse struct {
 //StringResponse response containing only one string
 type StringResponse struct {
 	String string `json:"content"`
+}
+
+//FileListResponse response for listing files
+type FileListResponse struct {
+	Files []models.File
 }

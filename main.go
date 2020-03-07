@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Yukaru-san/DataManager_Client/models"
+	"github.com/Yukaru-san/DataManager_Client/server"
 
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -42,36 +43,31 @@ var (
 			Short('c').String()
 
 	// File commands
-	fileCMD = app.Command("file", "Commands for handling files")
+	fileCMD       = app.Command("file", "Commands for handling files")
+	fileNamespace = fileCMD.Flag("namespace", "Set the namespace the file should belong to").Default("default").Short('n').String()
+	fileTags      = fileCMD.Flag("tag", "Download files with this tag").Short('t').Strings()
+	fileGroups    = fileCMD.Flag("group", "Set the group the file should belong to").Short('g').Strings()
+	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Int()
+
+	//child Commands
 	// -- File child commands
 	fileUpload   = fileCMD.Command("upload", "Upload the given file")
 	fileDelete   = fileCMD.Command("delete", "Delete a file stored on the server")
 	fileList     = fileCMD.Command("list", "List files stored on the server")
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
+
+	//Args/Flags
 	// -- -- Upload specifier
-	fileUploadPath      = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
-	fileUploadNamespace = fileUpload.Flag("namespace", "Set the namespace the file should belong to").Short('n').String()
-	fileUploadGroups    = fileUpload.Flag("group", "Set the group the file should belong to").Short('g').Strings()
-	fileUploadTags      = fileUpload.Flag("tag", "Set the tag the file should belong to").Short('t').Strings()
+	fileUploadPath = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	// -- -- Delete specifier
-	fileDeleteName      = fileUpload.Arg("fileName", "Name of the file that should be removed").String()
-	fileDeleteNamespace = fileUpload.Flag("namespace", "The namespace the file belongs to").Short('n').String()
-	fileDeleteGroups    = fileUpload.Flag("group", "The group the file belongs to").Short('g').Strings()
-	fileDeleteID        = fileDownload.Flag("id", "Delete by ID").Int()
-	fileDeleteTags      = fileUpload.Flag("tag", "The tag the file belongs to").Short('t').Strings()
+	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").String()
 	// -- -- List specifier
-	fileListName      = fileUpload.Arg("fileName", "Show files with this name").String()
-	fileListNamespace = fileUpload.Flag("namespace", "Show files within this namespace").Short('n').String()
-	fileListGroups    = fileUpload.Flag("group", "Show files within this group").Short('g').String()
-	fileListID        = fileDownload.Flag("id", "Find by ID").Int()
-	fileListTags      = fileUpload.Flag("tag", "Show files with this tag").Short('t').String()
+	fileListName = fileList.Arg("fileName", "Show files with this name").String()
 	// -- -- Download specifier
-	fileDownloadName      = fileDownload.Arg("fileName", "Download files with this name").String()
-	fileDownloadNamespace = fileDownload.Flag("namespace", "Download files in this namespace").Short('n').String()
-	fileDownloadGroups    = fileDownload.Flag("group", "Download files in this group").Short('g').Strings()
-	fileDownloadTags      = fileDownload.Flag("tag", "Download files with this tag").Short('t').Strings()
-	fileDownloadID        = fileDownload.Flag("id", "Download by ID").Int()
-	fileDownloadPath      = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
+	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
+	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
+
+	appPing = app.Command("ping", "pings the server and checks connectivity")
 )
 
 var (
@@ -111,17 +107,19 @@ func main() {
 	// Execute the desired command
 	switch parsed {
 	case fileDownload.FullCommand():
-		DownloadFile(fileDownloadName, fileDownloadNamespace, fileDownloadGroups, fileDownloadTags, fileDownloadID, fileDownloadPath)
+		DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
 
 	case fileUpload.FullCommand():
-		UploadFile(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags)
+		UploadFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
 
 	case fileDelete.FullCommand():
-		DeleteFile(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags, fileDeleteID)
+		DeleteFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	case fileList.FullCommand():
-		ListFiles(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags, fileListID)
+		ListFiles(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
+	case appPing.FullCommand():
+		pingServer(config)
 	}
 }
 
@@ -136,4 +134,22 @@ const (
 //Return the variable using the server prefix
 func getEnVar(name string) string {
 	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
+}
+
+func pingServer(config *models.Config) {
+	var response server.StringResponse
+	res, err := server.
+		NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, config).
+		Do(&response)
+
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+
+	if res.Status == server.ResponseSuccess {
+		fmt.Println("Ping success:", response.String)
+	} else {
+		log.Errorf("Error (%d) %s\n", res.HTTPCode, res.Message)
+	}
 }
