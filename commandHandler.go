@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"./server"
+	"github.com/Yukaru-san/DataManager_Client/server"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations

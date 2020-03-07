@@ -6,7 +6,7 @@ import (
 	"path"
 	"time"
 
-	"./models"
+	"github.com/Yukaru-san/DataManager_Client/models"
 
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"

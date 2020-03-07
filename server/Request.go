@@ -11,7 +11,8 @@ import (
 	"path"
 	"strconv"
 
-	"../models"
+
+	"github.com/Yukaru-san/DataManager_Client/models"
 )
 
 //Method http request method
