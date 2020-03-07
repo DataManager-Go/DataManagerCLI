@@ -68,6 +68,7 @@ var (
 	fileUploadPath = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	// -- -- Delete specifier
 	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").Required().String()
+	fileDeleteID   = fileDelete.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
 	// -- -- List specifier
 	fileListName = fileList.Arg("fileName", "Show files with this name").String()
 	// -- -- Download specifier
@@ -121,7 +122,7 @@ func main() {
 		UploadFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
 
 	case fileDelete.FullCommand():
-		DeleteFile(*fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		DeleteFile(*fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileDeleteID)
 
 	case fileList.FullCommand():
 		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)

@@ -35,11 +35,10 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 			Groups:    groups,
 			Tags:      tags,
 		},
-	}, config).WithAuth(
-		server.Authorization{
-			Type:    server.Bearer,
-			Palyoad: config.User.SessionToken,
-		}).Do(&resStruct)
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(&resStruct)
 
 	if err != nil {
 		if response != nil {
@@ -60,7 +59,11 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 // DeleteFile deletes the desired file(s)
 func DeleteFile(name string, namespace string, groups []string, tags []string, id int) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
-		Name: name,
+		Name:   name,
+		FileID: id,
+		Attributes: models.FileAttributes{
+			Namespace: namespace,
+		},
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,
