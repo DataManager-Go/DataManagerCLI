@@ -36,13 +36,17 @@ var (
 
 	// Global flags
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
+	appCfgFile = app.
+			Flag("config", "the configuration file for the app").
+			Envar(getEnVar(EnVarConfigFile)).
+			Short('c').String()
 
 	// File commands
 	fileCMD = app.Command("file", "Commands for handling files")
 	// -- File child commands
-	fileUpload = app.Command("upload", "Upload the given file")
-	fileDelete = app.Command("delete", "Delete a file stored on the server")
-	fileList   = app.Command("list", "List files stored on the server")
+	fileUpload = fileCMD.Command("upload", "Upload the given file")
+	fileDelete = fileCMD.Command("delete", "Delete a file stored on the server")
+	fileList   = fileCMD.Command("list", "List files stored on the server")
 	// -- -- Upload specifier
 	fileUploadPath      = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	fileUploadNamespace = fileUpload.Flag("namespace", "Set the namespace the file should belong to").Short('n').String()
@@ -81,18 +85,38 @@ func main() {
 		DisableColors:    *appNoColor,
 	})
 
+	//Init config
+	var err error
+	config, err = models.InitConfig(DefaultConfigPath, *appCfgFile)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	if config == nil {
+		log.Info("New config cerated")
+		return
+	}
+
 	switch parsed {
 	case fileUpload.FullCommand():
 		UploadFile(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
-		break
+
+	case fileDelete.FullCommand():
+		DeleteFile(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
+
+	case fileList.FullCommand():
+		ListFiles(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
+
 	}
 }
 
 //Env vars
 const (
 	//EnVarPrefix prefix of all used env vars
-	EnVarLogLevel = "LOG_LEVEL"
-	EnVarNoColor  = "NO_COLOR"
+	EnVarLogLevel   = "LOG_LEVEL"
+	EnVarNoColor    = "NO_COLOR"
+	EnVarConfigFile = "CONFIG"
 )
 
 //Return the variable using the server prefix

@@ -44,7 +44,11 @@ type Endpoint string
 //Remote endpoints
 const (
 	//User
-	EPPing Endpoint = "/ping"
+	EPPing     Endpoint = "/ping"
+	File       Endpoint = "/file"
+	UploadFile Endpoint = "/file/upload"
+	DeleteFile Endpoint = "/file/delete"
+	List       Endpoint = "/file/list"
 )
 
 //Request a rest server request
