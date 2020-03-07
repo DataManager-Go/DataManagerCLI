@@ -61,6 +61,23 @@ type Request struct {
 	Authorization *Authorization
 }
 
+// UploadStruct contains file info (and a file)
+type UploadStruct struct {
+	Data      []byte
+	Namespace string
+	Group     string
+	Tag       string
+}
+
+// HandleStruct contains file info
+type HandleStruct struct {
+	Name      string
+	Namespace string
+	Group     string
+	Tag       string
+	Task      string
+}
+
 //NewRequest creates a new post request
 func NewRequest(endpoint Endpoint, payload interface{}, config *models.Config) *Request {
 	return &Request{
