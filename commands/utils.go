@@ -14,7 +14,7 @@ import (
 var AppYes bool
 
 // Config - program's config
-var config *models.Config
+var Config *models.Config
 
 //GetMD5Hash return hash of input
 func GetMD5Hash(text []byte) string {

@@ -35,10 +35,10 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 			Groups:    groups,
 			Tags:      tags,
 		},
-	}, config).WithAuth(
+	}, Config).WithAuth(
 		server.Authorization{
 			Type:    server.Bearer,
-			Palyoad: config.User.SessionToken,
+			Palyoad: Config.User.SessionToken,
 		}).Do(&resStruct)
 
 	if err != nil {
@@ -61,9 +61,9 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 func DeleteFile(name string, namespace string, groups []string, tags []string, id int) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
 		Name: name,
-	}, config).WithAuth(server.Authorization{
+	}, Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: Config.User.SessionToken,
 	}).Do(nil)
 
 	if err != nil {
@@ -93,9 +93,9 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 			Namespace: namespace,
 			Tags:      tags,
 		},
-	}, config).WithAuth(server.Authorization{
+	}, Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: Config.User.SessionToken,
 	}).Do(&filesResponse)
 
 	if err != nil {
@@ -114,7 +114,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	// Output
 	fmt.Printf("There were %s found\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"))
 
-	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
+	if uint16(len(filesResponse.Files)) > Config.Client.MinFilesToDisplay {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return

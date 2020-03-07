@@ -10,8 +10,6 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 
-	_ "github.com/Yukaru-san/DataManager_Client/commands"
-
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -121,16 +119,16 @@ func main() {
 	switch parsed {
 	// File commands
 	case fileDownload.FullCommand():
-		DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
+		commands.DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
 
 	case fileUpload.FullCommand():
-		UploadFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
+		commands.UploadFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
 
 	case fileDelete.FullCommand():
-		DeleteFile(*fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		commands.DeleteFile(*fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	case fileList.FullCommand():
-		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		commands.ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	// Ping
 	case appPing.FullCommand():
@@ -138,9 +136,9 @@ func main() {
 
 	// User
 	case loginCmd.FullCommand():
-		LoginCommand(config, *loginCmdUser, *appYes)
+		commands.LoginCommand(config, *loginCmdUser, *appYes)
 	case registerCmd:
-		RegisterCommand(config)
+		commands.RegisterCommand(config)
 	}
 }
 
