@@ -59,13 +59,8 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(name string, namespace string, groups []string, tags []string, id int) {
-	response, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
-		FileID: id,
-		Attributes: models.FileAttributes{
-			Namespace: namespace,
-			Groups:    groups,
-			Tags:      tags,
-		},
+	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
+		Name: name,
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,

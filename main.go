@@ -67,7 +67,7 @@ var (
 	// -- -- Upload specifier
 	fileUploadPath = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	// -- -- Delete specifier
-	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").String()
+	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").Required().String()
 	// -- -- List specifier
 	fileListName = fileList.Arg("fileName", "Show files with this name").String()
 	// -- -- Download specifier
@@ -121,7 +121,7 @@ func main() {
 		UploadFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
 
 	case fileDelete.FullCommand():
-		DeleteFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		DeleteFile(*fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	case fileList.FullCommand():
 		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
@@ -153,9 +153,15 @@ func getEnVar(name string) string {
 
 func pingServer(config *models.Config) {
 	var response server.StringResponse
-	res, err := server.
-		NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, config).
-		Do(&response)
+	authorization := server.Authorization{}
+
+	//Use session if available
+	if config.IsLoggedIn() {
+		authorization.Type = server.Bearer
+		authorization.Palyoad = config.User.SessionToken
+	}
+
+	res, err := server.NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, config).WithAuth(authorization).Do(&response)
 
 	if err != nil {
 		log.Error(err.Error())
