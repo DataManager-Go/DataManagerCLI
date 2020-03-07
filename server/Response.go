@@ -35,3 +35,8 @@ type StringResponse struct {
 type FileListResponse struct {
 	Files []models.File
 }
+
+//UploadResponse response for uploading file
+type UploadResponse struct {
+	FileID uint
+}

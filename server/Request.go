@@ -73,6 +73,13 @@ type FileRequest struct {
 	Attributes models.FileAttributes `json:"attributes"`
 }
 
+// FileUpdateRequest contains data to update a file
+type FileUpdateRequest struct {
+	FileID     int                   `json:"fid"`
+	Name       string                `json:"name,omitempty"`
+	Attributes models.FileAttributes `json:"attributes"`
+}
+
 // UploadStruct contains file info (and a file)
 type UploadStruct struct {
 	Data       []byte                `json:"data"`

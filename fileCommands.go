@@ -2,17 +2,17 @@ package main
 
 import (
 	"bufio"
-	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"strconv"
 
+	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
+	"github.com/fatih/color"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
@@ -22,9 +22,10 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 	fileBytes, err := ioutil.ReadFile(path)
 
 	if err != nil {
-		println("Error processing your file. Please check your input.")
+		printError("processing your file. Please check your input")
 	}
 
+	var resStruct server.UploadResponse
 	response, err := server.NewRequest(server.EPFileUpload, &server.UploadStruct{
 		Data: fileBytes,
 		Name: fileName,
@@ -34,7 +35,7 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 			Groups:    groups,
 			Tags:      tags,
 		},
-	}, config).Do(nil)
+	}, config).Do(&resStruct)
 
 	if err != nil {
 		if response != nil {
@@ -45,16 +46,16 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 	}
 
 	if response.Status == server.ResponseError {
-		fmt.Println("Error uploading your file..\n" + response.Message)
+		printResponseError(response, "uploading your file")
 		return
 	}
 
-	fmt.Println("Successfully uploaded your file!")
+	fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
 }
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(name string, namespace string, groups []string, tags []string, id int) {
-	response, err := server.NewRequest(server.EPFileUpload, &server.FileRequest{
+	response, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
 		FileID: id,
 		Attributes: models.FileAttributes{
 			Namespace: namespace,
@@ -72,11 +73,11 @@ func DeleteFile(name string, namespace string, groups []string, tags []string, i
 	}
 
 	if response.Status == server.ResponseError {
-		fmt.Println("Error trying to delete your file.\n" + response.Message)
+		printResponseError(response, "trying to delete your file")
 		return
 	}
 
-	fmt.Println("The file has been successfully deleted.")
+	fmt.Printf("The file has been %s\n", color.HiGreenString("successfully deleted"))
 }
 
 // ListFiles lists the files corresponding to the args
@@ -101,27 +102,23 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	}
 
 	if response.Status == server.ResponseError {
-		fmt.Println("Error listing files:", response.Message)
+		printResponseError(response, "listing files")
 		return
 	}
 
 	// Output
-	fmt.Printf("There were %d files found\n", len(filesResponse.Files))
+	fmt.Printf("There were %s found\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"))
 
-	printFiles := true
-	if len(filesResponse.Files) > 10 {
-		fmt.Println("Do you want to print them? (y/n)")
-
-		if !strings.HasPrefix(readInput(), "s") {
-			printFiles = false
+	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
+		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
+		if !y {
+			return
 		}
 	}
 
-	if printFiles {
-		// Print files
-		for i := 0; i < len(filesResponse.Files); i++ {
-			fmt.Printf("%d: %s\n", filesResponse.Files[i].ID, filesResponse.Files[i].Name)
-		}
+	// Print files
+	for i := 0; i < len(filesResponse.Files); i++ {
+		fmt.Printf("%d: %s\n", filesResponse.Files[i].ID, filesResponse.Files[i].Name)
 	}
 }
 
@@ -136,18 +133,4 @@ func DownloadFile(name *string, namespace *string, groups *[]string, tags *[]str
 	// TODO Make it pretty and fix obvious issues here
 	ioutil.WriteFile(*savePath+"/"+foundFile.FileName, foundFile.FileData, 6400)
 	*/
-}
-
-func readInput() string {
-	reader := bufio.NewReader(os.Stdin)
-	input, _ := reader.ReadString('\n')
-	input = strings.Replace(input, "\n", "", -1)
-
-	return input
-}
-
-//GetMD5Hash return hash of input
-func GetMD5Hash(text []byte) string {
-	hash := md5.Sum(text)
-	return hex.EncodeToString(hash[:])
 }

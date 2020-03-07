@@ -10,6 +10,7 @@ import (
 //Config Configuration structure
 type Config struct {
 	Server serverConfig
+	Client clientConfig
 }
 
 type serverConfig struct {
@@ -17,11 +18,18 @@ type serverConfig struct {
 	IgnoreCert bool
 }
 
+type clientConfig struct {
+	MinFilesToDisplay uint16 `required:"true"`
+}
+
 func getDefaultConfig() Config {
 	return Config{
 		Server: serverConfig{
 			URL:        "http://localhost:9999",
 			IgnoreCert: false,
+		},
+		Client: clientConfig{
+			MinFilesToDisplay: 10,
 		},
 	}
 }
