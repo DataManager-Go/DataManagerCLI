@@ -86,7 +86,7 @@ func DeleteFile(config *models.Config, name string, namespace string, groups []s
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(config *models.Config, name string, namespace string, groups []string, tags []string, id int) {
+func ListFiles(config *models.Config, name string, namespace string, groups []string, tags []string, id uint) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileRequest{
 		FileID: id,
@@ -131,7 +131,7 @@ func ListFiles(config *models.Config, name string, namespace string, groups []st
 }
 
 // DownloadFile requests the file from the server
-func DownloadFile(name *string, namespace *string, groups *[]string, tags *[]string, id *int, savePath *string) {
+func DownloadFile(name string, namespace string, groups []string, tags []string, id uint, savePath string) {
 
 	/*if err != nil || response.Status == server.ResponseError {
 		println("File was not downloaded:\n" + response.Message)

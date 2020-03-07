@@ -56,7 +56,7 @@ var (
 	fileNamespace = app.Flag("namespace", "Set the namespace the file should belong to").Default("default").Short('n').String()
 	fileTags      = app.Flag("tag", "Download files with this tag").Short('t').Strings()
 	fileGroups    = app.Flag("group", "Set the group the file should belong to").Short('g').Strings()
-	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Int()
+	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Uint()
 
 	// Child Commands
 	// -- File child commands
@@ -116,7 +116,7 @@ func main() {
 	switch parsed {
 	// File commands
 	case fileDownload.FullCommand():
-		commands.DownloadFile(fileDownloadName, fileNamespace, fileGroups, fileTags, fileID, fileDownloadPath)
+		commands.DownloadFile(*fileDownloadName, *fileNamespace, *fileGroups, *fileTags, *fileID, *fileDownloadPath)
 
 	case fileUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
