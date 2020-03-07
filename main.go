@@ -108,7 +108,7 @@ func main() {
 	}
 
 	if config == nil {
-		log.Info("New config cerated")
+		log.Info("New config created")
 		return
 	}
 
