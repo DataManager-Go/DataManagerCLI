@@ -65,16 +65,17 @@ type Request struct {
 type UploadStruct struct {
 	Data      []byte
 	Namespace string
-	Group     string
-	Tag       string
+	Groups    []string
+	Tags      []string
 }
 
 // HandleStruct contains file info
 type HandleStruct struct {
 	Name      string
 	Namespace string
-	Group     string
-	Tag       string
+	Groups    []string
+	Tags      []string
+	ID        int
 	Task      string
 }
 

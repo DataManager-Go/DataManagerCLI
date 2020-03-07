@@ -44,24 +44,34 @@ var (
 	// File commands
 	fileCMD = app.Command("file", "Commands for handling files")
 	// -- File child commands
-	fileUpload = fileCMD.Command("upload", "Upload the given file")
-	fileDelete = fileCMD.Command("delete", "Delete a file stored on the server")
-	fileList   = fileCMD.Command("list", "List files stored on the server")
+	fileUpload   = fileCMD.Command("upload", "Upload the given file")
+	fileDelete   = fileCMD.Command("delete", "Delete a file stored on the server")
+	fileList     = fileCMD.Command("list", "List files stored on the server")
+	fileDownload = fileCMD.Command("download", "Download a file from the server")
 	// -- -- Upload specifier
 	fileUploadPath      = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	fileUploadNamespace = fileUpload.Flag("namespace", "Set the namespace the file should belong to").Short('n').String()
-	fileUploadGroup     = fileUpload.Flag("group", "Set the group the file should belong to").Short('g').String()
-	fileUploadTag       = fileUpload.Flag("tag", "Set the tag the file should belong to").Short('t').String()
+	fileUploadGroups    = fileUpload.Flag("group", "Set the group the file should belong to").Short('g').Strings()
+	fileUploadTags      = fileUpload.Flag("tag", "Set the tag the file should belong to").Short('t').Strings()
 	// -- -- Delete specifier
 	fileDeleteName      = fileUpload.Arg("fileName", "Name of the file that should be removed").String()
 	fileDeleteNamespace = fileUpload.Flag("namespace", "The namespace the file belongs to").Short('n').String()
-	fileDeleteGroup     = fileUpload.Flag("group", "The group the file belongs to").Short('g').String()
-	fileDeleteTag       = fileUpload.Flag("tag", "The tag the file belongs to").Short('t').String()
+	fileDeleteGroups    = fileUpload.Flag("group", "The group the file belongs to").Short('g').Strings()
+	fileDeleteID        = fileDownload.Flag("id", "Delete by ID").Int()
+	fileDeleteTags      = fileUpload.Flag("tag", "The tag the file belongs to").Short('t').Strings()
 	// -- -- List specifier
 	fileListName      = fileUpload.Arg("fileName", "Show files with this name").String()
 	fileListNamespace = fileUpload.Flag("namespace", "Show files within this namespace").Short('n').String()
-	fileListGroup     = fileUpload.Flag("group", "Show files within this group").Short('g').String()
-	fileListTag       = fileUpload.Flag("tag", "Show files with this tag").Short('t').String()
+	fileListGroups    = fileUpload.Flag("group", "Show files within this group").Short('g').String()
+	fileListID        = fileDownload.Flag("id", "Find by ID").Int()
+	fileListTags      = fileUpload.Flag("tag", "Show files with this tag").Short('t').String()
+	// -- -- Download specifier
+	fileDownloadName      = fileDownload.Arg("fileName", "Download files with this name").String()
+	fileDownloadNamespace = fileDownload.Flag("namespace", "Download files in this namespace").Short('n').String()
+	fileDownloadGroups    = fileDownload.Flag("group", "Download files in this group").Short('g').Strings()
+	fileDownloadTags      = fileDownload.Flag("tag", "Download files with this tag").Short('t').Strings()
+	fileDownloadID        = fileDownload.Flag("id", "Download by ID").Int()
+	fileDownloadPath      = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
 )
 
 var (
@@ -100,14 +110,17 @@ func main() {
 
 	// Execute the desired command
 	switch parsed {
+	case fileDownload.FullCommand():
+		DownloadFile(fileDownloadName, fileDownloadNamespace, fileDownloadGroups, fileDownloadTags, fileDownloadID, fileDownloadPath)
+
 	case fileUpload.FullCommand():
-		UploadFile(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
+		UploadFile(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags)
 
 	case fileDelete.FullCommand():
-		DeleteFile(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
+		DeleteFile(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags, fileDeleteID)
 
 	case fileList.FullCommand():
-		ListFiles(fileUploadPath, fileUploadNamespace, fileUploadGroup, fileUploadTag)
+		ListFiles(fileUploadPath, fileUploadNamespace, fileUploadGroups, fileUploadTags, fileListID)
 
 	}
 }

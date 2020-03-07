@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
 	"strings"
 
 	"./server"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(path *string, namespace *string, group *string, tag *string) {
+func UploadFile(path *string, namespace *string, groups *[]string, tags *[]string) {
 	fileBytes, err := ioutil.ReadFile(*path)
 
 	if err != nil {
@@ -22,8 +21,8 @@ func UploadFile(path *string, namespace *string, group *string, tag *string) {
 	response, err := server.NewRequest(server.UploadFile, &server.UploadStruct{
 		Data:      fileBytes,
 		Namespace: *namespace,
-		Group:     *group,
-		Tag:       *tag,
+		Groups:    *groups,
+		Tags:      *tags,
 	}, config).Do(nil)
 
 	if err != nil || response.Status == server.ResponseError {
@@ -35,13 +34,14 @@ func UploadFile(path *string, namespace *string, group *string, tag *string) {
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(name *string, namespace *string, group *string, tag *string) {
+func DeleteFile(name *string, namespace *string, groups *[]string, tags *[]string, id *int) {
 
 	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
 		Name:      *name,
 		Namespace: *namespace,
-		Group:     *group,
-		Tag:       *tag,
+		Groups:    *groups,
+		Tags:      *tags,
+		ID:        *id,
 		Task:      "Delete",
 	}, config).Do(nil)
 
@@ -54,13 +54,13 @@ func DeleteFile(name *string, namespace *string, group *string, tag *string) {
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(name *string, namespace *string, group *string, tag *string) {
+func ListFiles(name *string, namespace *string, groups *[]string, tags *[]string, id *int) {
 
 	// The answer should look like this
 	type returnInfo struct {
 		filesFound []struct {
-			id       int
-			fileName string
+			ID       int
+			FileName string
 		}
 	}
 	var listedFiles returnInfo
@@ -69,8 +69,9 @@ func ListFiles(name *string, namespace *string, group *string, tag *string) {
 	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
 		Name:      *name,
 		Namespace: *namespace,
-		Group:     *group,
-		Tag:       *tag,
+		Groups:    *groups,
+		Tags:      *tags,
+		ID:        *id,
 		Task:      "List",
 	}, config).Do(&listedFiles)
 
@@ -95,44 +96,37 @@ func ListFiles(name *string, namespace *string, group *string, tag *string) {
 	if printFiles {
 		// Print files
 		for i := 0; i < len(listedFiles.filesFound); i++ {
-			fmt.Printf("%d: %s", listedFiles.filesFound[i].id, listedFiles.filesFound[i].fileName)
-		}
-
-		// Download?
-		println(`If you want to download a file, write it's index, otherwise type "q"`)
-		input := readInput()
-
-		// Try to download the file
-		if !strings.HasPrefix(input, "q") {
-			id, err := strconv.ParseInt(input, 10, 64)
-
-			if err != nil {
-				println("Input error") // TODO Try again
-				return
-			}
-
-			idMatched := false
-			for i := 0; i < len(listedFiles.filesFound); i++ {
-				if listedFiles.filesFound[i].id == int(id) {
-					idMatched = true
-					break
-				}
-			}
-
-			if !idMatched {
-				println("Input error") // TODO Try again
-				return
-			}
-
-			println("Alright. Your download will be initiated..")
-			DownloadFilebyID(int(id))
+			fmt.Printf("%d: %s", listedFiles.filesFound[i].ID, listedFiles.filesFound[i].FileName)
 		}
 	}
 }
 
-// DownloadFilebyID requests the file from the server
-func DownloadFilebyID(id int) {
-	// TODO
+// DownloadFile requests the file from the server
+func DownloadFile(name *string, namespace *string, groups *[]string, tags *[]string, id *int, savePath *string) {
+
+	// The answer should look like this
+	type returnInfo struct {
+		FileData []byte
+		FileName string
+	}
+	var foundFile returnInfo
+
+	response, err := server.NewRequest(server.UploadFile, &server.HandleStruct{
+		Name:      *name,
+		Namespace: *namespace,
+		Groups:    *groups,
+		Tags:      *tags,
+		ID:        *id,
+		Task:      "Download",
+	}, config).Do(&foundFile)
+
+	if err != nil || response.Status == server.ResponseError {
+		println("File was not downloaded:\n" + response.Message)
+		return
+	}
+
+	// TODO Make it pretty and fix obvious issues here
+	ioutil.WriteFile(*savePath+"/"+foundFile.FileName, foundFile.FileData, 6400)
 }
 
 func readInput() string {
