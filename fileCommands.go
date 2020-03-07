@@ -35,7 +35,11 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 			Groups:    groups,
 			Tags:      tags,
 		},
-	}, config).Do(&resStruct)
+	}, config).WithAuth(
+		server.Authorization{
+			Type:    server.Bearer,
+			Palyoad: config.User.SessionToken,
+		}).Do(&resStruct)
 
 	if err != nil {
 		if response != nil {
@@ -62,7 +66,10 @@ func DeleteFile(name string, namespace string, groups []string, tags []string, i
 			Groups:    groups,
 			Tags:      tags,
 		},
-	}, config).Do(nil)
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(nil)
 
 	if err != nil {
 		if response != nil {
@@ -91,7 +98,10 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 			Namespace: namespace,
 			Tags:      tags,
 		},
-	}, config).Do(&filesResponse)
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(&filesResponse)
 
 	if err != nil {
 		if response != nil {
