@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 //FileAttributes attributes for a file
 type FileAttributes struct {
 	Tags      []string `json:"tags"`
@@ -7,8 +9,10 @@ type FileAttributes struct {
 	Namespace string   `json:"ns"`
 }
 
-//File a file
-type File struct {
-	ID   int64  `json:"id"`
-	Name string `json:"name"`
+//FileResponseItem file item for file response
+type FileResponseItem struct {
+	ID           uint      `json:"id"`
+	Size         int64     `json:"size"`
+	CreationDate time.Time `json:"creation"`
+	Name         string    `json:"name"`
 }

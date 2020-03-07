@@ -13,6 +13,7 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
+	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
@@ -125,9 +126,17 @@ func ListFiles(config *models.Config, name string, namespace string, groups []st
 	}
 
 	// Print files
+	headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
+
+	table := clitable.New()
+	table.ColSeparator = "   "
+	table.AddRow(headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("CreationDate"))
+
 	for i := 0; i < len(filesResponse.Files); i++ {
-		fmt.Printf("%d: %s\n", filesResponse.Files[i].ID, filesResponse.Files[i].Name)
+		table.AddRow(filesResponse.Files[i].ID, filesResponse.Files[i].Name, filesResponse.Files[i].Size, filesResponse.Files[i].CreationDate.Format("2. Jan 2006 15:04:12"))
 	}
+
+	fmt.Println(table.String())
 }
 
 // DownloadFile requests the file from the server

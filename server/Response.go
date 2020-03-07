@@ -38,7 +38,7 @@ type StringResponse struct {
 
 //FileListResponse response for listing files
 type FileListResponse struct {
-	Files []models.File
+	Files []models.FileResponseItem
 }
 
 //UploadResponse response for uploading file
