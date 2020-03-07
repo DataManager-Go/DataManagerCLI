@@ -9,7 +9,6 @@ type FileAttributes struct {
 
 //File a file
 type File struct {
-	ID         int64 `json:"id"`
-	Name       string
-	Attributes FileAttributes
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }

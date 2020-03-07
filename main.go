@@ -44,9 +44,9 @@ var (
 
 	// File commands
 	fileCMD       = app.Command("file", "Commands for handling files")
-	fileNamespace = fileCMD.Flag("namespace", "Set the namespace the file should belong to").Default("default").Short('n').String()
-	fileTags      = fileCMD.Flag("tag", "Download files with this tag").Short('t').Strings()
-	fileGroups    = fileCMD.Flag("group", "Set the group the file should belong to").Short('g').Strings()
+	fileNamespace = app.Flag("namespace", "Set the namespace the file should belong to").Default("default").Short('n').String()
+	fileTags      = app.Flag("tag", "Download files with this tag").Short('t').Strings()
+	fileGroups    = app.Flag("group", "Set the group the file should belong to").Short('g').Strings()
 	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Int()
 
 	//child Commands
@@ -116,7 +116,7 @@ func main() {
 		DeleteFile(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	case fileList.FullCommand():
-		ListFiles(*fileUploadPath, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		ListFiles(*fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
 
 	case appPing.FullCommand():
 		pingServer(config)

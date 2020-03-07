@@ -81,6 +81,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileRequest{
 		FileID: id,
+		Name:   name,
 		Attributes: models.FileAttributes{
 			Groups:    groups,
 			Namespace: namespace,
@@ -97,7 +98,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	}
 
 	if response.Status == server.ResponseError {
-		fmt.Println("Error trying to delete your file.\n" + response.Message)
+		fmt.Println("Error listing files:", response.Message)
 		return
 	}
 
@@ -116,7 +117,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	if printFiles {
 		// Print files
 		for i := 0; i < len(filesResponse.Files); i++ {
-			fmt.Printf("%d: %s", filesResponse.Files[i].ID, filesResponse.Files[i].Name)
+			fmt.Printf("%d: %s\n", filesResponse.Files[i].ID, filesResponse.Files[i].Name)
 		}
 	}
 }
