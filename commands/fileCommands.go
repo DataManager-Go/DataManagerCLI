@@ -1,4 +1,4 @@
-package main
+package commands
 
 import (
 	"bufio"
@@ -16,7 +16,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(path string, namespace string, groups []string, tags []string) {
+func UploadFile(config *models.Config, path string, namespace string, groups []string, tags []string) {
 	_, fileName := filepath.Split(path)
 
 	fileBytes, err := ioutil.ReadFile(path)
@@ -57,7 +57,7 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(name string, namespace string, groups []string, tags []string, id int) {
+func DeleteFile(config *models.Config, name string, namespace string, groups []string, tags []string, id int) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
 		Name:   name,
 		FileID: id,
@@ -66,7 +66,7 @@ func DeleteFile(name string, namespace string, groups []string, tags []string, i
 		},
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: Config.User.SessionToken,
 	}).Do(nil)
 
 	if err != nil {
@@ -96,9 +96,9 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 			Namespace: namespace,
 			Tags:      tags,
 		},
-	}, config).WithAuth(server.Authorization{
+	}, Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: Config.User.SessionToken,
 	}).Do(&filesResponse)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func ListFiles(name string, namespace string, groups []string, tags []string, id
 	// Output
 	fmt.Printf("There were %s found\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"))
 
-	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
+	if uint16(len(filesResponse.Files)) > Config.Client.MinFilesToDisplay {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return
