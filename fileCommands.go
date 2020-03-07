@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,6 +28,7 @@ func UploadFile(path string, namespace string, groups []string, tags []string) {
 	response, err := server.NewRequest(server.EPFileUpload, &server.UploadStruct{
 		Data: fileBytes,
 		Name: fileName,
+		Sum:  GetMD5Hash(fileBytes),
 		Attributes: models.FileAttributes{
 			Namespace: namespace,
 			Groups:    groups,
@@ -141,4 +144,10 @@ func readInput() string {
 	input = strings.Replace(input, "\n", "", -1)
 
 	return input
+}
+
+//GetMD5Hash return hash of input
+func GetMD5Hash(text []byte) string {
+	hash := md5.Sum(text)
+	return hex.EncodeToString(hash[:])
 }

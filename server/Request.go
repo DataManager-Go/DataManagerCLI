@@ -76,6 +76,7 @@ type FileRequest struct {
 // UploadStruct contains file info (and a file)
 type UploadStruct struct {
 	Data       []byte                `json:"data"`
+	Sum        string                `json:"sum"`
 	Name       string                `json:"name"`
 	Attributes models.FileAttributes `json:"attributes"`
 }
