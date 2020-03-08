@@ -37,6 +37,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		public = true
 	}
 
+	//bulid request
 	request := server.UploadRequest{
 		Name:       fileName,
 		Attributes: attributes,
@@ -44,6 +45,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		PublicName: publicName,
 	}
 
+	//Check for url/file
 	u, err := url.Parse(path)
 	if err == nil && (u.Scheme == "http" || u.Scheme == "https") {
 		request.UploadType = server.URLUploadType
@@ -59,6 +61,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		//Try to detect filetype
 		ft, err := filetype.Get(fileBytes)
 		if err == nil {
+			//Set filetype if detected successfully
 			request.FileType = ft.MIME.Value
 		}
 
@@ -163,7 +166,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	table.Padding = 7
 
 	header := []interface{}{
-		headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"),
+		headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"), headingColor.Sprint("Public name"),
 	}
 
 	//Show namespace on -dd
@@ -179,11 +182,18 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	table.AddRow(header...)
 
 	for _, file := range filesResponse.Files {
+		//Colorize private pubNames if not public
+		pubname := file.PublicName
+		if len(pubname) > 0 && !file.IsPublic {
+			pubname = color.HiMagentaString(pubname)
+		}
+
 		rowItems := []interface{}{
 			file.ID,
 			file.Name,
 			units.BinarySuffix(float64(file.Size)),
 			humanTime.Difference(time.Now(), file.CreationDate),
+			pubname,
 		}
 
 		//Show namespace on -dd
