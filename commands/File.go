@@ -19,6 +19,7 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
+	"github.com/h2non/filetype"
 	humanTime "github.com/sbani/go-humanizer/time"
 	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
@@ -53,6 +54,12 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		if err != nil {
 			printError("processing your file. Please check your input")
 			return
+		}
+
+		//Try to detect filetype
+		ft, err := filetype.Get(fileBytes)
+		if err == nil {
+			request.FileType = ft.MIME.Value
 		}
 
 		request.UploadType = server.FileUploadType
