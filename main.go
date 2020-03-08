@@ -44,19 +44,23 @@ var (
 			Flag("config", "the configuration file for the app").
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
+	appNamespace = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appTags      = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups    = app.Flag("group", "Specify groups to use").Short('g').Strings()
 
 	// UserCommands
+	//Login
 	loginCmd     = app.Command("login", "Login")
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
-
+	//Register
 	registerCmd = app.Command("register", "Create an account").FullCommand()
 
 	// File commands
-	fileCMD       = app.Command("file", "Commands for handling files")
-	fileNamespace = app.Flag("namespace", "Set the namespace the file should belong to").Default("default").Short('n').String()
-	fileTags      = app.Flag("tag", "Download files with this tag").Short('t').Strings()
-	fileGroups    = app.Flag("group", "Set the group the file should belong to").Short('g').Strings()
-	fileID        = fileDownload.Flag("file-id", "Specify the fileID").Uint()
+
+	fileCMD = app.Command("file", "Commands for handling files")
+	fileID  = fileDownload.Flag("file-id", "Specify the fileID").Uint()
+	//Config commands
+	configCMD = app.Command("config", "Commands for working with the config")
 
 	// Child Commands
 	// -- File child commands
@@ -65,6 +69,8 @@ var (
 	fileList     = fileCMD.Command("list", "List files stored on the server")
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
 	fileUpdate   = fileCMD.Command("update", "Update a file")
+	// -- Config child command
+	configUse = configCMD.Command("use", "Use something")
 
 	// Args/Flags
 	// -- -- Upload specifier
@@ -86,6 +92,10 @@ var (
 	fileupdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
 	fileupdateAddTags      = fileUpdate.Flag("add-tags", "Add a tag to a file").Strings()
 	fileupdateRemoveTags   = fileUpdate.Flag("remove-tags", "Add a tag to a file").Strings()
+
+	// Args/Config
+	configUseTarget      = configUse.Arg("target", "Use different namespace as default").HintOptions(commands.UseTargets...).Required().String()
+	configUseTargetValue = configUse.Arg("value", "the value of the new target").HintOptions("default").Strings()
 )
 
 var (
@@ -122,18 +132,20 @@ func main() {
 		return
 	}
 
+	*appNamespace = config.Default.Namespace
+
 	//Generate  file attributes
 	fileAttributes := models.FileAttributes{
-		Namespace: *fileNamespace,
-		Groups:    *fileGroups,
-		Tags:      *fileTags,
+		Namespace: *appNamespace,
+		Groups:    *appGroups,
+		Tags:      *appTags,
 	}
 
 	// Execute the desired command
 	switch parsed {
 	// File commands
 	case fileDownload.FullCommand():
-		commands.DownloadFile(*fileDownloadName, *fileNamespace, *fileGroups, *fileTags, *fileID, *fileDownloadPath)
+		commands.DownloadFile(*fileDownloadName, *appNamespace, *appGroups, *appTags, *fileID, *fileDownloadPath)
 
 	case fileUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, fileAttributes)
@@ -156,6 +168,10 @@ func main() {
 		commands.LoginCommand(config, *loginCmdUser, *appYes)
 	case registerCmd:
 		commands.RegisterCommand(config)
+
+	//Config
+	case configUse.FullCommand():
+		commands.ConfigUse(config, *configUseTarget, *configUseTargetValue)
 	}
 }
 

@@ -9,13 +9,14 @@ import (
 
 //Config Configuration structure
 type Config struct {
-	File   string
-	Server serverConfig
-	Client clientConfig
-	User   struct {
+	File string
+	User struct {
 		Username     string
 		SessionToken string
 	}
+	Server  serverConfig
+	Client  clientConfig
+	Default defaultConfig
 }
 
 type serverConfig struct {
@@ -27,6 +28,12 @@ type clientConfig struct {
 	MinFilesToDisplay uint16 `required:"true"`
 }
 
+type defaultConfig struct {
+	Namespace string `default:"default"`
+	Tags      []string
+	Groups    []string
+}
+
 func getDefaultConfig() Config {
 	return Config{
 		Server: serverConfig{
@@ -35,6 +42,9 @@ func getDefaultConfig() Config {
 		},
 		Client: clientConfig{
 			MinFilesToDisplay: 10,
+		},
+		Default: defaultConfig{
+			Namespace: "default",
 		},
 	}
 }

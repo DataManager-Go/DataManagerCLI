@@ -113,7 +113,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	}
 
 	// Output
-	fmt.Printf("There were %s found\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"))
+	fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), attributes.Namespace)
 
 	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
