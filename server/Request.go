@@ -54,10 +54,11 @@ const (
 	//Files
 	EPFile Endpoint = "/file"
 
-	EPFileList   Endpoint = EPFile + "s"
-	EPFileUpdate Endpoint = EPFile + "/update"
-	EPFileDelete Endpoint = EPFile + "/delete"
-	EPFileGet    Endpoint = EPFile + "/get"
+	EPFileList    Endpoint = EPFile + "s"
+	EPFileUpdate  Endpoint = EPFile + "/update"
+	EPFileDelete  Endpoint = EPFile + "/delete"
+	EPFileGet     Endpoint = EPFile + "/get"
+	EPFilePublish Endpoint = EPFile + "/publish"
 
 	//Upload
 	EPFileUpload Endpoint = "/upload" + EPFile
@@ -96,6 +97,7 @@ type OptionalRequetsParameter struct {
 type FileRequest struct {
 	FileID     uint                  `json:"fid"`
 	Name       string                `json:"name,omitempty"`
+	PublicName string                `json:"pubname,omitempty"`
 	Updates    models.FileUpdateItem `json:"updates,omitempty"`
 	Attributes models.FileAttributes `json:"attributes"`
 }

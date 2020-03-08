@@ -28,7 +28,8 @@ func printError(message interface{}) {
 	fmt.Printf("%s %s\n", color.HiRedString("Error"), message)
 }
 
-func procesStrSliceParam(slice *[]string) {
+//ProcesStrSliceParam divides args by ,
+func ProcesStrSliceParam(slice *[]string) {
 	var newSlice []string
 
 	for _, itm := range *slice {
@@ -38,8 +39,9 @@ func procesStrSliceParam(slice *[]string) {
 	*slice = newSlice
 }
 
-func procesStrSliceParams(slices ...*[]string) {
+//ProcesStrSliceParams divides args by ,
+func ProcesStrSliceParams(slices ...*[]string) {
 	for i := range slices {
-		procesStrSliceParam(slices[i])
+		ProcesStrSliceParam(slices[i])
 	}
 }

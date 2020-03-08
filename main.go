@@ -72,7 +72,7 @@ var (
 	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
 	fileUploadName       = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
-	fileUploadPublicName = appUpload.Flag("public-name", "Make uploaded file publci").String()
+	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
 
 	// -- Delete
 	appDelete = app.Command("delete", "Delete something from the server").Alias("remove").Alias("del").Alias("rm")
@@ -100,6 +100,14 @@ var (
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
 	fileDownloadID   = fileDownload.Arg("fileId", "Specify the fileID").Uint()
 	fileDownloadPath = fileDownload.Flag("output", "Where to store the file").Default("./").Short('o').String()
+
+	// -- Publish
+	publishCmd = app.Command("publish", "publish something")
+	//File
+	publishFileCmd    = publishCmd.Command("file", "Publish a file")
+	publishFileName   = publishFileCmd.Arg("fileName", "Name of the file that should be published").Required().String()
+	publishFileID     = publishFileCmd.Arg("fileID", "FileID of specified file. Only required if mulitple files with same name are available").Uint()
+	publishPublicName = publishFileCmd.Flag("public-name", "Specify the public filename").String()
 
 	// -- Update
 	appUpdate = app.Command("update", "Update the filesystem")
@@ -177,6 +185,9 @@ func main() {
 		*appGroups = config.Default.Groups
 	}
 
+	//Process params: make t1,t2 -> [t1 t2]
+	commands.ProcesStrSliceParams(appTags, appGroups)
+
 	//Generate  file attributes
 	fileAttributes := models.FileAttributes{
 		Namespace: *appNamespace,
@@ -214,6 +225,9 @@ func main() {
 
 	case tagUpdate.FullCommand():
 		commands.UpdateTag(config, *tagUpdateName, *appNamespace, *tagUpdateNewName)
+
+	case publishFileCmd.FullCommand():
+		commands.PublishFile(config, *publishFileName, *publishFileID, *publishPublicName, fileAttributes)
 
 	// Ping
 	case appPing.FullCommand():

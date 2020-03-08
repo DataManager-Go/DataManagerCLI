@@ -188,6 +188,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 			pubname = color.HiMagentaString(pubname)
 		}
 
+		//Add items
 		rowItems := []interface{}{
 			file.ID,
 			file.Name,
@@ -213,10 +214,41 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	fmt.Println(table.String())
 }
 
+//PublishFile publishes a file
+func PublishFile(config *models.Config, name string, id uint, publicName string, attributes models.FileAttributes) {
+	var resData server.PublishResponse
+	response, err := server.NewRequest(server.EPFilePublish, server.FileRequest{
+		Name:       name,
+		FileID:     id,
+		PublicName: publicName,
+		Attributes: attributes,
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(&resData)
+
+	if err != nil {
+		if response != nil {
+			fmt.Println("http:", response.HTTPCode)
+			return
+		}
+		log.Fatalln(err)
+	}
+
+	// Error handling #2
+	if response.Status == server.ResponseError {
+		printResponseError(response, "publishing")
+		return
+	}
+
+	// Output
+	fmt.Printf(resData.PublicFilename)
+}
+
 // UpdateFile updates a file on the server
 func UpdateFile(config *models.Config, name string, id uint, namespace string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	//Process params: make t1,t2 -> [t1 t2]
-	procesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
+	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
 	// Set attributes
 	attributes := models.FileAttributes{

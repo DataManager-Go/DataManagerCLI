@@ -46,3 +46,8 @@ type FileListResponse struct {
 type UploadResponse struct {
 	FileID uint
 }
+
+//PublishResponse response for publishing a file
+type PublishResponse struct {
+	PublicFilename string `json:"pubName"`
+}
