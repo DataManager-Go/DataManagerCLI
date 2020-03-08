@@ -52,14 +52,15 @@ const (
 	EPRegister Endpoint = EPUser + "/register"
 
 	//Files
-	EPFile       Endpoint = "/file"
-	EPFileList   Endpoint = EPFile + "/list"
-	EPFileUpload Endpoint = EPFile + "/upload"
+	EPFile Endpoint = "/file"
 
-	//Update files
-	EPFileUpdate       Endpoint = EPFile + "/update"
-	EPFileUpdateAction Endpoint = EPFileUpdate + "/update"
-	EPFileDelete       Endpoint = EPFileUpdate + "/delete"
+	EPFileList   Endpoint = EPFile + "s"
+	EPFileUpdate Endpoint = EPFile + "/update"
+	EPFileDelete Endpoint = EPFile + "/delete"
+	EPFileGet    Endpoint = EPFile + "/get"
+
+	//Upload
+	EPFileUpload Endpoint = "/upload" + EPFile
 
 	//Tags
 	EPTag Endpoint = "/tag"
@@ -78,8 +79,8 @@ type Request struct {
 	Authorization *Authorization
 }
 
-// FileRequest contains file info (and a file)
-type FileRequest struct {
+// FileListRequest contains file info (and a file)
+type FileListRequest struct {
 	FileID         uint                     `json:"fid"`
 	Name           string                   `json:"name"`
 	OptionalParams OptionalRequetsParameter `json:"opt"`
@@ -91,8 +92,8 @@ type OptionalRequetsParameter struct {
 	Verbose uint8 `json:"verb"`
 }
 
-// FileUpdateRequest contains data to update a file
-type FileUpdateRequest struct {
+// FileRequest contains data to update a file
+type FileRequest struct {
 	FileID     uint                  `json:"fid"`
 	Name       string                `json:"name,omitempty"`
 	Updates    models.FileUpdateItem `json:"updates,omitempty"`
@@ -103,8 +104,7 @@ type FileUpdateRequest struct {
 type TagUpdateRequest struct {
 	Name      string `json:"name"`
 	Namespace string `json:"namespace"`
-
-	NewName string `json:"newname,omitempty"`
+	NewName   string `json:"newname,omitempty"`
 }
 
 //CredentialsRequest request containing credentials
@@ -149,8 +149,8 @@ func (request *Request) WithAuth(a Authorization) *Request {
 	return request
 }
 
-//Do a better request method
-func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
+//DoHTTPRequest do plain http request
+func (request *Request) DoHTTPRequest() (*http.Response, error) {
 	client := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -181,7 +181,12 @@ func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
 		req.Header.Set("Authorization", fmt.Sprintf("%s %s", string(request.Authorization.Type), request.Authorization.Palyoad))
 	}
 
-	resp, err := client.Do(req)
+	return client.Do(req)
+}
+
+//Do a better request method
+func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
+	resp, err := request.DoHTTPRequest()
 	if err != nil {
 		return nil, err
 	}

@@ -73,7 +73,7 @@ var (
 	fileUploadName = appUpload.Flag("name", "Specify the name of the file").String()
 
 	// -- Delete
-	appDelete = app.Command("delete", "Delete something from the server")
+	appDelete = app.Command("delete", "Delete something from the server").Alias("remove").Alias("del").Alias("rm")
 	//Delete file
 	deleteFileCmd  = appDelete.Command("file", "Delete a file")
 	fileDeleteName = deleteFileCmd.Arg("fileName", "Name of the file that should be removed").Required().String()
@@ -96,8 +96,8 @@ var (
 	// -- Download
 	fileDownload     = app.Command("download", "Download a file from the server")
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
-	fileDownloadPath = fileDownload.Arg("path", "Where to store the file").Default("./").String()
-	fileDownloadID   = fileDownload.Flag("file-id", "Specify the fileID").Uint()
+	fileDownloadID   = fileDownload.Arg("fileId", "Specify the fileID").Uint()
+	fileDownloadPath = fileDownload.Flag("output", "Where to store the file").Default("./").Short('o').String()
 
 	// -- Update
 	appUpdate = app.Command("update", "Update the filesystem")
@@ -186,7 +186,14 @@ func main() {
 	switch parsed {
 	// File commands
 	case fileDownload.FullCommand():
-		commands.DownloadFile(*fileDownloadName, *appNamespace, *appGroups, *appTags, *fileDownloadID, *fileDownloadPath)
+		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
+			Namespace: *appNamespace,
+		}, *fileDownloadPath, false)
+
+	case viewFileCmd.FullCommand():
+		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
+			Namespace: *appNamespace,
+		}, "", true)
 
 	case appUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileUploadName, fileAttributes)

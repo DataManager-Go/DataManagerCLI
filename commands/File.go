@@ -3,10 +3,12 @@ package commands
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -75,7 +77,7 @@ func UploadFile(config *models.Config, path, name string, attributes models.File
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(config *models.Config, name string, id uint, attributes models.FileAttributes) {
-	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
+	response, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
 		Name:       name,
 		FileID:     id,
 		Attributes: attributes,
@@ -103,7 +105,7 @@ func DeleteFile(config *models.Config, name string, id uint, attributes models.F
 // ListFiles lists the files corresponding to the args
 func ListFiles(config *models.Config, name string, id uint, attributes models.FileAttributes, verbosity uint8) {
 	var filesResponse server.FileListResponse
-	response, err := server.NewRequest(server.EPFileList, &server.FileRequest{
+	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:     id,
 		Name:       name,
 		Attributes: attributes,
@@ -222,7 +224,7 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, n
 	}
 
 	// Combine and send it
-	response, err := server.NewRequest(server.EPFileUpdateAction, &server.FileUpdateRequest{
+	response, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
 		Name:       name,
 		FileID:     id,
 		Updates:    fileUpdates,
@@ -253,7 +255,6 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, n
 
 // UpdateTag updates a given tag
 func UpdateTag(config *models.Config, name string, namespace string, newName string) {
-
 	// Combine and send it
 	response, err := server.NewRequest(server.EPTagUpdate, &server.TagUpdateRequest{
 		Name:      name,
@@ -283,15 +284,65 @@ func UpdateTag(config *models.Config, name string, namespace string, newName str
 	fmt.Printf("The tag has been %s\n", color.HiGreenString("successfully updated"))
 }
 
-// DownloadFile requests the file from the server
-func DownloadFile(name string, namespace string, groups []string, tags []string, id uint, savePath string) {
+// GetFile requests the file from the server and displays or saves it
+func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput bool) {
+	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
+		Name:       fileName,
+		FileID:     id,
+		Attributes: attribute,
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).DoHTTPRequest()
 
-	/*if err != nil || response.Status == server.ResponseError {
-		println("File was not downloaded:\n" + response.Message)
+	//Check for error
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	// TODO Make it pretty and fix obvious issues here
-	ioutil.WriteFile(*savePath+"/"+foundFile.FileName, foundFile.FileData, 6400)
-	*/
+	//Display or save file
+	if displayOutput {
+		//Print file to os.Stdout
+		io.Copy(os.Stdout, resp.Body)
+	} else {
+		if len(savePath) == 0 {
+			fmt.Println("Can't save file if you don't specify a path")
+			return
+		}
+
+		//Determine output file/path
+		outFile := savePath
+		if strings.HasSuffix(savePath, "/") {
+			outFile = path.Join(savePath, fileName)
+		} else {
+			stat, err := os.Stat(outFile)
+			if err == nil && stat.IsDir() {
+				outFile = path.Join(outFile, fileName)
+			}
+		}
+
+		//Create file
+		f, err := os.Create(outFile)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//Save
+		_, err = io.Copy(f, resp.Body)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//Close file
+		f.Close()
+
+		//Print success message
+		fmt.Printf("Saved file into %s\n", outFile)
+	}
+
+	//Close body
+	resp.Body.Close()
 }
