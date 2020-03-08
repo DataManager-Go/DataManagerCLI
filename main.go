@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	appName = "managerclient"
+	appName = "manager"
 	version = "1.0.0"
 
 	//EnVarPrefix prefix for env vars

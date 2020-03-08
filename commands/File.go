@@ -133,9 +133,11 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 		headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"),
 	}
 
+	//Show namespace on -dd
 	if verbosity > 2 {
 		header = append(header, headingColor.Sprintf("Namespace"))
 	}
+	//Show groups and tags on -d
 	if verbosity > 1 {
 		header = append(header, headingColor.Sprintf("Groups"))
 		header = append(header, headingColor.Sprintf("Tags"))
@@ -151,9 +153,12 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 			humanTime.Difference(time.Now(), file.CreationDate),
 		}
 
+		//Show namespace on -dd
 		if verbosity > 2 {
 			rowItems = append(rowItems, file.Attributes.Namespace)
 		}
+
+		//Show groups and tags on -d
 		if verbosity > 1 {
 			rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
 			rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
@@ -163,11 +168,6 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	}
 
 	fmt.Println(table.String())
-}
-
-//UpdateFile updates a file
-func UpdateFile(config *models.Config, fileName string, fileID uint, toggle bool) {
-
 }
 
 // DownloadFile requests the file from the server
