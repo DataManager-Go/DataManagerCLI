@@ -19,6 +19,7 @@ import (
 
 //LoginCommand login into the server
 func LoginCommand(config *models.Config, usernameArg string, appYes bool, args ...bool) {
+	//Print confirmation if user is already logged in
 	if config.IsLoggedIn() && !appYes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
 		if !i {
@@ -26,16 +27,16 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 		}
 	}
 
+	//Enter credentials
 	username, pass := credentials(usernameArg, false, 0)
-
-	login := server.CredentialsRequest{
-		Password: pass,
-		Username: username,
-	}
 
 	var response server.LoginResponse
 
-	resp, err := server.NewRequest(server.EPLogin, login, config).Do(&response)
+	//Do request
+	resp, err := server.NewRequest(server.EPLogin, server.CredentialsRequest{
+		Password: pass,
+		Username: username,
+	}, config).Do(&response)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,6 +46,7 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 	if resp.Status == server.ResponseError && resp.HTTPCode == 403 {
 		fmt.Println(color.HiRedString("Failure"))
 	} else if resp.Status == server.ResponseSuccess && len(response.Token) > 0 {
+		//put username and token in config
 		config.User = struct {
 			Username     string
 			SessionToken string
@@ -52,11 +54,17 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 			Username:     username,
 			SessionToken: response.Token,
 		}
+
+		//Set default namespace to users
+		config.Default.Namespace = response.Namespace
+
+		//Save new config
 		err := configService.Save(config, config.File)
 		if err != nil {
 			fmt.Println("Error saving config:", err.Error())
 			return
 		}
+
 		fmt.Println(color.HiGreenString("Success!"), "\nLogged in as", username)
 	} else {
 		printResponseError(resp)
@@ -65,17 +73,18 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 
 //RegisterCommand create a new account
 func RegisterCommand(config *models.Config) {
+	//Input for credentials
 	username, pass := credentials("", true, 0)
 	if len(username) == 0 || len(pass) == 0 {
 		return
 	}
 
-	req := server.CredentialsRequest{
+	//Do request
+	resp, err := server.NewRequest(server.EPRegister, server.CredentialsRequest{
 		Username: username,
 		Password: pass,
-	}
+	}, config).Do(nil)
 
-	resp, err := server.NewRequest(server.EPRegister, req, config).Do(nil)
 	if err != nil {
 		fmt.Println("Err", err.Error())
 		return
@@ -83,6 +92,7 @@ func RegisterCommand(config *models.Config) {
 
 	if resp.Status == server.ResponseSuccess {
 		fmt.Printf("User '%s' created %s!\n", username, color.HiGreenString("successfully"))
+
 		y, _ := gaw.ConfirmInput("Do you want to login to this account? [y/n]> ", bufio.NewReader(os.Stdin))
 		if y {
 			LoginCommand(config, username, true)

@@ -44,7 +44,7 @@ var (
 			Flag("config", "the configuration file for the app").
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
-	appNamespace = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appNamespace = app.Flag("namespace", "Specify the namespace to use").Short('n').String()
 	appTags      = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups    = app.Flag("group", "Specify groups to use").Short('g').Strings()
 
@@ -55,7 +55,6 @@ var (
 	//Register
 	registerCmd = app.Command("register", "Create an account").FullCommand()
 	// Manager commands
-	managerCMD = app.Command("manager", "General commands within the manager")
 	// File commands
 	fileCMD = app.Command("file", "Commands for handling files")
 	fileID  = fileDownload.Flag("file-id", "Specify the fileID").Uint()
@@ -70,7 +69,7 @@ var (
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
 
 	// -- Manager child commands
-	managerUpdate = managerCMD.Command("update", "Update the filesystem")
+	managerUpdate = app.Command("update", "Update the filesystem")
 
 	// -- -- ManagerUpdate childs
 	fileUpdate = managerUpdate.Command("file", "Update a file")
@@ -95,7 +94,7 @@ var (
 	// -- -- File-Update specifier
 	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be updated").Required().String()
 	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
-	fileUpdateTogglePublic = fileUpdate.Flag("isPublic", "Sets a file public or private").Default("").String()
+	fileUpdateTogglePublic = fileUpdate.Flag("isPublic", "Sets a file public or private").String()
 	fileUpdateNewName      = fileUpdate.Flag("new-name", "Change the name of a file").String()
 	fileUpdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
 	fileUpdateAddTags      = fileUpdate.Flag("add-tags", "Add tags to a file").Strings()
@@ -148,7 +147,7 @@ func main() {
 	}
 
 	//Use in config specified values for targets
-	if len(*appNamespace) == 0 || (*appNamespace) == "default" {
+	if len(*appNamespace) == 0 {
 		*appNamespace = config.Default.Namespace
 	}
 	if len(*appTags) == 0 {

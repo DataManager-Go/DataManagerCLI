@@ -27,8 +27,10 @@ func ConfigUse(config *models.Config, target string, values []string) {
 		switch target {
 		case UseTargets[1]:
 			config.Default.Tags = []string{}
+			fmt.Println("Removing tags")
 		case UseTargets[2]:
 			config.Default.Groups = []string{}
+			fmt.Println("Removing groups")
 		}
 	} else {
 		switch target {
