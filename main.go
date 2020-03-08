@@ -133,7 +133,9 @@ func main() {
 	}
 
 	//Use in config specified values for targets
-	*appNamespace = config.Default.Namespace
+	if len(*appNamespace) == 0 || (*appNamespace) == "default" {
+		*appNamespace = config.Default.Namespace
+	}
 	if len(*appTags) == 0 {
 		*appTags = config.Default.Tags
 	}
