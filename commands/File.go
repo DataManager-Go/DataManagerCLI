@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bufio"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -24,15 +25,22 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(config *models.Config, path, name string, attributes models.FileAttributes) {
+func UploadFile(config *models.Config, path, name, publicName string, public bool, attributes models.FileAttributes) {
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
 	}
 
+	//Make public if public name was specified
+	if len(publicName) > 0 {
+		public = true
+	}
+
 	request := server.UploadRequest{
 		Name:       fileName,
 		Attributes: attributes,
+		Public:     public,
+		PublicName: publicName,
 	}
 
 	u, err := url.Parse(path)
@@ -48,8 +56,8 @@ func UploadFile(config *models.Config, path, name string, attributes models.File
 		}
 
 		request.UploadType = server.FileUploadType
-		request.Data = fileBytes
-		request.Sum = GetMD5Hash(fileBytes)
+		request.Data = base64.StdEncoding.EncodeToString(fileBytes)
+		request.Sum = GetMD5Hash(request.Data)
 	}
 
 	//Do request

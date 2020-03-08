@@ -68,9 +68,11 @@ var (
 
 	// ---------> File commands
 	// -- Upload
-	appUpload      = app.Command("upload", "Upload the given file")
-	fileUploadPath = appUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
-	fileUploadName = appUpload.Flag("name", "Specify the name of the file").String()
+	appUpload            = app.Command("upload", "Upload the given file")
+	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
+	fileUploadName       = appUpload.Flag("name", "Specify the name of the file").String()
+	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
+	fileUploadPublicName = appUpload.Flag("public-name", "Make uploaded file publci").String()
 
 	// -- Delete
 	appDelete = app.Command("delete", "Delete something from the server").Alias("remove").Alias("del").Alias("rm")
@@ -196,7 +198,7 @@ func main() {
 		}, "", true)
 
 	case appUpload.FullCommand():
-		commands.UploadFile(config, *fileUploadPath, *fileUploadName, fileAttributes)
+		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes)
 
 	case deleteFileCmd.FullCommand():
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
