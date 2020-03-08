@@ -81,7 +81,7 @@ var (
 	deleteTagName = deleteTagCmd.Arg("tagName", "Name of tag to delete").Required().String()
 	//Delete Group
 	deleteGroup     = appDelete.Command("group", "Delete a group")
-	deleteGroupName = deleteTagCmd.Arg("groupName", "Name of group to delete").Required().String()
+	deleteGroupName = deleteGroup.Arg("groupName", "Name of group to delete").Required().String()
 
 	// -- List
 	appList = app.Command("list", "List stuff stored on the server")
@@ -94,8 +94,8 @@ var (
 	// -- Download
 	fileDownload     = app.Command("download", "Download a file from the server")
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
-	fileID           = fileDownload.Flag("file-id", "Specify the fileID").Uint()
-	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
+	fileDownloadPath = fileDownload.Arg("path", "Where to store the file").Default("./").String()
+	fileDownloadID   = fileDownload.Flag("file-id", "Specify the fileID").Uint()
 
 	// -- Update
 	appUpdate = app.Command("update", "Update the filesystem")
@@ -119,6 +119,13 @@ var (
 	groupUpdate        = appUpdate.Command("group", "Update a group")
 	groupUpdateName    = groupUpdate.Arg("groupName", "Name of the group that should be updated").Required().String()
 	groupUpdateNewName = groupUpdate.Flag("new-name", "Rename a group").String()
+
+	// -- View
+	viewCmd = app.Command("view", "View something")
+	//View file
+	viewFileCmd  = viewCmd.Command("file", "view a file")
+	viewFileName = viewFileCmd.Arg("fileName", "The filename to view").Required().String()
+	viewFileID   = viewFileCmd.Arg("fileID", "The fileID to view").Uint()
 )
 
 var (
@@ -177,7 +184,7 @@ func main() {
 	switch parsed {
 	// File commands
 	case fileDownload.FullCommand():
-		commands.DownloadFile(*fileDownloadName, *appNamespace, *appGroups, *appTags, *fileID, *fileDownloadPath)
+		commands.DownloadFile(*fileDownloadName, *appNamespace, *appGroups, *appTags, *fileDownloadID, *fileDownloadPath)
 
 	case appUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileUploadName, fileAttributes)
@@ -186,10 +193,10 @@ func main() {
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
 
 	case listFileCmd.FullCommand():
-		commands.ListFiles(config, *fileListName, *fileID, fileAttributes, uint8(*appDetails)+1)
+		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1)
 
 	case listFilesCmd.FullCommand():
-		commands.ListFiles(config, "", *fileID, fileAttributes, uint8(*appDetails)+1)
+		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1)
 
 	case fileUpdate.FullCommand():
 		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
