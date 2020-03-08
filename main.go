@@ -132,7 +132,14 @@ func main() {
 		return
 	}
 
+	//Use in config specified values for targets
 	*appNamespace = config.Default.Namespace
+	if len(*appTags) == 0 {
+		*appTags = config.Default.Tags
+	}
+	if len(*appGroups) == 0 {
+		*appGroups = config.Default.Groups
+	}
 
 	//Generate  file attributes
 	fileAttributes := models.FileAttributes{
