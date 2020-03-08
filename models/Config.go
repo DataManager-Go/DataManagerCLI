@@ -1,10 +1,14 @@
 package models
 
 import (
+	"log"
 	"os"
+	"path"
 	"path/filepath"
 
+	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/JojiiOfficial/configService"
+	"github.com/Yukaru-san/DataManager_Client/constants"
 )
 
 //Config Configuration structure
@@ -108,4 +112,23 @@ func (config *Config) Validate() error {
 //IsLoggedIn return true if sessiondata is available
 func (config *Config) IsLoggedIn() bool {
 	return len(config.User.Username) > 0 && len(config.User.SessionToken) == 64
+}
+
+//GetDefaultConfig return path of default config
+func GetDefaultConfig() string {
+	return path.Join(getDataPath(), constants.DefaultConfigFile)
+}
+
+func getDataPath() string {
+	path := path.Join(gaw.GetHome(), constants.DataDir)
+	s, err := os.Stat(path)
+	if err != nil {
+		err = os.Mkdir(path, 0770)
+		if err != nil {
+			log.Fatalln(err.Error())
+		}
+	} else if s != nil && !s.IsDir() {
+		log.Fatalln("DataPath-name already taken by a file!")
+	}
+	return path
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
 	"time"
 
 	"github.com/Yukaru-san/DataManager_Client/commands"
@@ -23,13 +22,6 @@ const (
 
 	//Datapath the default path for data files
 	Datapath = "./data"
-	//DefaultConfig the default config file
-	DefaultConfig = "config.yaml"
-)
-
-var (
-	//DefaultConfigPath default config path
-	DefaultConfigPath = path.Join(Datapath, DefaultConfig)
 )
 
 //App commands
@@ -163,7 +155,7 @@ func main() {
 
 	//Init config
 	var err error
-	config, err = models.InitConfig(DefaultConfigPath, *appCfgFile)
+	config, err = models.InitConfig(models.GetDefaultConfig(), *appCfgFile)
 	if err != nil {
 		log.Error(err)
 		return

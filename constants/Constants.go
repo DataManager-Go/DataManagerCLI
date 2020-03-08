@@ -9,3 +9,9 @@ var (
 		"error",
 	}
 )
+
+//Contants for cofig/data
+const (
+	DefaultConfigFile = "config.yaml"
+	DataDir           = ".dmanager"
+)
