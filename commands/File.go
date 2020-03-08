@@ -186,6 +186,88 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	fmt.Println(table.String())
 }
 
+// UpdateFile updates a file on the server
+func UpdateFile(config *models.Config, name string, id int, namespace string, isPublic string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string) {
+
+	// Set attributes
+	attributes := models.FileAttributes{
+		Tags:      addTags,
+		Groups:    addGroups,
+		Namespace: namespace,
+	}
+
+	// Set fileUpdates
+	fileUpdates := models.FileUpdateItem{
+		IsPublic:     isPublic,
+		NewName:      newName,
+		NewNamespace: newNamespace,
+		RemoveTags:   removeTags,
+		RemoveGroups: removeGroups,
+	}
+
+	// Combine and send it
+	response, err := server.NewRequest(server.EPFileUpdate, &server.FileUpdateRequest{
+		Name:       name,
+		FileID:     id,
+		Updates:    fileUpdates,
+		Attributes: attributes,
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(nil)
+
+	// Error handling #1
+	if err != nil {
+		if response != nil {
+			fmt.Println("http:", response.HTTPCode)
+			return
+		}
+		log.Fatalln(err)
+	}
+
+	// Error handling #2
+	if response.Status == server.ResponseError {
+		printResponseError(response, "trying to update your file")
+		return
+	}
+
+	// Output
+	fmt.Printf("The file has been %s\n", color.HiGreenString("successfully updated"))
+}
+
+// UpdateTag updates a given tag
+func UpdateTag(config *models.Config, name string, namespace string, newName string, delete bool) {
+
+	// Combine and send it
+	response, err := server.NewRequest(server.EPTagUpdate, &server.TagUpdateRequest{
+		Name:      name,
+		NewName:   newName,
+		Namespace: namespace,
+		Delete:    delete,
+	}, config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: config.User.SessionToken,
+	}).Do(nil)
+
+	// Error handling #1
+	if err != nil {
+		if response != nil {
+			fmt.Println("http:", response.HTTPCode)
+			return
+		}
+		log.Fatalln(err)
+	}
+
+	// Error handling #2
+	if response.Status == server.ResponseError {
+		printResponseError(response, "trying to update your tag")
+		return
+	}
+
+	// Output
+	fmt.Printf("The tag has been %s\n", color.HiGreenString("successfully updated"))
+}
+
 // DownloadFile requests the file from the server
 func DownloadFile(name string, namespace string, groups []string, tags []string, id uint, savePath string) {
 

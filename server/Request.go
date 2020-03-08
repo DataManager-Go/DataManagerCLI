@@ -56,9 +56,15 @@ const (
 	EPFileList   Endpoint = EPFile + "/list"
 	EPFileUpload Endpoint = EPFile + "/upload"
 
-	//Update file
-	EPFileUpdate Endpoint = "/file/update"
+	//Update files
+	EPFileUpdate Endpoint = EPFile + "/update"
 	EPFileDelete Endpoint = EPFileUpdate + "/delete"
+
+	//Tags
+	EPTag Endpoint = "/tag"
+
+	//Update tags
+	EPTagUpdate Endpoint = EPTag + "/update"
 )
 
 //Request a rest server request
@@ -88,7 +94,17 @@ type OptionalRequetsParameter struct {
 type FileUpdateRequest struct {
 	FileID     int                   `json:"fid"`
 	Name       string                `json:"name,omitempty"`
+	Updates    models.FileUpdateItem `json:"updates,omitempty"`
 	Attributes models.FileAttributes `json:"attributes"`
+}
+
+// TagUpdateRequest contains data to update a tag
+type TagUpdateRequest struct {
+	Name      string `json:"name"`
+	Namespace string `json:"namespace"`
+
+	NewName string `json:"newname,omitempty"`
+	Delete  bool   `json:"delete,omitempty"`
 }
 
 //CredentialsRequest request containing credentials

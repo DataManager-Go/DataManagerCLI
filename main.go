@@ -54,9 +54,9 @@ var (
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
 	//Register
 	registerCmd = app.Command("register", "Create an account").FullCommand()
-
+	// Manager commands
+	managerCMD = app.Command("manager", "General commands within the manager")
 	// File commands
-
 	fileCMD = app.Command("file", "Commands for handling files")
 	fileID  = fileDownload.Flag("file-id", "Specify the fileID").Uint()
 	//Config commands
@@ -68,7 +68,14 @@ var (
 	fileDelete   = fileCMD.Command("delete", "Delete a file stored on the server")
 	fileList     = fileCMD.Command("list", "List files stored on the server")
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
-	fileUpdate   = fileCMD.Command("update", "Update a file")
+
+	// -- Manager child commands
+	managerUpdate = managerCMD.Command("update", "Update the filesystem")
+
+	// -- -- ManagerUpdate childs
+	fileUpdate = managerUpdate.Command("file", "Update a file")
+	tagUpdate  = managerUpdate.Command("tag", "Update a tag")
+
 	// -- Config child command
 	configUse = configCMD.Command("use", "Use something")
 
@@ -85,14 +92,21 @@ var (
 	// -- -- Download specifier
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
 	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
-	// -- -- Update specifier
-	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be removed").Required().String()
+	// -- -- File-Update specifier
+	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be updated").Required().String()
 	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
-	fileUpdateTogglePublic = fileUpdate.Flag("share", "Share a file").Counter()
+	fileUpdateTogglePublic = fileUpdate.Flag("isPublic", "Sets a file public or private").Default("").String()
 	fileUpdateNewName      = fileUpdate.Flag("new-name", "Change the name of a file").String()
-	fileupdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
-	fileupdateAddTags      = fileUpdate.Flag("add-tags", "Add a tag to a file").Strings()
-	fileupdateRemoveTags   = fileUpdate.Flag("remove-tags", "Add a tag to a file").Strings()
+	fileUpdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
+	fileUpdateAddTags      = fileUpdate.Flag("add-tags", "Add tags to a file").Strings()
+	fileUpdateRemoveTags   = fileUpdate.Flag("remove-tags", "Remove tags from a file").Strings()
+	fileUpdateAddGroups    = fileUpdate.Flag("add-groups", "Add groups to a file").Strings()
+	fileUpdateRemoveGroups = fileUpdate.Flag("remove-groups", "Remove groups from a file").Strings()
+
+	// -- -- Tag-Update specifier
+	tagUpdateName    = tagUpdate.Arg("fileName", "Name of the tag that should be updated").Required().String()
+	tagUpdateNewName = tagUpdate.Flag("new-name", "Add a tag to a file").String()
+	tagUpdateDelete  = tagUpdate.Flag("delete", "Delete the given tag").Bool()
 
 	// Args/Config
 	configUseTarget      = configUse.Arg("target", "Use different namespace as default").HintOptions(commands.UseTargets...).Required().String()
@@ -167,7 +181,10 @@ func main() {
 		commands.ListFiles(config, *fileListName, *fileID, fileAttributes, uint8(*fileListDetails)+1)
 
 	case fileUpdate.FullCommand():
-		//commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *fileUpdateTogglePublic, *fileUpdateNewName, *fileupdateNewNamespace, *fileupdateAddTags, *fileupdateRemoveTags)
+		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateTogglePublic, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups)
+
+	case tagUpdate.FullCommand():
+		commands.UpdateTag(config, *tagUpdateName, *appNamespace, *tagUpdateNewName, *tagUpdateDelete)
 
 	// Ping
 	case appPing.FullCommand():

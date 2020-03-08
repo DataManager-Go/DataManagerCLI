@@ -9,6 +9,15 @@ type FileAttributes struct {
 	Namespace string   `json:"ns"`
 }
 
+// FileUpdateItem lists changes to a file
+type FileUpdateItem struct {
+	IsPublic     string   `json:"ispublic,omitempty"`
+	NewName      string   `json:"name,omitempty"`
+	NewNamespace string   `json:"namespace,omitempty"`
+	RemoveTags   []string `json:"rem_tags,omitempty"`
+	RemoveGroups []string `json:"rem_groups,omitempty"`
+}
+
 //FileResponseItem file item for file response
 type FileResponseItem struct {
 	ID           uint           `json:"id"`
