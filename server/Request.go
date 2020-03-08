@@ -105,7 +105,6 @@ type TagUpdateRequest struct {
 	Namespace string `json:"namespace"`
 
 	NewName string `json:"newname,omitempty"`
-	Delete  bool   `json:"delete,omitempty"`
 }
 
 //CredentialsRequest request containing credentials

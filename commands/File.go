@@ -187,21 +187,27 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 }
 
 // UpdateFile updates a file on the server
-func UpdateFile(config *models.Config, name string, id uint, namespace string, isPublic string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string) {
-	if len(isPublic) > 0 {
-		_, err := strconv.ParseBool(isPublic)
-		if err != nil {
-			fmt.Printf("%s isPublic must be true/false", color.HiRedString("Error"))
-			return
-		}
-	}
-
+func UpdateFile(config *models.Config, name string, id uint, namespace string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	//Process params: make t1,t2 -> [t1 t2]
 	procesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
 	// Set attributes
 	attributes := models.FileAttributes{
 		Namespace: namespace,
+	}
+
+	//Can't use both
+	if setPrivate && setPublic {
+		fmt.Println("Illegal flag combination")
+		return
+	}
+
+	var isPublic string
+	if setPublic {
+		isPublic = "true"
+	}
+	if setPrivate {
+		isPublic = "false"
 	}
 
 	// Set fileUpdates
@@ -246,14 +252,13 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, i
 }
 
 // UpdateTag updates a given tag
-func UpdateTag(config *models.Config, name string, namespace string, newName string, delete bool) {
+func UpdateTag(config *models.Config, name string, namespace string, newName string) {
 
 	// Combine and send it
 	response, err := server.NewRequest(server.EPTagUpdate, &server.TagUpdateRequest{
 		Name:      name,
 		NewName:   newName,
 		Namespace: namespace,
-		Delete:    delete,
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,
