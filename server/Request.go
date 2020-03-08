@@ -57,8 +57,9 @@ const (
 	EPFileUpload Endpoint = EPFile + "/upload"
 
 	//Update files
-	EPFileUpdate Endpoint = EPFile + "/update"
-	EPFileDelete Endpoint = EPFileUpdate + "/delete"
+	EPFileUpdate       Endpoint = EPFile + "/update"
+	EPFileUpdateAction Endpoint = EPFileUpdate + "/update"
+	EPFileDelete       Endpoint = EPFileUpdate + "/delete"
 
 	//Tags
 	EPTag Endpoint = "/tag"
@@ -92,7 +93,7 @@ type OptionalRequetsParameter struct {
 
 // FileUpdateRequest contains data to update a file
 type FileUpdateRequest struct {
-	FileID     int                   `json:"fid"`
+	FileID     uint                  `json:"fid"`
 	Name       string                `json:"name,omitempty"`
 	Updates    models.FileUpdateItem `json:"updates,omitempty"`
 	Attributes models.FileAttributes `json:"attributes"`

@@ -74,7 +74,7 @@ func UploadFile(config *models.Config, path, name string, attributes models.File
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(config *models.Config, name string, id int, attributes models.FileAttributes) {
+func DeleteFile(config *models.Config, name string, id uint, attributes models.FileAttributes) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
 		Name:       name,
 		FileID:     id,
@@ -187,12 +187,20 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 }
 
 // UpdateFile updates a file on the server
-func UpdateFile(config *models.Config, name string, id int, namespace string, isPublic string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string) {
+func UpdateFile(config *models.Config, name string, id uint, namespace string, isPublic string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string) {
+	if len(isPublic) > 0 {
+		_, err := strconv.ParseBool(isPublic)
+		if err != nil {
+			fmt.Printf("%s isPublic must be true/false", color.HiRedString("Error"))
+			return
+		}
+	}
+
+	//Process params: make t1,t2 -> [t1 t2]
+	procesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
 	// Set attributes
 	attributes := models.FileAttributes{
-		Tags:      addTags,
-		Groups:    addGroups,
 		Namespace: namespace,
 	}
 
@@ -203,10 +211,12 @@ func UpdateFile(config *models.Config, name string, id int, namespace string, is
 		NewNamespace: newNamespace,
 		RemoveTags:   removeTags,
 		RemoveGroups: removeGroups,
+		AddTags:      addTags,
+		AddGroups:    addGroups,
 	}
 
 	// Combine and send it
-	response, err := server.NewRequest(server.EPFileUpdate, &server.FileUpdateRequest{
+	response, err := server.NewRequest(server.EPFileUpdateAction, &server.FileUpdateRequest{
 		Name:       name,
 		FileID:     id,
 		Updates:    fileUpdates,

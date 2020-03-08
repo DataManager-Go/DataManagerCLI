@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"strings"
 
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
@@ -25,4 +26,20 @@ func printResponseError(response *server.RestRequestResponse, add ...string) {
 
 func printError(message interface{}) {
 	fmt.Printf("%s %s\n", color.HiRedString("Error"), message)
+}
+
+func procesStrSliceParam(slice *[]string) {
+	var newSlice []string
+
+	for _, itm := range *slice {
+		newSlice = append(newSlice, strings.Split(itm, ",")...)
+	}
+
+	*slice = newSlice
+}
+
+func procesStrSliceParams(slices ...*[]string) {
+	for i := range slices {
+		procesStrSliceParam(slices[i])
+	}
 }

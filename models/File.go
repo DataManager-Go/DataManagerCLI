@@ -16,6 +16,8 @@ type FileUpdateItem struct {
 	NewNamespace string   `json:"namespace,omitempty"`
 	RemoveTags   []string `json:"rem_tags,omitempty"`
 	RemoveGroups []string `json:"rem_groups,omitempty"`
+	AddTags      []string `json:"add_tags,omitempty"`
+	AddGroups    []string `json:"add_groups,omitempty"`
 }
 
 //FileResponseItem file item for file response

@@ -44,7 +44,7 @@ var (
 			Flag("config", "the configuration file for the app").
 			Envar(getEnVar(EnVarConfigFile)).
 			Short('c').String()
-	appNamespace = app.Flag("namespace", "Specify the namespace to use").Short('n').String()
+	appNamespace = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
 	appTags      = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups    = app.Flag("group", "Specify groups to use").Short('g').Strings()
 
@@ -84,7 +84,7 @@ var (
 	fileUploadName = fileUpload.Flag("name", "Specify the name of the file").String()
 	// -- -- Delete specifier
 	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").Required().String()
-	fileDeleteID   = fileDelete.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
+	fileDeleteID   = fileDelete.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- -- List specifier
 	fileListName    = fileList.Arg("fileName", "Show files with this name").String()
 	fileListDetails = fileList.Flag("details", "Print more details of files").Short('d').Counter()
@@ -93,8 +93,8 @@ var (
 	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
 	// -- -- File-Update specifier
 	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be updated").Required().String()
-	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
-	fileUpdateTogglePublic = fileUpdate.Flag("isPublic", "Sets a file public or private").String()
+	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
+	fileUpdateTogglePublic = fileUpdate.Flag("isPublic", "Sets a file public or private").Default("").String()
 	fileUpdateNewName      = fileUpdate.Flag("new-name", "Change the name of a file").String()
 	fileUpdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
 	fileUpdateAddTags      = fileUpdate.Flag("add-tags", "Add tags to a file").Strings()
@@ -147,7 +147,7 @@ func main() {
 	}
 
 	//Use in config specified values for targets
-	if len(*appNamespace) == 0 {
+	if len(*appNamespace) == 0 || (*appNamespace) == "default" {
 		*appNamespace = config.Default.Namespace
 	}
 	if len(*appTags) == 0 {
