@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -21,22 +22,37 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(config *models.Config, path string, attributes models.FileAttributes) {
+func UploadFile(config *models.Config, path, name string, attributes models.FileAttributes) {
 	_, fileName := filepath.Split(path)
-
-	fileBytes, err := ioutil.ReadFile(path)
-
-	if err != nil {
-		printError("processing your file. Please check your input")
+	if len(name) != 0 {
+		fileName = name
 	}
 
-	var resStruct server.UploadResponse
-	response, err := server.NewRequest(server.EPFileUpload, &server.UploadStruct{
-		Data:       fileBytes,
+	request := server.UploadRequest{
 		Name:       fileName,
-		Sum:        GetMD5Hash(fileBytes),
 		Attributes: attributes,
-	}, config).WithAuth(server.Authorization{
+	}
+
+	u, err := url.Parse(path)
+	if err == nil && (u.Scheme == "http" || u.Scheme == "https") {
+		request.UploadType = server.URLUploadType
+		request.URL = path
+	} else {
+		fileBytes, err := ioutil.ReadFile(path)
+
+		if err != nil {
+			printError("processing your file. Please check your input")
+			return
+		}
+
+		request.UploadType = server.FileUploadType
+		request.Data = fileBytes
+		request.Sum = GetMD5Hash(fileBytes)
+	}
+
+	//Do request
+	var resStruct server.UploadResponse
+	response, err := server.NewRequest(server.EPFileUpload, request, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,
 	}).Do(&resStruct)

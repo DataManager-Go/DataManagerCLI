@@ -91,19 +91,30 @@ type FileUpdateRequest struct {
 	Attributes models.FileAttributes `json:"attributes"`
 }
 
-// UploadStruct contains file info (and a file)
-type UploadStruct struct {
-	Data       []byte                `json:"data"`
-	Sum        string                `json:"sum"`
-	Name       string                `json:"name"`
-	Attributes models.FileAttributes `json:"attributes"`
-}
-
 //CredentialsRequest request containing credentials
 type CredentialsRequest struct {
 	Username string `json:"username"`
 	Password string `json:"pass"`
 }
+
+// UploadRequest contains file info (and a file)
+type UploadRequest struct {
+	UploadType UploadType            `json:"type"`
+	Data       []byte                `json:"data"`
+	URL        string                `json:"url"`
+	Sum        string                `json:"sum"`
+	Name       string                `json:"name"`
+	Attributes models.FileAttributes `json:"attributes"`
+}
+
+//UploadType type of upload
+type UploadType uint8
+
+//Available upload types
+const (
+	FileUploadType UploadType = iota
+	URLUploadType
+)
 
 //NewRequest creates a new post request
 func NewRequest(endpoint Endpoint, payload interface{}, config *models.Config) *Request {

@@ -75,6 +75,7 @@ var (
 	// Args/Flags
 	// -- -- Upload specifier
 	fileUploadPath = fileUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
+	fileUploadName = fileUpload.Flag("name", "Specify the name of the file").String()
 	// -- -- Delete specifier
 	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").Required().String()
 	fileDeleteID   = fileDelete.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
@@ -157,7 +158,7 @@ func main() {
 		commands.DownloadFile(*fileDownloadName, *appNamespace, *appGroups, *appTags, *fileID, *fileDownloadPath)
 
 	case fileUpload.FullCommand():
-		commands.UploadFile(config, *fileUploadPath, fileAttributes)
+		commands.UploadFile(config, *fileUploadPath, *fileUploadName, fileAttributes)
 
 	case fileDelete.FullCommand():
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
