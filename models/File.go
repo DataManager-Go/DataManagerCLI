@@ -11,8 +11,9 @@ type FileAttributes struct {
 
 //FileResponseItem file item for file response
 type FileResponseItem struct {
-	ID           uint      `json:"id"`
-	Size         int64     `json:"size"`
-	CreationDate time.Time `json:"creation"`
-	Name         string    `json:"name"`
+	ID           uint           `json:"id"`
+	Size         int64          `json:"size"`
+	CreationDate time.Time      `json:"creation"`
+	Name         string         `json:"name"`
+	Attributes   FileAttributes `json:"attrib"`
 }

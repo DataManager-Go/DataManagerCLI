@@ -73,9 +73,15 @@ type Request struct {
 
 // FileRequest contains file info (and a file)
 type FileRequest struct {
-	FileID     uint                  `json:"fid"`
-	Name       string                `json:"name"`
-	Attributes models.FileAttributes `json:"attributes"`
+	FileID         uint                     `json:"fid"`
+	Name           string                   `json:"name"`
+	OptionalParams OptionalRequetsParameter `json:"opt"`
+	Attributes     models.FileAttributes    `json:"attributes"`
+}
+
+//OptionalRequetsParameter optional request parameter
+type OptionalRequetsParameter struct {
+	Verbose uint8 `json:"verb"`
 }
 
 // FileUpdateRequest contains data to update a file

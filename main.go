@@ -64,6 +64,7 @@ var (
 	fileDelete   = fileCMD.Command("delete", "Delete a file stored on the server")
 	fileList     = fileCMD.Command("list", "List files stored on the server")
 	fileDownload = fileCMD.Command("download", "Download a file from the server")
+	fileUpdate   = fileCMD.Command("update", "Update a file")
 
 	// Args/Flags
 	// -- -- Upload specifier
@@ -72,10 +73,19 @@ var (
 	fileDeleteName = fileDelete.Arg("fileName", "Name of the file that should be removed").Required().String()
 	fileDeleteID   = fileDelete.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
 	// -- -- List specifier
-	fileListName = fileList.Arg("fileName", "Show files with this name").String()
+	fileListName    = fileList.Arg("fileName", "Show files with this name").String()
+	fileListDetails = fileList.Flag("details", "Print more details of files").Short('d').Counter()
 	// -- -- Download specifier
 	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
 	fileDownloadPath = fileDownload.Flag("path", "Where to store the file").Short('p').Required().String()
+	// -- -- Update specifier
+	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be removed").Required().String()
+	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Int()
+	fileUpdateTogglePublic = fileUpdate.Flag("share", "Share a file").Counter()
+	fileUpdateNewName      = fileUpdate.Flag("new-name", "Change the name of a file").String()
+	fileupdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
+	fileupdateAddTags      = fileUpdate.Flag("add-tags", "Add a tag to a file").Strings()
+	fileupdateRemoveTags   = fileUpdate.Flag("remove-tags", "Add a tag to a file").Strings()
 )
 
 var (
@@ -112,6 +122,13 @@ func main() {
 		return
 	}
 
+	//Generate  file attributes
+	fileAttributes := models.FileAttributes{
+		Namespace: *fileNamespace,
+		Groups:    *fileGroups,
+		Tags:      *fileTags,
+	}
+
 	// Execute the desired command
 	switch parsed {
 	// File commands
@@ -119,13 +136,16 @@ func main() {
 		commands.DownloadFile(*fileDownloadName, *fileNamespace, *fileGroups, *fileTags, *fileID, *fileDownloadPath)
 
 	case fileUpload.FullCommand():
-		commands.UploadFile(config, *fileUploadPath, *fileNamespace, *fileGroups, *fileTags)
+		commands.UploadFile(config, *fileUploadPath, fileAttributes)
 
 	case fileDelete.FullCommand():
-		commands.DeleteFile(config, *fileDeleteName, *fileNamespace, *fileGroups, *fileTags, *fileDeleteID)
+		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
 
 	case fileList.FullCommand():
-		commands.ListFiles(config, *fileListName, *fileNamespace, *fileGroups, *fileTags, *fileID)
+		commands.ListFiles(config, *fileListName, *fileID, fileAttributes, uint8(*fileListDetails)+1)
+
+	case fileUpdate.FullCommand():
+		//commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *fileUpdateTogglePublic, *fileUpdateNewName, *fileupdateNewNamespace, *fileupdateAddTags, *fileupdateRemoveTags)
 
 	// Ping
 	case appPing.FullCommand():

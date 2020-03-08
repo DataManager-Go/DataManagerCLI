@@ -8,16 +8,20 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"time"
 
 	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
+	humanTime "github.com/sbani/go-humanizer/time"
+	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(config *models.Config, path string, namespace string, groups []string, tags []string) {
+func UploadFile(config *models.Config, path string, attributes models.FileAttributes) {
 	_, fileName := filepath.Split(path)
 
 	fileBytes, err := ioutil.ReadFile(path)
@@ -28,14 +32,10 @@ func UploadFile(config *models.Config, path string, namespace string, groups []s
 
 	var resStruct server.UploadResponse
 	response, err := server.NewRequest(server.EPFileUpload, &server.UploadStruct{
-		Data: fileBytes,
-		Name: fileName,
-		Sum:  GetMD5Hash(fileBytes),
-		Attributes: models.FileAttributes{
-			Namespace: namespace,
-			Groups:    groups,
-			Tags:      tags,
-		},
+		Data:       fileBytes,
+		Name:       fileName,
+		Sum:        GetMD5Hash(fileBytes),
+		Attributes: attributes,
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,
@@ -58,13 +58,11 @@ func UploadFile(config *models.Config, path string, namespace string, groups []s
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(config *models.Config, name string, namespace string, groups []string, tags []string, id int) {
+func DeleteFile(config *models.Config, name string, id int, attributes models.FileAttributes) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileUpdateRequest{
-		Name:   name,
-		FileID: id,
-		Attributes: models.FileAttributes{
-			Namespace: namespace,
-		},
+		Name:       name,
+		FileID:     id,
+		Attributes: attributes,
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: config.User.SessionToken,
@@ -87,15 +85,14 @@ func DeleteFile(config *models.Config, name string, namespace string, groups []s
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(config *models.Config, name string, namespace string, groups []string, tags []string, id uint) {
+func ListFiles(config *models.Config, name string, id uint, attributes models.FileAttributes, verbosity uint8) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileRequest{
-		FileID: id,
-		Name:   name,
-		Attributes: models.FileAttributes{
-			Groups:    groups,
-			Namespace: namespace,
-			Tags:      tags,
+		FileID:     id,
+		Name:       name,
+		Attributes: attributes,
+		OptionalParams: server.OptionalRequetsParameter{
+			Verbose: verbosity,
 		},
 	}, config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
@@ -129,14 +126,48 @@ func ListFiles(config *models.Config, name string, namespace string, groups []st
 	headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
 	table := clitable.New()
-	table.ColSeparator = "   "
-	table.AddRow(headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("CreationDate"))
+	table.ColSeparator = " "
+	table.Padding = 7
 
-	for i := 0; i < len(filesResponse.Files); i++ {
-		table.AddRow(filesResponse.Files[i].ID, filesResponse.Files[i].Name, filesResponse.Files[i].Size, filesResponse.Files[i].CreationDate.Format("2. Jan 2006 15:04:12"))
+	header := []interface{}{
+		headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"),
+	}
+
+	if verbosity > 2 {
+		header = append(header, headingColor.Sprintf("Namespace"))
+	}
+	if verbosity > 1 {
+		header = append(header, headingColor.Sprintf("Groups"))
+		header = append(header, headingColor.Sprintf("Tags"))
+	}
+
+	table.AddRow(header...)
+
+	for _, file := range filesResponse.Files {
+		rowItems := []interface{}{
+			file.ID,
+			file.Name,
+			units.BinarySuffix(float64(file.Size)),
+			humanTime.Difference(time.Now(), file.CreationDate),
+		}
+
+		if verbosity > 2 {
+			rowItems = append(rowItems, file.Attributes.Namespace)
+		}
+		if verbosity > 1 {
+			rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
+			rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+		}
+
+		table.AddRow(rowItems...)
 	}
 
 	fmt.Println(table.String())
+}
+
+//UpdateFile updates a file
+func UpdateFile(config *models.Config, fileName string, fileID uint, toggle bool) {
+
 }
 
 // DownloadFile requests the file from the server
