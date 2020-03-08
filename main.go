@@ -34,20 +34,22 @@ var (
 
 //App commands
 var (
-	app     = kingpin.New(appName, "A DataManager")
-	appPing = app.Command("ping", "pings the server and checks connectivity")
+	app = kingpin.New(appName, "A DataManager")
 
 	// Global flags
 	appYes     = app.Flag("yes", "Skip confirmations").Bool()
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
-	appCfgFile = app.
-			Flag("config", "the configuration file for the app").
-			Envar(getEnVar(EnVarConfigFile)).
-			Short('c').String()
+	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
+
 	appNamespace = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
 	appTags      = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups    = app.Flag("group", "Specify groups to use").Short('g').Strings()
 	appDetails   = app.Flag("details", "Print more details of something").Short('d').Counter()
+
+	// --- :Commands: -------
+
+	// ---------> Ping
+	appPing = app.Command("ping", "pings the server and checks connectivity")
 
 	// ---------> UserCommands
 	userCmd = app.Command("user", "Do user related stuff")
