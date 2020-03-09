@@ -53,7 +53,9 @@ type FileListResponse struct {
 
 //UploadResponse response for uploading file
 type UploadResponse struct {
-	FileID uint
+	FileID         uint   `json:"fileID"`
+	Filename       string `json:"filename"`
+	PublicFilename string `json:"publicFilename,omitempty"`
 }
 
 //PublishResponse response for publishing a file

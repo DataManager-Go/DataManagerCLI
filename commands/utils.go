@@ -2,8 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,12 +14,6 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
 )
-
-//GetMD5Hash return hash of input
-func GetMD5Hash(text string) string {
-	hash := md5.Sum([]byte(text))
-	return hex.EncodeToString(hash[:])
-}
 
 func printResponseError(response *server.RestRequestResponse, add ...string) {
 	sadd := ""
@@ -83,8 +75,8 @@ func SaveToTempFile(reader io.ReadCloser, fileName string) (string, error) {
 	return filePath, nil
 }
 
-// PreviewFile opens a locally stored file
-func PreviewFile(filepath string) {
+// previewFile opens a locally stored file
+func previewFile(filepath string) {
 	// Windows
 	if runtime.GOOS == "windows" {
 		fmt.Println("Filepath: " + filepath)

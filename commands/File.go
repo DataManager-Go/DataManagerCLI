@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	gaw "github.com/JojiiOfficial/GoAw"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
@@ -66,7 +66,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 
 		request.UploadType = server.FileUploadType
 		request.Data = base64.StdEncoding.EncodeToString(fileBytes)
-		request.Sum = GetMD5Hash(request.Data)
+		request.Sum = gaw.GetMD5Hash(request.Data)
 	}
 
 	//Do request
@@ -84,11 +84,13 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		log.Fatalln(err)
 	}
 
+	//Verifying response status
 	if response.Status == server.ResponseError {
 		printResponseError(response, "uploading your file")
 		return
 	}
 
+	//print output
 	if printAsJSON {
 		fmt.Println(toJSON(resStruct))
 	} else {
@@ -112,6 +114,7 @@ func DeleteFile(config *models.Config, name string, id uint, attributes models.F
 			fmt.Println("http:", response.HTTPCode)
 			return
 		}
+
 		log.Fatalln(err)
 	}
 
@@ -171,7 +174,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 		table.Padding = 7
 
 		header := []interface{}{
-			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"), headingColor.Sprint("Public name"),
+			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Public name"), headingColor.Sprint("Created"),
 		}
 
 		//Show namespace on -dd
@@ -198,8 +201,8 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 				file.ID,
 				file.Name,
 				units.BinarySuffix(float64(file.Size)),
-				humanTime.Difference(time.Now(), file.CreationDate),
 				pubname,
+				humanTime.Difference(time.Now(), file.CreationDate),
 			}
 
 			//Show namespace on -dd
@@ -393,7 +396,7 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 		}
 
 		//Preview file
-		PreviewFile(file)
+		previewFile(file)
 
 	} else if len(savePath) > 0 {
 		//Determine output file/path
@@ -426,7 +429,7 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 
 		// Preview
 		if displayOutput {
-			PreviewFile(savePath)
+			previewFile(savePath)
 		}
 
 		//Print success message

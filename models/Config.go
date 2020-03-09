@@ -6,8 +6,8 @@ import (
 	"path"
 	"path/filepath"
 
-	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/JojiiOfficial/configService"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/constants"
 	"gopkg.in/yaml.v2"
 )

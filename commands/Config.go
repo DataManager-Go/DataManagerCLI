@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/JojiiOfficial/configService"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/fatih/color"
 )
