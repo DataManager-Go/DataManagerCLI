@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -14,7 +15,7 @@ import (
 var UseTargets = []string{"namespace", "tags", "groups"}
 
 //ConfigUse command for config use
-func ConfigUse(config *models.Config, target string, values []string) {
+func ConfigUse(config models.Config, target string, values []string) {
 	//Return if target not found
 	if !gaw.IsInStringArray(target, UseTargets) {
 		fmt.Println("Target not found")
@@ -69,4 +70,27 @@ func ConfigUse(config *models.Config, target string, values []string) {
 		fmt.Printf("Config saved %s\n", color.HiGreenString("successfully"))
 	}
 	return
+}
+
+//ConfigView view config
+func ConfigView(config models.Config, outputJSON, noRedaction bool) {
+	if !outputJSON {
+		//Print human output
+		fmt.Println(config.View(!noRedaction))
+	} else {
+		//Redact secrets
+		if !noRedaction {
+			config.User.SessionToken = "<redacted>"
+		}
+
+		//Make json
+		b, err := json.Marshal(config)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//Print output
+		fmt.Println(string(b))
+	}
 }

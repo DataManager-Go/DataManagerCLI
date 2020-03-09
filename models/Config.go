@@ -9,6 +9,7 @@ import (
 	gaw "github.com/JojiiOfficial/GoAw"
 	"github.com/JojiiOfficial/configService"
 	"github.com/Yukaru-san/DataManager_Client/constants"
+	"gopkg.in/yaml.v2"
 )
 
 //Config Configuration structure
@@ -18,6 +19,7 @@ type Config struct {
 		Username     string
 		SessionToken string
 	}
+
 	Server  serverConfig
 	Client  clientConfig
 	Default defaultConfig
@@ -131,4 +133,20 @@ func getDataPath() string {
 		log.Fatalln("DataPath-name already taken by a file!")
 	}
 	return path
+}
+
+//View view config
+func (config Config) View(redactSecrets bool) string {
+	//Redact secrets if desired
+	if redactSecrets {
+		config.User.SessionToken = "<redacted>"
+	}
+
+	//Create yaml
+	ymlB, err := yaml.Marshal(config)
+	if err != nil {
+		return err.Error()
+	}
+
+	return string(ymlB)
 }

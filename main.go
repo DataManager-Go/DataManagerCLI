@@ -33,10 +33,12 @@ var (
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 
-	appNamespace = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
-	appTags      = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups    = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appDetails   = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appNamespace   = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appTags        = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups      = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appOutputJSON  = app.Flag("json", "Print output as json").Bool()
+	appNoRedaction = app.Flag("no-redact", "Print output as json").Bool()
+	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
 
 	// --- :Commands: -------
 
@@ -57,6 +59,8 @@ var (
 	configUse            = configCMD.Command("use", "Use something")
 	configUseTarget      = configUse.Arg("target", "Use different namespace as default").HintOptions(commands.UseTargets...).Required().String()
 	configUseTargetValue = configUse.Arg("value", "the value of the new target").HintOptions("default").Strings()
+	//View
+	configView = configCMD.Command("view", "View config")
 
 	// ---------> File commands
 	// -- Upload
@@ -233,7 +237,9 @@ func main() {
 
 	//Config
 	case configUse.FullCommand():
-		commands.ConfigUse(config, *configUseTarget, *configUseTargetValue)
+		commands.ConfigUse(*config, *configUseTarget, *configUseTargetValue)
+	case configView.FullCommand():
+		commands.ConfigView(*config, *appOutputJSON, *appNoRedaction)
 	}
 }
 

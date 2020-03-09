@@ -15,4 +15,5 @@ require (
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
+	gopkg.in/yaml.v2 v2.2.8
 )
