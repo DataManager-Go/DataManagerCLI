@@ -3,6 +3,7 @@ package commands
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -44,4 +45,12 @@ func ProcesStrSliceParams(slices ...*[]string) {
 	for i := range slices {
 		ProcesStrSliceParam(slices[i])
 	}
+}
+
+func toJSON(in interface{}) string {
+	b, err := json.Marshal(in)
+	if err != nil {
+		return err.Error()
+	}
+	return string(b)
 }

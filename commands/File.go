@@ -26,7 +26,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(config *models.Config, path, name, publicName string, public bool, attributes models.FileAttributes) {
+func UploadFile(config *models.Config, path, name, publicName string, public bool, attributes models.FileAttributes, printAsJSON bool) {
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
@@ -90,7 +90,11 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 		return
 	}
 
-	fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
+	if printAsJSON {
+		fmt.Println(toJSON(resStruct))
+	} else {
+		fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
+	}
 }
 
 // DeleteFile deletes the desired file(s)
@@ -121,7 +125,7 @@ func DeleteFile(config *models.Config, name string, id uint, attributes models.F
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(config *models.Config, name string, id uint, attributes models.FileAttributes, verbosity uint8) {
+func ListFiles(config *models.Config, name string, id uint, attributes models.FileAttributes, verbosity uint8, printAsJSON, yes bool) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:     id,
@@ -148,74 +152,77 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 		return
 	}
 
-	// Output
-	fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), attributes.Namespace)
-
-	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay {
+	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay && !yes {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return
 		}
 	}
 
-	// Print files
-	headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
+	//Print as json if desired
+	if printAsJSON {
+		fmt.Println(toJSON(filesResponse.Files))
+	} else {
+		fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), attributes.Namespace)
+		// Print files
+		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
-	table := clitable.New()
-	table.ColSeparator = " "
-	table.Padding = 7
+		table := clitable.New()
+		table.ColSeparator = " "
+		table.Padding = 7
 
-	header := []interface{}{
-		headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"), headingColor.Sprint("Public name"),
-	}
-
-	//Show namespace on -dd
-	if verbosity > 2 {
-		header = append(header, headingColor.Sprintf("Namespace"))
-	}
-	//Show groups and tags on -d
-	if verbosity > 1 {
-		header = append(header, headingColor.Sprintf("Groups"))
-		header = append(header, headingColor.Sprintf("Tags"))
-	}
-
-	table.AddRow(header...)
-
-	for _, file := range filesResponse.Files {
-		//Colorize private pubNames if not public
-		pubname := file.PublicName
-		if len(pubname) > 0 && !file.IsPublic {
-			pubname = color.HiMagentaString(pubname)
-		}
-
-		//Add items
-		rowItems := []interface{}{
-			file.ID,
-			file.Name,
-			units.BinarySuffix(float64(file.Size)),
-			humanTime.Difference(time.Now(), file.CreationDate),
-			pubname,
+		header := []interface{}{
+			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Created"), headingColor.Sprint("Public name"),
 		}
 
 		//Show namespace on -dd
 		if verbosity > 2 {
-			rowItems = append(rowItems, file.Attributes.Namespace)
+			header = append(header, headingColor.Sprintf("Namespace"))
 		}
-
 		//Show groups and tags on -d
 		if verbosity > 1 {
-			rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
-			rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+			header = append(header, headingColor.Sprintf("Groups"))
+			header = append(header, headingColor.Sprintf("Tags"))
 		}
 
-		table.AddRow(rowItems...)
-	}
+		table.AddRow(header...)
 
-	fmt.Println(table.String())
+		for _, file := range filesResponse.Files {
+			//Colorize private pubNames if not public
+			pubname := file.PublicName
+			if len(pubname) > 0 && !file.IsPublic {
+				pubname = color.HiMagentaString(pubname)
+			}
+
+			//Add items
+			rowItems := []interface{}{
+				file.ID,
+				file.Name,
+				units.BinarySuffix(float64(file.Size)),
+				humanTime.Difference(time.Now(), file.CreationDate),
+				pubname,
+			}
+
+			//Show namespace on -dd
+			if verbosity > 2 {
+				rowItems = append(rowItems, file.Attributes.Namespace)
+			}
+
+			//Show groups and tags on -d
+			if verbosity > 1 {
+				rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
+				rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+			}
+
+			table.AddRow(rowItems...)
+		}
+
+		fmt.Println(table.String())
+	}
 }
 
 //PublishFile publishes a file
-func PublishFile(config *models.Config, name string, id uint, publicName string, attributes models.FileAttributes) {
+func PublishFile(config *models.Config, name string, id uint, publicName string, attributes models.FileAttributes, printAsJSON bool) {
 	var resData server.PublishResponse
 	response, err := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
@@ -242,7 +249,11 @@ func PublishFile(config *models.Config, name string, id uint, publicName string,
 	}
 
 	// Output
-	fmt.Printf(resData.PublicFilename)
+	if printAsJSON {
+		fmt.Println(toJSON(resData))
+	} else {
+		fmt.Printf(resData.PublicFilename)
+	}
 }
 
 // UpdateFile updates a file on the server

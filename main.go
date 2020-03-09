@@ -84,9 +84,10 @@ var (
 	deleteGroupName = deleteGroup.Arg("groupName", "Name of group to delete").Required().String()
 
 	// -- List
-	appList = app.Command("list", "List stuff stored on the server")
+	appList  = app.Command("list", "List stuff stored on the server")
+	appFiles = app.Command("files", "List files")
 	//List File
-	listFilesCmd = appList.Command("files", "List files")
+	listFilesCmd = appList.Command("files", "Listuff stored on the serverst files")
 	//List files
 	listFileCmd  = appList.Command("file", "List files")
 	fileListName = listFileCmd.Arg("fileName", "Show files with this name").String()
@@ -205,16 +206,16 @@ func main() {
 		}, "", true)
 
 	case appUpload.FullCommand():
-		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes)
+		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes, *appOutputJSON)
 
 	case deleteFileCmd.FullCommand():
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
 
 	case listFileCmd.FullCommand():
-		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1)
+		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
-	case listFilesCmd.FullCommand():
-		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1)
+	case listFilesCmd.FullCommand(), appFiles.FullCommand():
+		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
 	case fileUpdate.FullCommand():
 		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
@@ -223,7 +224,7 @@ func main() {
 		commands.UpdateTag(config, *tagUpdateName, *appNamespace, *tagUpdateNewName)
 
 	case publishFileCmd.FullCommand():
-		commands.PublishFile(config, *publishFileName, *publishFileID, *publishPublicName, fileAttributes)
+		commands.PublishFile(config, *publishFileName, *publishFileID, *publishPublicName, fileAttributes, *appOutputJSON)
 
 	// Ping
 	case appPing.FullCommand():
