@@ -32,6 +32,7 @@ type serverConfig struct {
 
 type clientConfig struct {
 	MinFilesToDisplay uint16 `required:"true"`
+	AutoFilePreview   bool
 }
 
 type defaultConfig struct {
@@ -48,6 +49,7 @@ func getDefaultConfig() Config {
 		},
 		Client: clientConfig{
 			MinFilesToDisplay: 10,
+			AutoFilePreview:   true,
 		},
 		Default: defaultConfig{
 			Namespace: "default",

@@ -69,7 +69,6 @@ func SaveToTempFile(reader io.ReadCloser, fileName string) (string, error) {
 	}
 
 	//Close streams
-	reader.Close()
 	f.Close()
 
 	return filePath, nil

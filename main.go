@@ -128,7 +128,10 @@ var (
 	groupUpdateNewName = groupUpdate.Flag("new-name", "Rename a group").String()
 
 	// -- View
-	viewCmd = app.Command("view", "View something")
+	viewCmd       = app.Command("view", "View something")
+	viewNoPreview = viewCmd.Flag("no-preview", "Disable preview for command").Bool()
+	viewPreview   = viewCmd.Flag("preview", "Show preview for command").Bool()
+
 	//View file
 	viewFileCmd  = viewCmd.Command("file", "view a file")
 	viewFileName = viewFileCmd.Arg("fileName", "The filename to view").Required().String()
@@ -196,12 +199,12 @@ func main() {
 	case fileDownload.FullCommand():
 		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
 			Namespace: *appNamespace,
-		}, *fileDownloadPath, *fileDownloadPreview)
+		}, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
 	case viewFileCmd.FullCommand():
 		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
 			Namespace: *appNamespace,
-		}, "", true)
+		}, "", true, *viewNoPreview, *viewPreview)
 
 	case appUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes, *appOutputJSON)

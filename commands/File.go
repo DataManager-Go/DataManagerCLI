@@ -355,7 +355,19 @@ func UpdateTag(config *models.Config, name string, namespace string, newName str
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput bool) {
+func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput, noPreview, preview bool) {
+	shouldPreview := config.Client.AutoFilePreview || preview
+	if noPreview {
+		fmt.Println("noPreview")
+		shouldPreview = false
+	}
+
+	//Errorhandling 100
+	if noPreview && preview {
+		fmt.Print("rlly?")
+		return
+	}
+
 	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
 		Name:       fileName,
 		FileID:     id,
@@ -389,15 +401,20 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 
 	//Display or save file
 	if displayOutput && len(savePath) == 0 {
-		file, err := SaveToTempFile(resp.Body, serverFileName)
-		if err != nil {
-			fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
-			return
+		//Only write to tmpfile if preview needed
+		if shouldPreview {
+			file, err := SaveToTempFile(resp.Body, serverFileName)
+			if err != nil {
+				fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
+				return
+			}
+
+			//Preview file
+			previewFile(file)
+		} else {
+			//Printf like a boss
+			io.Copy(os.Stdout, resp.Body)
 		}
-
-		//Preview file
-		previewFile(file)
-
 	} else if len(savePath) > 0 {
 		//Determine output file/path
 		outFile := savePath
