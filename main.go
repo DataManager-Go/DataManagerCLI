@@ -34,32 +34,37 @@ var (
 	appTags        = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups      = app.Flag("group", "Specify groups to use").Short('g').Strings()
 	appOutputJSON  = app.Flag("json", "Print output as json").Bool()
-	appNoRedaction = app.Flag("no-redact", "Print output as json").Bool()
+	appNoRedaction = app.Flag("no-redact", "Don't redact secrets").Bool()
 	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
 
 	// --- :Commands: -------
 
-	// ---------> Ping
+	//
+	// ---------> Ping --------------------------------------
 	appPing = app.Command("ping", "pings the server and checks connectivity")
 
-	// ---------> UserCommands
-	userCmd = app.Command("user", "Do user related stuff")
+	//
+	// ---------> UserCommands --------------------------------------
 	// -- Login
-	loginCmd     = userCmd.Command("login", "Login")
+	loginCmd     = app.Command("login", "Login")
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
 	// -- Register
-	registerCmd = userCmd.Command("register", "Create an account").FullCommand()
+	registerCmd = app.Command("register", "Create an account").FullCommand()
 
-	// ---------> Config commands
+	//
+	// ---------> Config commands --------------------------------------
 	configCMD = app.Command("config", "Commands for working with the config")
-	//Use
+
+	// -- Use
 	configUse            = configCMD.Command("use", "Use something")
 	configUseTarget      = configUse.Arg("target", "Use different namespace as default").HintOptions(commands.UseTargets...).Required().String()
 	configUseTargetValue = configUse.Arg("value", "the value of the new target").HintOptions("default").Strings()
-	//View
+	// -- View
 	configView = configCMD.Command("view", "View config")
 
-	// ---------> File commands
+	//
+	// ---------> Universal commands --------------------------------------
+
 	// -- Upload
 	appUpload            = app.Command("upload", "Upload the given file")
 	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
@@ -67,75 +72,84 @@ var (
 	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
 
+	//
+	// ---------> File commands --------------------------------------
+	appFileCmd  = app.Command("file", "Do something with a file").Alias("f")
+	appFilesCmd = app.Command("files", "List files").Alias("fs")
+
 	// -- Delete
-	appDelete = app.Command("delete", "Delete something from the server").Alias("remove").Alias("del").Alias("rm")
-	//Delete file
-	deleteFileCmd  = appDelete.Command("file", "Delete a file")
-	fileDeleteName = deleteFileCmd.Arg("fileName", "Name of the file that should be removed").Required().String()
-	fileDeleteID   = deleteFileCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
-	//Delete Tag
-	deleteTagCmd  = appDelete.Command("tag", "Delete a tag")
-	deleteTagName = deleteTagCmd.Arg("tagName", "Name of tag to delete").Required().String()
-	//Delete Group
-	deleteGroup     = appDelete.Command("group", "Delete a group")
-	deleteGroupName = deleteGroup.Arg("groupName", "Name of group to delete").Required().String()
-
+	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
+	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").Required().String()
+	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- List
-	appList  = app.Command("list", "List stuff stored on the server")
-	appFiles = app.Command("files", "List files")
-	//List File
-	listFilesCmd = appList.Command("files", "Listuff stored on the serverst files")
-	//List files
-	listFileCmd  = appList.Command("file", "List files")
-	fileListName = listFileCmd.Arg("fileName", "Show files with this name").String()
-
-	// -- Download
-	fileDownload        = app.Command("download", "Download a file from the server")
-	fileDownloadName    = fileDownload.Arg("fileName", "Download files with this name").String()
-	fileDownloadID      = fileDownload.Arg("fileId", "Specify the fileID").Uint()
-	fileDownloadPath    = fileDownload.Flag("output", "Where to store the file").Default("./").Short('o').String()
-	fileDownloadPreview = fileDownload.Flag("preview", "Whether you want to open the file after downloading it").Bool()
-
-	// -- Publish
-	publishCmd = app.Command("publish", "publish something")
-	//File
-	publishFileCmd    = publishCmd.Command("file", "Publish a file")
-	publishFileName   = publishFileCmd.Arg("fileName", "Name of the file that should be published").Required().String()
-	publishFileID     = publishFileCmd.Arg("fileID", "FileID of specified file. Only required if mulitple files with same name are available").Uint()
-	publishPublicName = publishFileCmd.Flag("public-name", "Specify the public filename").String()
-
+	fileListCmd  = appFileCmd.Command("list", "List files")
+	fileListName = fileListCmd.Arg("fileName", "Show files with this name").String()
+	fileListID   = fileListCmd.Arg("fileID", "The fileID").Uint()
 	// -- Update
-	appUpdate = app.Command("update", "Update the filesystem")
-	//Update File
-	fileUpdate             = appUpdate.Command("file", "Update a file")
-	fileUpdateName         = fileUpdate.Arg("fileName", "Name of the file that should be updated").Required().String()
-	fileUpdateID           = fileUpdate.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
-	fileUpdateSetPublic    = fileUpdate.Flag("set-public", "Sets a file public").Bool()
-	fileUpdateSetPrivate   = fileUpdate.Flag("set-private", "Sets a file private").Bool()
-	fileUpdateNewName      = fileUpdate.Flag("new-name", "Change the name of a file").String()
-	fileUpdateNewNamespace = fileUpdate.Flag("new-namespace", "Change the namespace of a file").String()
-	fileUpdateAddTags      = fileUpdate.Flag("add-tags", "Add tags to a file").Strings()
-	fileUpdateRemoveTags   = fileUpdate.Flag("remove-tags", "Remove tags from a file").Strings()
-	fileUpdateAddGroups    = fileUpdate.Flag("add-groups", "Add groups to a file").Strings()
-	fileUpdateRemoveGroups = fileUpdate.Flag("remove-groups", "Remove groups from a file").Strings()
-	//Update Tag
-	tagUpdate        = appUpdate.Command("tag", "Update a tag")
-	tagUpdateName    = tagUpdate.Arg("fileName", "Name of the tag that should be updated").Required().String()
-	tagUpdateNewName = tagUpdate.Flag("new-name", "New name of a tag").String()
-	//Update Group
-	groupUpdate        = appUpdate.Command("group", "Update a group")
-	groupUpdateName    = groupUpdate.Arg("groupName", "Name of the group that should be updated").Required().String()
-	groupUpdateNewName = groupUpdate.Flag("new-name", "Rename a group").String()
-
+	fileUpdateCmd          = appFileCmd.Command("update", "Update a file")
+	fileUpdateName         = fileUpdateCmd.Arg("fileName", "Name of the file that should be updated").Required().String()
+	fileUpdateID           = fileUpdateCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
+	fileUpdateSetPublic    = fileUpdateCmd.Flag("set-public", "Sets a file public").Bool()
+	fileUpdateSetPrivate   = fileUpdateCmd.Flag("set-private", "Sets a file private").Bool()
+	fileUpdateNewName      = fileUpdateCmd.Flag("new-name", "Change the name of a file").String()
+	fileUpdateNewNamespace = fileUpdateCmd.Flag("new-namespace", "Change the namespace of a file").String()
+	fileUpdateAddTags      = fileUpdateCmd.Flag("add-tags", "Add tags to a file").Strings()
+	fileUpdateRemoveTags   = fileUpdateCmd.Flag("remove-tags", "Remove tags from a file").Strings()
+	fileUpdateAddGroups    = fileUpdateCmd.Flag("add-groups", "Add groups to a file").Strings()
+	fileUpdateRemoveGroups = fileUpdateCmd.Flag("remove-groups", "Remove groups from a file").Strings()
+	// -- Download
+	fileDownloadCmd     = appFileCmd.Command("download", "Download a file from the server")
+	fileDownloadName    = fileDownloadCmd.Arg("fileName", "Download files with this name").String()
+	fileDownloadID      = fileDownloadCmd.Arg("fileId", "Specify the fileID").Uint()
+	fileDownloadPath    = fileDownloadCmd.Flag("output", "Where to store the file").Default("./").Short('o').String()
+	fileDownloadPreview = fileDownloadCmd.Flag("preview", "Whether you want to open the file after downloading it").Bool()
+	// -- Publish
+	filePublishCmd    = appFileCmd.Command("publish", "publish something")
+	filePublishName   = filePublishCmd.Arg("fileName", "Name of the file that should be published").Required().String()
+	filePublishID     = filePublishCmd.Arg("fileID", "FileID of specified file. Only required if mulitple files with same name are available").Uint()
+	publishPublicName = filePublishCmd.Flag("public-name", "Specify the public filename").String()
 	// -- View
-	viewCmd       = app.Command("view", "View something")
+	viewCmd       = appFileCmd.Command("view", "View something")
+	viewFileName  = viewCmd.Arg("fileName", "filename of file to view").Required().String()
+	viewFileID    = viewCmd.Arg("fileID", "fileID of file to view").Uint()
 	viewNoPreview = viewCmd.Flag("no-preview", "Disable preview for command").Bool()
 	viewPreview   = viewCmd.Flag("preview", "Show preview for command").Bool()
 
-	//View file
-	viewFileCmd  = viewCmd.Command("file", "view a file")
-	viewFileName = viewFileCmd.Arg("fileName", "The filename to view").Required().String()
-	viewFileID   = viewFileCmd.Arg("fileID", "The fileID to view").Uint()
+	//
+	// ---------> Tag commands --------------------------------------
+	tagCmd = app.Command("tag", "Do something with tags")
+
+	// -- Delete
+	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag")
+	tagDeleteName = tagDeleteCmd.Arg("tagName", "Name of tag to delete").Required().String()
+	// -- Update
+	tagUpdateCmd     = tagCmd.Command("update", "Update a tag")
+	tagUpdateName    = tagUpdateCmd.Arg("tagname", "Name of the tag that should be updated").Required().String()
+	tagUpdateNewName = tagUpdateCmd.Flag("new-name", "New name of a tag").String()
+
+	//
+	// ---------> Group commands --------------------------------------
+	groupCmd = app.Command("group", "Do something with groups")
+
+	// -- Delete
+	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group")
+	groupDeleteName = groupDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()
+	// -- Update
+	groupUpdateCmd     = groupCmd.Command("update", "Update a group")
+	groupUpdateName    = groupUpdateCmd.Arg("groupName", "Name of the group that should be updated").Required().String()
+	groupUpdateNewName = groupUpdateCmd.Flag("new-name", "Rename a group").String()
+
+	//
+	// ---------> Namespace commands --------------------------------------
+	namespaceCmd = app.Command("namespace", "Do something with namespaces").Alias("ns")
+
+	// -- Delete
+	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a group")
+	namespaceDeleteName = namespaceDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()
+	// -- Update
+	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a group")
+	namespaceUpdateName    = namespaceUpdateCmd.Arg("groupName", "Name of the group that should be updated").Required().String()
+	namespaceUpdateNewName = namespaceUpdateCmd.Flag("new-name", "Rename a group").String()
 )
 
 var (
@@ -196,12 +210,12 @@ func main() {
 	// Execute the desired command
 	switch parsed {
 	// File commands
-	case fileDownload.FullCommand():
+	case fileDownloadCmd.FullCommand():
 		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
 			Namespace: *appNamespace,
 		}, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
-	case viewFileCmd.FullCommand():
+	case viewCmd.FullCommand():
 		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
 			Namespace: *appNamespace,
 		}, "", true, *viewNoPreview, *viewPreview)
@@ -209,23 +223,23 @@ func main() {
 	case appUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes, *appOutputJSON)
 
-	case deleteFileCmd.FullCommand():
+	case fileDeleteCmd.FullCommand():
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
 
-	case listFileCmd.FullCommand():
+	case fileListCmd.FullCommand():
 		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
-	case listFilesCmd.FullCommand(), appFiles.FullCommand():
+	case appFilesCmd.FullCommand():
 		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
-	case fileUpdate.FullCommand():
+	case fileUpdateCmd.FullCommand():
 		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
 
-	case tagUpdate.FullCommand():
+	case tagUpdateCmd.FullCommand():
 		commands.UpdateTag(config, *tagUpdateName, *appNamespace, *tagUpdateNewName)
 
-	case publishFileCmd.FullCommand():
-		commands.PublishFile(config, *publishFileName, *publishFileID, *publishPublicName, fileAttributes, *appOutputJSON)
+	case filePublishCmd.FullCommand():
+		commands.PublishFile(config, *filePublishName, *filePublishID, *publishPublicName, fileAttributes, *appOutputJSON)
 
 	// Ping
 	case appPing.FullCommand():
@@ -237,7 +251,7 @@ func main() {
 	case registerCmd:
 		commands.RegisterCommand(config)
 
-	//Config
+	// Config
 	case configUse.FullCommand():
 		commands.ConfigUse(*config, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
