@@ -63,11 +63,16 @@ const (
 	//Upload
 	EPFileUpload Endpoint = "/upload" + EPFile
 
+	// Attributes
+	EPAttribute Endpoint = "/attribute"
 	//Tags
-	EPTag Endpoint = "/tag"
-
-	//Update tags
-	EPTagUpdate Endpoint = EPTag + "/update"
+	EPAttributeTag = EPAttribute + "/tag"
+	EPTagUpdate    = EPAttributeTag + "/update"
+	EPTagDelete    = EPAttributeTag + "/delete"
+	//Group
+	EPAttributeGroup = EPAttribute + "/group"
+	EPGroupUpdate    = EPAttributeGroup + "/update"
+	EPGroupDelete    = EPAttributeGroup + "/delete"
 )
 
 //Request a rest server request
@@ -102,11 +107,11 @@ type FileRequest struct {
 	Attributes models.FileAttributes `json:"attributes"`
 }
 
-// TagUpdateRequest contains data to update a tag
-type TagUpdateRequest struct {
+// UpdateAttributeRequest contains data to update a tag
+type UpdateAttributeRequest struct {
 	Name      string `json:"name"`
+	NewName   string `json:"newname"`
 	Namespace string `json:"namespace"`
-	NewName   string `json:"newname,omitempty"`
 }
 
 //CredentialsRequest request containing credentials

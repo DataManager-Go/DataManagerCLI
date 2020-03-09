@@ -235,23 +235,37 @@ func main() {
 	case fileUpdateCmd.FullCommand():
 		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
 
-	case tagUpdateCmd.FullCommand():
-		commands.UpdateTag(config, *tagUpdateName, *appNamespace, *tagUpdateNewName)
-
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(config, *filePublishName, *filePublishID, *publishPublicName, fileAttributes, *appOutputJSON)
 
-	// Ping
+	// -- Attributes
+	//Update tag
+	case tagUpdateCmd.FullCommand():
+		commands.UpdateAttribute(config, models.TagAttribute, *tagUpdateName, *appNamespace, *tagUpdateNewName)
+
+	//Delete Tag
+	case tagDeleteCmd.FullCommand():
+		commands.DeleteAttribute(config, models.TagAttribute, *tagDeleteName, *appNamespace)
+
+	//Update group
+	case groupUpdateCmd.FullCommand():
+		commands.UpdateAttribute(config, models.GroupAttribute, *groupUpdateName, *appNamespace, *groupUpdateNewName)
+
+	//Delete Group
+	case groupDeleteCmd.FullCommand():
+		commands.DeleteAttribute(config, models.GroupAttribute, *groupDeleteName, *appNamespace)
+
+	// -- Ping
 	case appPing.FullCommand():
 		pingServer(config)
 
-	// User
+	// -- User
 	case loginCmd.FullCommand():
 		commands.LoginCommand(config, *loginCmdUser, *appYes)
 	case registerCmd:
 		commands.RegisterCommand(config)
 
-	// Config
+	// -- Config
 	case configUse.FullCommand():
 		commands.ConfigUse(*config, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():

@@ -323,37 +323,6 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, n
 	fmt.Printf("The file has been %s\n", color.HiGreenString("successfully updated"))
 }
 
-// UpdateTag updates a given tag
-func UpdateTag(config *models.Config, name string, namespace string, newName string) {
-	// Combine and send it
-	response, err := server.NewRequest(server.EPTagUpdate, &server.TagUpdateRequest{
-		Name:      name,
-		NewName:   newName,
-		Namespace: namespace,
-	}, config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
-	}).Do(nil)
-
-	// Error handling #1
-	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
-			return
-		}
-		log.Fatalln(err)
-	}
-
-	// Error handling #2
-	if response.Status == server.ResponseError {
-		printResponseError(response, "trying to update your tag")
-		return
-	}
-
-	// Output
-	fmt.Printf("The tag has been %s\n", color.HiGreenString("successfully updated"))
-}
-
 // GetFile requests the file from the server and displays or saves it
 func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput, noPreview, preview bool) {
 	shouldPreview := config.Client.AutoFilePreview || preview
