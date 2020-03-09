@@ -1,6 +1,10 @@
 package server
 
-import "github.com/Yukaru-san/DataManager_Client/models"
+import (
+	"net/http"
+
+	"github.com/Yukaru-san/DataManager_Client/models"
+)
 
 //ResponseStatus the status of response
 type ResponseStatus uint8
@@ -17,6 +21,10 @@ const (
 	HeaderStatus string = "X-Response-Status"
 	//HeaderStatusMessage headername for status in response
 	HeaderStatusMessage string = "X-Response-Message"
+	//HeaderContentType contenttype of response
+	HeaderContentType string = "Content-Type"
+	//HeaderFileName filename header
+	HeaderFileName string = "X-Filename"
 )
 
 //LoginResponse response for login
@@ -30,6 +38,7 @@ type RestRequestResponse struct {
 	HTTPCode int
 	Status   ResponseStatus
 	Message  string
+	Headers  *http.Header
 }
 
 //StringResponse response containing only one string

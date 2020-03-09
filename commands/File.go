@@ -4,11 +4,11 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -353,9 +353,6 @@ func UpdateTag(config *models.Config, name string, namespace string, newName str
 
 // GetFile requests the file from the server and displays or saves it
 func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput bool) {
-
-	// TODO Client should receive a file's name (not always set!)
-
 	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
 		Name:       fileName,
 		FileID:     id,
@@ -371,37 +368,61 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 		return
 	}
 
-	// Read the file's data
-	file, err := ioutil.ReadAll(resp.Body)
+	//Check response headers
+	if resp.Header.Get(server.HeaderStatus) == strconv.Itoa(int(server.ResponseError)) {
+		statusMessage := resp.Header.Get(server.HeaderStatusMessage)
+		fmt.Println(color.HiRedString("Error: ") + statusMessage)
+		return
+	}
 
-	if err != nil {
+	//Get filename from response headers
+	serverFileName := resp.Header.Get(server.HeaderFileName)
+
+	//Check headers
+	if len(serverFileName) == 0 {
 		fmt.Println(color.HiRedString("Error:") + " Received corrupted Data from the server")
+		return
 	}
 
 	//Display or save file
 	if displayOutput && len(savePath) == 0 {
-		// Preview TODO Change name here to one that the server responded
-		PreviewFileFromBytes(file, fileName)
+		file, err := SaveToTempFile(resp.Body, serverFileName)
+		if err != nil {
+			fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
+			return
+		}
 
-		// Save
+		//Preview file
+		PreviewFile(file)
+
 	} else if len(savePath) > 0 {
 		//Determine output file/path
 		outFile := savePath
 		if strings.HasSuffix(savePath, "/") {
-			outFile = path.Join(savePath, fileName)
+			outFile = filepath.Join(savePath, fileName)
 		} else {
 			stat, err := os.Stat(outFile)
 			if err == nil && stat.IsDir() {
-				outFile = path.Join(outFile, fileName)
+				outFile = filepath.Join(outFile, fileName)
 			}
 		}
 
-		//Save
-		err = ioutil.WriteFile(savePath, file, 0640)
+		//Create or truncate file
+		f, err := os.Create(outFile)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
+
+		//Write file
+		_, err = io.Copy(f, resp.Body)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//Close file
+		f.Close()
 
 		// Preview
 		if displayOutput {

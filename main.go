@@ -17,9 +17,6 @@ const (
 	appName = "manager"
 	version = "1.0.0"
 
-	//EnVarPrefix prefix for env vars
-	EnVarPrefix = "MANAGER"
-
 	//Datapath the default path for data files
 	Datapath = "./data"
 )
@@ -247,6 +244,9 @@ func main() {
 
 // Env vars
 const (
+	//EnVarPrefix prefix for env vars
+	EnVarPrefix = "MANAGER"
+
 	//EnVarPrefix prefix of all used env vars
 	EnVarLogLevel   = "LOG_LEVEL"
 	EnVarNoColor    = "NO_COLOR"

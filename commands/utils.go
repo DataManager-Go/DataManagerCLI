@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -61,18 +61,26 @@ func toJSON(in interface{}) string {
 	return string(b)
 }
 
-// PreviewFileFromBytes previews raw bytes by creating a temp file
-func PreviewFileFromBytes(file []byte, filename string) {
-	// Davon ausgehend, dass der Name MIT Extension übergeben wird
-	filepath := filepath.Join(os.TempDir(), filename)
-	err := ioutil.WriteFile(filepath, file, 0640)
-
+//SaveToTempFile saves a stream to a temporary file
+func SaveToTempFile(reader io.ReadCloser, fileName string) (string, error) {
+	filePath := filepath.Join(os.TempDir(), fileName)
+	//Create temp file
+	f, err := os.Create(filePath)
 	if err != nil {
-		fmt.Println("Error creating a temporary file for your preview")
-		return
+		return "", err
 	}
 
-	PreviewFile(filepath)
+	//Write from reader
+	_, err = io.Copy(f, reader)
+	if err != nil {
+		return "", err
+	}
+
+	//Close streams
+	reader.Close()
+	f.Close()
+
+	return filePath, nil
 }
 
 // PreviewFile opens a locally stored file
@@ -94,11 +102,10 @@ func PreviewFile(filepath string) {
 		var errCatcher bytes.Buffer
 		cmd.Stderr = &errCatcher
 
-		cmd.Output()
+		cmd.Run()
 
-		output := string(errCatcher.Bytes())
-		if len(output) > 0 {
-			fmt.Println("Error:\n", output)
+		if errCatcher.Len() > 0 {
+			fmt.Println("Error:\n", string(errCatcher.Bytes()))
 		}
 	}
 }

@@ -201,6 +201,7 @@ func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
 	if resp != nil {
 		response = &RestRequestResponse{
 			HTTPCode: resp.StatusCode,
+			Headers:  &resp.Header,
 		}
 	}
 
