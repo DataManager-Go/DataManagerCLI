@@ -1,10 +1,16 @@
 package commands
 
 import (
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Yukaru-san/DataManager_Client/server"
@@ -53,4 +59,46 @@ func toJSON(in interface{}) string {
 		return err.Error()
 	}
 	return string(b)
+}
+
+// PreviewFileFromBytes previews raw bytes by creating a temp file
+func PreviewFileFromBytes(file []byte, filename string) {
+	// Davon ausgehend, dass der Name MIT Extension übergeben wird
+	filepath := filepath.Join(os.TempDir(), filename)
+	err := ioutil.WriteFile(filepath, file, 0640)
+
+	if err != nil {
+		fmt.Println("Error creating a temporary file for your preview")
+		return
+	}
+
+	PreviewFile(filepath)
+}
+
+// PreviewFile opens a locally stored file
+func PreviewFile(filepath string) {
+	// Windows
+	if runtime.GOOS == "windows" {
+		fmt.Println("Filepath: " + filepath)
+		cmd := exec.Command("cmd", "/C "+filepath)
+		output, _ := cmd.Output()
+
+		if len(output) > 0 {
+			fmt.Println("Error: Your system hasn't set up a default application for this datatype.")
+		}
+
+		// Linux
+	} else if runtime.GOOS == "linux" {
+		cmd := exec.Command("xdg-open", filepath)
+
+		var errCatcher bytes.Buffer
+		cmd.Stderr = &errCatcher
+
+		cmd.Output()
+
+		output := string(errCatcher.Bytes())
+		if len(output) > 0 {
+			fmt.Println("Error:\n", output)
+		}
+	}
 }

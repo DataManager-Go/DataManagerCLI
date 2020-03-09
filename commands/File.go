@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/url"
@@ -354,6 +353,9 @@ func UpdateTag(config *models.Config, name string, namespace string, newName str
 
 // GetFile requests the file from the server and displays or saves it
 func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput bool) {
+
+	// TODO Client should receive a file's name (not always set!)
+
 	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
 		Name:       fileName,
 		FileID:     id,
@@ -369,16 +371,20 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 		return
 	}
 
-	//Display or save file
-	if displayOutput {
-		//Print file to os.Stdout
-		io.Copy(os.Stdout, resp.Body)
-	} else {
-		if len(savePath) == 0 {
-			fmt.Println("Can't save file if you don't specify a path")
-			return
-		}
+	// Read the file's data
+	file, err := ioutil.ReadAll(resp.Body)
 
+	if err != nil {
+		fmt.Println(color.HiRedString("Error:") + " Received corrupted Data from the server")
+	}
+
+	//Display or save file
+	if displayOutput && len(savePath) == 0 {
+		// Preview TODO Change name here to one that the server responded
+		PreviewFileFromBytes(file, fileName)
+
+		// Save
+	} else if len(savePath) > 0 {
 		//Determine output file/path
 		outFile := savePath
 		if strings.HasSuffix(savePath, "/") {
@@ -390,25 +396,23 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 			}
 		}
 
-		//Create file
-		f, err := os.Create(outFile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
 		//Save
-		_, err = io.Copy(f, resp.Body)
+		err = ioutil.WriteFile(savePath, file, 0640)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		//Close file
-		f.Close()
+		// Preview
+		if displayOutput {
+			PreviewFile(savePath)
+		}
 
 		//Print success message
 		fmt.Printf("Saved file into %s\n", outFile)
+	} else if !displayOutput && len(savePath) == 0 {
+		fmt.Println("Can't save file if you don't specify a path.")
+		return
 	}
 
 	//Close body

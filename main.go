@@ -93,10 +93,11 @@ var (
 	fileListName = listFileCmd.Arg("fileName", "Show files with this name").String()
 
 	// -- Download
-	fileDownload     = app.Command("download", "Download a file from the server")
-	fileDownloadName = fileDownload.Arg("fileName", "Download files with this name").String()
-	fileDownloadID   = fileDownload.Arg("fileId", "Specify the fileID").Uint()
-	fileDownloadPath = fileDownload.Flag("output", "Where to store the file").Default("./").Short('o').String()
+	fileDownload        = app.Command("download", "Download a file from the server")
+	fileDownloadName    = fileDownload.Arg("fileName", "Download files with this name").String()
+	fileDownloadID      = fileDownload.Arg("fileId", "Specify the fileID").Uint()
+	fileDownloadPath    = fileDownload.Flag("output", "Where to store the file").Default("./").Short('o').String()
+	fileDownloadPreview = fileDownload.Flag("preview", "Whether you want to open the file after downloading it").Bool()
 
 	// -- Publish
 	publishCmd = app.Command("publish", "publish something")
@@ -198,7 +199,7 @@ func main() {
 	case fileDownload.FullCommand():
 		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
 			Namespace: *appNamespace,
-		}, *fileDownloadPath, false)
+		}, *fileDownloadPath, *fileDownloadPreview)
 
 	case viewFileCmd.FullCommand():
 		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
