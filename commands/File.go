@@ -280,8 +280,8 @@ func ListFiles(cData CommandData, name string, id uint) {
 //PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	// TODO print count of published files
-	var resData server.PublishResponse
-	response, err := server.NewRequest(server.EPFilePublish, server.FileRequest{
+
+	request := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
 		FileID:     id,
 		PublicName: publicName,
@@ -290,7 +290,21 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&resData)
+	})
+
+	var err error
+	var response *server.RestRequestResponse
+	var resp interface{}
+
+	if cData.All {
+		var respData server.BulkPublishResponse
+		response, err = request.Do(&respData)
+		resp = respData
+	} else {
+		var respData server.PublishResponse
+		response, err = request.Do(&respData)
+		resp = respData
+	}
 
 	if err != nil {
 		if response != nil {
@@ -308,9 +322,18 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 
 	// Output
 	if cData.OutputJSON {
-		fmt.Println(toJSON(resData))
+		fmt.Println(toJSON(resp))
 	} else {
-		fmt.Printf(resData.PublicFilename)
+		if cData.All {
+			rs := (resp).(server.BulkPublishResponse)
+
+			fmt.Printf("Published %d files\n", len(rs.Files))
+			for _, file := range rs.Files {
+				fmt.Printf("File %s with ID %d Public name: %s\n", file.Filename, file.FileID, file.PublicFilename)
+			}
+		} else {
+			fmt.Printf((resp.(server.PublishResponse)).PublicFilename)
+		}
 	}
 }
 
