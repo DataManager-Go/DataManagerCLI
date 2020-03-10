@@ -157,8 +157,7 @@ var (
 	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a namespace")
 	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
 	// -- List
-	namespaceListCmd  = namespaceCmd.Command("list", "List your namespaces")
-	namespaceListName = namespaceListCmd.Arg("namespaceName", "Name of namespace to view").String()
+	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces")
 )
 
 var (
@@ -295,7 +294,7 @@ func main() {
 
 	//List namespaces
 	case namespaceListCmd.FullCommand(), namespacesCmd.FullCommand():
-		commands.ListNamespace(commandData, *namespaceListName)
+		commands.ListNamespace(commandData)
 
 	// -- Ping command
 	case appPing.FullCommand():

@@ -42,11 +42,15 @@ func handleNamespaceCommand(cData CommandData, action uint8, name, newName strin
 	if response.Status == server.ResponseError {
 		printResponseError(response, namespaceActionToString(action, false, true))
 	} else {
-		switch action {
-		case 2, 0:
-			fmt.Printf("%s %s namespace '%s'\n", constants.GreenSuccessfully, namespaceActionToString(action, true, false), name)
-		case 1:
-			fmt.Printf("%s created namespace '%s'\n", constants.GreenSuccessfully, res.String)
+		if cData.OutputJSON {
+			fmt.Println(toJSON(res))
+		} else {
+			switch action {
+			case 2, 0:
+				fmt.Printf("%s %s namespace '%s'\n", constants.GreenSuccessfully, namespaceActionToString(action, true, false), name)
+			case 1:
+				fmt.Printf("%s created namespace '%s'\n", constants.GreenSuccessfully, res.String)
+			}
 		}
 	}
 }
@@ -67,8 +71,34 @@ func DeleteNamespace(cData CommandData, name string) {
 }
 
 //ListNamespace lists your namespace
-func ListNamespace(cData CommandData, name string) {
+func ListNamespace(cData CommandData) {
+	var resp server.StringSliceResponse
 
+	response, err := server.NewRequest(server.EPNamespaceList, nil, cData.Config).WithAuth(server.Authorization{
+		Type:    server.Bearer,
+		Palyoad: cData.Config.User.SessionToken,
+	}).Do(&resp)
+
+	if err != nil {
+		if response != nil {
+			fmt.Println("http:", response.HTTPCode)
+			return
+		}
+		log.Fatalln(err)
+	}
+
+	if response.Status == server.ResponseError {
+		printResponseError(response, "listing namespaces")
+	} else {
+		if cData.OutputJSON {
+			fmt.Println(toJSON(resp))
+		} else {
+			fmt.Println("Your namespaces:")
+			for _, namespace := range resp.Slice {
+				fmt.Println(namespace)
+			}
+		}
+	}
 }
 
 func namespaceActionToString(action uint8, past, pp bool) (name string) {

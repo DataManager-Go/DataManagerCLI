@@ -46,6 +46,11 @@ type StringResponse struct {
 	String string `json:"content"`
 }
 
+//StringSliceResponse response containing only one string slice
+type StringSliceResponse struct {
+	Slice []string `json:"slice"`
+}
+
 //FileListResponse response for listing files
 type FileListResponse struct {
 	Files []models.FileResponseItem
