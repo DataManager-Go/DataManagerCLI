@@ -67,3 +67,8 @@ type PublishResponse struct {
 type BulkPublishResponse struct {
 	Files []UploadResponse `json:"files"`
 }
+
+//CountResponse response containing a count of changed items
+type CountResponse struct {
+	Count uint32 `json:"count"`
+}

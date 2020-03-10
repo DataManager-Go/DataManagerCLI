@@ -100,30 +100,36 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(cData CommandData, name string, id uint) {
-	response, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
+	var response server.CountResponse
+	resp, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
 		Name:       name,
 		FileID:     id,
+		All:        cData.All,
 		Attributes: cData.FileAttributes,
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(nil)
+	}).Do(&response)
 
 	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
+		if resp != nil {
+			fmt.Println("http:", resp.HTTPCode)
 			return
 		}
 
 		log.Fatalln(err)
 	}
 
-	if response.Status == server.ResponseError {
-		printResponseError(response, "trying to delete your file")
+	if resp.Status == server.ResponseError {
+		printResponseError(resp, "trying to delete your file")
 		return
 	}
 
-	fmt.Printf("The file has been %s\n", color.HiGreenString("successfully deleted"))
+	if response.Count > 1 {
+		fmt.Printf("Deleted %d files %s\n", response.Count, color.HiGreenString("successfully"))
+	} else {
+		fmt.Printf("The file has been %s\n", color.HiGreenString("successfully deleted"))
+	}
 }
 
 // ListFiles lists the files corresponding to the args
@@ -230,6 +236,7 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 		Name:       name,
 		FileID:     id,
 		PublicName: publicName,
+		All:        cData.All,
 		Attributes: cData.FileAttributes,
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
@@ -293,34 +300,40 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 		AddGroups:    addGroups,
 	}
 
+	var response server.CountResponse
+
 	// Combine and send it
-	response, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
+	resp, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
 		Name:       name,
 		FileID:     id,
+		All:        cData.All,
 		Updates:    fileUpdates,
 		Attributes: attributes,
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(nil)
+	}).Do(&response)
 
 	// Error handling #1
 	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
+		if resp != nil {
+			fmt.Println("http:", resp.HTTPCode)
 			return
 		}
 		log.Fatalln(err)
 	}
 
 	// Error handling #2
-	if response.Status == server.ResponseError {
-		printResponseError(response, "trying to update your file")
+	if resp.Status == server.ResponseError {
+		printResponseError(resp, "trying to update your file")
 		return
 	}
 
-	// Output
-	fmt.Printf("The file has been %s\n", color.HiGreenString("successfully updated"))
+	if response.Count > 1 {
+		fmt.Printf("Updated %d files %s\n", response.Count, color.HiGreenString("successfully"))
+	} else {
+		fmt.Printf("The file has been %s\n", color.HiGreenString("successfully updated"))
+	}
 }
 
 // GetFile requests the file from the server and displays or saves it
