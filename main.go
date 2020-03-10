@@ -36,6 +36,7 @@ var (
 	appOutputJSON  = app.Flag("json", "Print output as json").Bool()
 	appNoRedaction = app.Flag("no-redact", "Don't redact secrets").Bool()
 	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appAll         = app.Flag("all", "Do action for all found files").Short('a').Bool()
 
 	// --- :Commands: -------
 
@@ -207,61 +208,69 @@ func main() {
 		Tags:      *appTags,
 	}
 
+	//Command data
+	commandData := commands.CommandData{
+		Config:         config,
+		Details:        uint8(*appDetails),
+		FileAttributes: fileAttributes,
+		Namespace:      *appNamespace,
+		All:            *appAll,
+		NoRedaction:    *appNoRedaction,
+		OutputJSON:     *appOutputJSON,
+		Yes:            *appYes,
+	}
+
 	// Execute the desired command
 	switch parsed {
 	// File commands
 	case fileDownloadCmd.FullCommand():
 		//Download file
-		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
-			Namespace: *appNamespace,
-		}, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
+		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
 	//View file
 	case viewCmd.FullCommand():
-		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
-			Namespace: *appNamespace,
-		}, "", true, *viewNoPreview, *viewPreview)
+		commands.GetFile(commandData, *viewFileName, *viewFileID, "", true, *viewNoPreview, *viewPreview)
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes, *appOutputJSON)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic)
 
 	//Delete file
 	case fileDeleteCmd.FullCommand():
-		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
+		commands.DeleteFile(commandData, *fileDeleteName, *fileDeleteID)
 
 	//List files
 	case fileListCmd.FullCommand():
-		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
+		commands.ListFiles(commandData, *fileListName, *fileDownloadID)
 
 	//List file(s)
 	case appFilesCmd.FullCommand():
-		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
+		commands.ListFiles(commandData, "", *fileDownloadID)
 
 	//Update File
 	case fileUpdateCmd.FullCommand():
-		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
+		commands.UpdateFile(commandData, *fileUpdateName, *fileUpdateID, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
 
 	//Publish file
 	case filePublishCmd.FullCommand():
-		commands.PublishFile(config, *filePublishName, *filePublishID, *publishPublicName, fileAttributes, *appOutputJSON)
+		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
 
 	// -- Attributes
 	//Update tag
 	case tagUpdateCmd.FullCommand():
-		commands.UpdateAttribute(config, models.TagAttribute, *tagUpdateName, *appNamespace, *tagUpdateNewName)
+		commands.UpdateAttribute(commandData, models.TagAttribute, *tagUpdateName, *tagUpdateNewName)
 
 	//Delete Tag
 	case tagDeleteCmd.FullCommand():
-		commands.DeleteAttribute(config, models.TagAttribute, *tagDeleteName, *appNamespace)
+		commands.DeleteAttribute(commandData, models.TagAttribute, *tagDeleteName)
 
 	//Update group
 	case groupUpdateCmd.FullCommand():
-		commands.UpdateAttribute(config, models.GroupAttribute, *groupUpdateName, *appNamespace, *groupUpdateNewName)
+		commands.UpdateAttribute(commandData, models.GroupAttribute, *groupUpdateName, *groupUpdateNewName)
 
 	//Delete Group
 	case groupDeleteCmd.FullCommand():
-		commands.DeleteAttribute(config, models.GroupAttribute, *groupDeleteName, *appNamespace)
+		commands.DeleteAttribute(commandData, models.GroupAttribute, *groupDeleteName)
 
 	// -- Ping
 	case appPing.FullCommand():
@@ -269,15 +278,15 @@ func main() {
 
 	// -- User
 	case loginCmd.FullCommand():
-		commands.LoginCommand(config, *loginCmdUser, *appYes)
+		commands.LoginCommand(commandData.Config, *loginCmdUser, *appYes)
 	case registerCmd:
 		commands.RegisterCommand(config)
 
 	// -- Config
 	case configUse.FullCommand():
-		commands.ConfigUse(*config, *configUseTarget, *configUseTargetValue)
+		commands.ConfigUse(*commandData.Config, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
-		commands.ConfigView(*config, *appOutputJSON, *appNoRedaction)
+		commands.ConfigView(*commandData.Config, *appOutputJSON, *appNoRedaction)
 	}
 }
 

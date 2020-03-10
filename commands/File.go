@@ -25,7 +25,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(config *models.Config, path, name, publicName string, public bool, attributes models.FileAttributes, printAsJSON bool) {
+func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
@@ -39,7 +39,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 	//bulid request
 	request := server.UploadRequest{
 		Name:       fileName,
-		Attributes: attributes,
+		Attributes: cData.FileAttributes,
 		Public:     public,
 		PublicName: publicName,
 	}
@@ -71,9 +71,9 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 
 	//Do request
 	var resStruct server.UploadResponse
-	response, err := server.NewRequest(server.EPFileUpload, request, config).WithAuth(server.Authorization{
+	response, err := server.NewRequest(server.EPFileUpload, request, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(&resStruct)
 
 	if err != nil {
@@ -91,7 +91,7 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 	}
 
 	//print output
-	if printAsJSON {
+	if cData.OutputJSON {
 		fmt.Println(toJSON(resStruct))
 	} else {
 		fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
@@ -99,14 +99,14 @@ func UploadFile(config *models.Config, path, name, publicName string, public boo
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(config *models.Config, name string, id uint, attributes models.FileAttributes) {
+func DeleteFile(cData CommandData, name string, id uint) {
 	response, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
 		Name:       name,
 		FileID:     id,
-		Attributes: attributes,
-	}, config).WithAuth(server.Authorization{
+		Attributes: cData.FileAttributes,
+	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(nil)
 
 	if err != nil {
@@ -127,18 +127,18 @@ func DeleteFile(config *models.Config, name string, id uint, attributes models.F
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(config *models.Config, name string, id uint, attributes models.FileAttributes, verbosity uint8, printAsJSON, yes bool) {
+func ListFiles(cData CommandData, name string, id uint) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:     id,
 		Name:       name,
-		Attributes: attributes,
+		Attributes: cData.FileAttributes,
 		OptionalParams: server.OptionalRequetsParameter{
-			Verbose: verbosity,
+			Verbose: cData.Details,
 		},
-	}, config).WithAuth(server.Authorization{
+	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(&filesResponse)
 
 	if err != nil {
@@ -154,7 +154,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 		return
 	}
 
-	if uint16(len(filesResponse.Files)) > config.Client.MinFilesToDisplay && !yes {
+	if uint16(len(filesResponse.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return
@@ -162,10 +162,10 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 	}
 
 	//Print as json if desired
-	if printAsJSON {
+	if cData.OutputJSON {
 		fmt.Println(toJSON(filesResponse.Files))
 	} else {
-		fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), attributes.Namespace)
+		fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), cData.Namespace)
 		// Print files
 		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
@@ -178,11 +178,11 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 		}
 
 		//Show namespace on -dd
-		if verbosity > 2 {
+		if cData.Details > 2 {
 			header = append(header, headingColor.Sprintf("Namespace"))
 		}
 		//Show groups and tags on -d
-		if verbosity > 1 {
+		if cData.Details > 1 {
 			header = append(header, headingColor.Sprintf("Groups"))
 			header = append(header, headingColor.Sprintf("Tags"))
 		}
@@ -206,12 +206,12 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 			}
 
 			//Show namespace on -dd
-			if verbosity > 2 {
+			if cData.Details > 2 {
 				rowItems = append(rowItems, file.Attributes.Namespace)
 			}
 
 			//Show groups and tags on -d
-			if verbosity > 1 {
+			if cData.Details > 1 {
 				rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
 				rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
 			}
@@ -224,16 +224,16 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 }
 
 //PublishFile publishes a file
-func PublishFile(config *models.Config, name string, id uint, publicName string, attributes models.FileAttributes, printAsJSON bool) {
+func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	var resData server.PublishResponse
 	response, err := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
 		FileID:     id,
 		PublicName: publicName,
-		Attributes: attributes,
-	}, config).WithAuth(server.Authorization{
+		Attributes: cData.FileAttributes,
+	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(&resData)
 
 	if err != nil {
@@ -251,7 +251,7 @@ func PublishFile(config *models.Config, name string, id uint, publicName string,
 	}
 
 	// Output
-	if printAsJSON {
+	if cData.OutputJSON {
 		fmt.Println(toJSON(resData))
 	} else {
 		fmt.Printf(resData.PublicFilename)
@@ -259,13 +259,13 @@ func PublishFile(config *models.Config, name string, id uint, publicName string,
 }
 
 // UpdateFile updates a file on the server
-func UpdateFile(config *models.Config, name string, id uint, namespace string, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
+func UpdateFile(cData CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	//Process params: make t1,t2 -> [t1 t2]
 	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
 	// Set attributes
 	attributes := models.FileAttributes{
-		Namespace: namespace,
+		Namespace: cData.Namespace,
 	}
 
 	//Can't use both
@@ -299,9 +299,9 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, n
 		FileID:     id,
 		Updates:    fileUpdates,
 		Attributes: attributes,
-	}, config).WithAuth(server.Authorization{
+	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(nil)
 
 	// Error handling #1
@@ -324,8 +324,8 @@ func UpdateFile(config *models.Config, name string, id uint, namespace string, n
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(config *models.Config, fileName string, id uint, attribute models.FileAttributes, savePath string, displayOutput, noPreview, preview bool) {
-	shouldPreview := config.Client.AutoFilePreview || preview
+func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) {
+	shouldPreview := cData.Config.Client.AutoFilePreview || preview
 	if noPreview {
 		fmt.Println("noPreview")
 		shouldPreview = false
@@ -338,12 +338,14 @@ func GetFile(config *models.Config, fileName string, id uint, attribute models.F
 	}
 
 	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
-		Name:       fileName,
-		FileID:     id,
-		Attributes: attribute,
-	}, config).WithAuth(server.Authorization{
+		Name:   fileName,
+		FileID: id,
+		Attributes: models.FileAttributes{
+			Namespace: cData.Namespace,
+		},
+	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).DoHTTPRequest()
 
 	//Check for error

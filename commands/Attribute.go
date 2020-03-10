@@ -10,7 +10,7 @@ import (
 )
 
 // do an attribute request (update/delete group or tag). action: 0 - delete, 1 - update
-func attributeRequest(config *models.Config, attribute models.Attribute, action uint8, name, namespace string, newName ...string) {
+func attributeRequest(cData CommandData, attribute models.Attribute, action uint8, name string, newName ...string) {
 	var endpoint server.Endpoint
 
 	//Pick right endpoint
@@ -31,7 +31,7 @@ func attributeRequest(config *models.Config, attribute models.Attribute, action 
 	// Build request
 	request := server.UpdateAttributeRequest{
 		Name:      name,
-		Namespace: namespace,
+		Namespace: cData.Namespace,
 	}
 
 	// Add new name on update request
@@ -39,9 +39,9 @@ func attributeRequest(config *models.Config, attribute models.Attribute, action 
 		request.NewName = newName[0]
 	}
 
-	response, err := server.NewRequest(endpoint, request, config).WithAuth(server.Authorization{
+	response, err := server.NewRequest(endpoint, request, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
-		Palyoad: config.User.SessionToken,
+		Palyoad: cData.Config.User.SessionToken,
 	}).Do(nil)
 
 	// Error handling #1
@@ -69,11 +69,11 @@ func attributeRequest(config *models.Config, attribute models.Attribute, action 
 }
 
 // UpdateAttribute update an attribute
-func UpdateAttribute(config *models.Config, attribute models.Attribute, name, namespace, newName string) {
-	attributeRequest(config, attribute, 1, name, namespace, newName)
+func UpdateAttribute(cData CommandData, attribute models.Attribute, name, newName string) {
+	attributeRequest(cData, attribute, 1, name, newName)
 }
 
 // DeleteAttribute update an attribute
-func DeleteAttribute(config *models.Config, attribute models.Attribute, name, namespace string) {
-	attributeRequest(config, attribute, 0, name, namespace)
+func DeleteAttribute(cData CommandData, attribute models.Attribute, name string) {
+	attributeRequest(cData, attribute, 0, name)
 }

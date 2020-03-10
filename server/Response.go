@@ -62,3 +62,8 @@ type UploadResponse struct {
 type PublishResponse struct {
 	PublicFilename string `json:"pubName"`
 }
+
+//BulkPublishResponse response for publishing a file
+type BulkPublishResponse struct {
+	Files []UploadResponse `json:"files"`
+}
