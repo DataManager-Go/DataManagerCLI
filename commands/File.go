@@ -175,22 +175,59 @@ func ListFiles(cData CommandData, name string, id uint) {
 		// Print files
 		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
+		//Table setup
 		table := clitable.New()
 		table.ColSeparator = " "
 		table.Padding = 4
 
-		header := []interface{}{
-			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Public name"), headingColor.Sprint("Created"),
+		var hasPublicFile, hasTag, hasGroup bool
+
+		// scan for availability of attributes
+		for _, file := range filesResponse.Files {
+			if !hasPublicFile && file.IsPublic && len(file.PublicName) > 0 {
+				hasPublicFile = true
+			}
+
+			// only need to do if requested more details
+			if cData.Details > 1 {
+				//Has tag
+				if !hasTag && len(file.Attributes.Tags) > 0 {
+					hasTag = true
+				}
+
+				//Has group
+				if !hasGroup && len(file.Attributes.Groups) > 0 {
+					hasGroup = true
+				}
+			}
 		}
+
+		header := []interface{}{
+			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"),
+		}
+
+		//Add public name
+		if hasPublicFile {
+			header = append(header, headingColor.Sprint("Public name"))
+		}
+
+		//Add created
+		header = append(header, headingColor.Sprint("Created"))
 
 		//Show namespace on -dd
 		if cData.Details > 2 {
 			header = append(header, headingColor.Sprintf("Namespace"))
 		}
+
 		//Show groups and tags on -d
 		if cData.Details > 1 {
-			header = append(header, headingColor.Sprintf("Groups"))
-			header = append(header, headingColor.Sprintf("Tags"))
+			if hasGroup {
+				header = append(header, headingColor.Sprintf("Groups"))
+			}
+
+			if hasTag {
+				header = append(header, headingColor.Sprintf("Tags"))
+			}
 		}
 
 		table.AddRow(header...)
@@ -207,9 +244,15 @@ func ListFiles(cData CommandData, name string, id uint) {
 				file.ID,
 				file.Name,
 				units.BinarySuffix(float64(file.Size)),
-				pubname,
-				humanTime.Difference(time.Now(), file.CreationDate),
 			}
+
+			// Append public file
+			if hasPublicFile {
+				rowItems = append(rowItems, pubname)
+			}
+
+			//Append time
+			rowItems = append(rowItems, humanTime.Difference(time.Now(), file.CreationDate))
 
 			//Show namespace on -dd
 			if cData.Details > 2 {
@@ -218,8 +261,13 @@ func ListFiles(cData CommandData, name string, id uint) {
 
 			//Show groups and tags on -d
 			if cData.Details > 1 {
-				rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
-				rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+				if hasGroup {
+					rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
+				}
+
+				if hasTag {
+					rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+				}
 			}
 
 			table.AddRow(rowItems...)
@@ -231,6 +279,7 @@ func ListFiles(cData CommandData, name string, id uint) {
 
 //PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
+	// TODO print count of published files
 	var resData server.PublishResponse
 	response, err := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
