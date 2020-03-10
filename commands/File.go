@@ -171,7 +171,7 @@ func ListFiles(config *models.Config, name string, id uint, attributes models.Fi
 
 		table := clitable.New()
 		table.ColSeparator = " "
-		table.Padding = 7
+		table.Padding = 4
 
 		header := []interface{}{
 			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"), headingColor.Sprint("Public name"), headingColor.Sprint("Created"),

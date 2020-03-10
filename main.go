@@ -211,30 +211,38 @@ func main() {
 	switch parsed {
 	// File commands
 	case fileDownloadCmd.FullCommand():
+		//Download file
 		commands.GetFile(config, *fileDownloadName, *fileDownloadID, models.FileAttributes{
 			Namespace: *appNamespace,
 		}, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
+	//View file
 	case viewCmd.FullCommand():
 		commands.GetFile(config, *viewFileName, *viewFileID, models.FileAttributes{
 			Namespace: *appNamespace,
 		}, "", true, *viewNoPreview, *viewPreview)
 
+	// Upload
 	case appUpload.FullCommand():
 		commands.UploadFile(config, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, fileAttributes, *appOutputJSON)
 
+	//Delete file
 	case fileDeleteCmd.FullCommand():
 		commands.DeleteFile(config, *fileDeleteName, *fileDeleteID, fileAttributes)
 
+	//List files
 	case fileListCmd.FullCommand():
 		commands.ListFiles(config, *fileListName, *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
+	//List file(s)
 	case appFilesCmd.FullCommand():
 		commands.ListFiles(config, "", *fileDownloadID, fileAttributes, uint8(*appDetails)+1, *appOutputJSON, *appYes)
 
+	//Update File
 	case fileUpdateCmd.FullCommand():
 		commands.UpdateFile(config, *fileUpdateName, *fileUpdateID, *appNamespace, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
 
+	//Publish file
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(config, *filePublishName, *filePublishID, *publishPublicName, fileAttributes, *appOutputJSON)
 
