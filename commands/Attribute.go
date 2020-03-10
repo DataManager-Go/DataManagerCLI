@@ -55,7 +55,7 @@ func attributeRequest(cData CommandData, attribute models.Attribute, action uint
 
 	// Error handling #2
 	if response.Status == server.ResponseError {
-		printResponseError(response, "trying to update")
+		printResponseError(response)
 		return
 	}
 

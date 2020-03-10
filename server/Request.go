@@ -73,6 +73,13 @@ const (
 	EPAttributeGroup = EPAttribute + "/group"
 	EPGroupUpdate    = EPAttributeGroup + "/update"
 	EPGroupDelete    = EPAttributeGroup + "/delete"
+
+	// Namespace
+	EPNamespace       Endpoint = "/namespace"
+	EPNamespaceCreate          = EPNamespace + "/create"
+	EPNamespaceUpdate          = EPNamespace + "/update"
+	EPNamespaceDelete          = EPNamespace + "/delete"
+	EPNamespaceList            = EPNamespace + "s"
 )
 
 //Request a rest server request
@@ -119,6 +126,13 @@ type UpdateAttributeRequest struct {
 type CredentialsRequest struct {
 	Username string `json:"username"`
 	Password string `json:"pass"`
+}
+
+//NamespaceRequest namespace action request
+type NamespaceRequest struct {
+	Namespace string               `json:"ns"`
+	NewName   string               `json:"newName,omitempty"`
+	Type      models.NamespaceType `json:"nstype"`
 }
 
 // UploadRequest contains file info (and a file)

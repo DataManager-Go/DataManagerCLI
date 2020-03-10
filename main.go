@@ -142,15 +142,23 @@ var (
 
 	//
 	// ---------> Namespace commands --------------------------------------
-	namespaceCmd = app.Command("namespace", "Do something with namespaces").Alias("ns")
+	namespaceCmd  = app.Command("namespace", "Do something with namespaces").Alias("ns")
+	namespacesCmd = app.Command("namespaces", "List your namespaces")
 
-	// -- Delete
-	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a group")
-	namespaceDeleteName = namespaceDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()
+	// -- Create
+	namespaceCreateCmd    = namespaceCmd.Command("create", "Create a namespace")
+	namespaceCreateName   = namespaceCreateCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
+	namespaceCreateCustom = namespaceCreateCmd.Flag("custom", "Create a custom namespace (no username prefix)").Bool()
 	// -- Update
-	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a group")
-	namespaceUpdateName    = namespaceUpdateCmd.Arg("groupName", "Name of the group that should be updated").Required().String()
-	namespaceUpdateNewName = namespaceUpdateCmd.Flag("new-name", "Rename a group").String()
+	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a namespace")
+	namespaceUpdateName    = namespaceUpdateCmd.Arg("namespaceName", "Name of the namespace that should be updated").Required().String()
+	namespaceUpdateNewName = namespaceUpdateCmd.Flag("new-name", "Rename a namespace").String()
+	// -- Delete
+	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a namespace")
+	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
+	// -- List
+	namespaceListCmd  = namespaceCmd.Command("list", "List your namespaces")
+	namespaceListName = namespaceListCmd.Arg("namespaceName", "Name of namespace to view").String()
 )
 
 var (
@@ -222,7 +230,7 @@ func main() {
 
 	// Execute the desired command
 	switch parsed {
-	// File commands
+	// -- File commands
 	case fileDownloadCmd.FullCommand():
 		//Download file
 		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
@@ -255,7 +263,7 @@ func main() {
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
 
-	// -- Attributes
+	// -- Attributes commands
 	//Update tag
 	case tagUpdateCmd.FullCommand():
 		commands.UpdateAttribute(commandData, models.TagAttribute, *tagUpdateName, *tagUpdateNewName)
@@ -272,17 +280,34 @@ func main() {
 	case groupDeleteCmd.FullCommand():
 		commands.DeleteAttribute(commandData, models.GroupAttribute, *groupDeleteName)
 
-	// -- Ping
+	// -- Namespace commands
+	//Create namespace
+	case namespaceCreateCmd.FullCommand():
+		commands.CreateNamespace(commandData, *namespaceCreateName, *namespaceCreateCustom)
+
+	//Update namespace
+	case namespaceUpdateCmd.FullCommand():
+		commands.UpdateNamespace(commandData, *namespaceUpdateName, *namespaceUpdateNewName, *namespaceCreateCustom)
+
+	//Delete namespace
+	case namespaceDeleteCmd.FullCommand():
+		commands.DeleteNamespace(commandData, *namespaceDeleteName)
+
+	//List namespaces
+	case namespaceListCmd.FullCommand(), namespacesCmd.FullCommand():
+		commands.ListNamespace(commandData, *namespaceListName)
+
+	// -- Ping command
 	case appPing.FullCommand():
 		pingServer(config)
 
-	// -- User
+	// -- User commands
 	case loginCmd.FullCommand():
 		commands.LoginCommand(commandData.Config, *loginCmdUser, *appYes)
 	case registerCmd:
 		commands.RegisterCommand(config)
 
-	// -- Config
+	// -- Config commands
 	case configUse.FullCommand():
 		commands.ConfigUse(*commandData.Config, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
