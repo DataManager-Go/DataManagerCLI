@@ -25,6 +25,8 @@ const (
 	HeaderContentType string = "Content-Type"
 	//HeaderFileName filename header
 	HeaderFileName string = "X-Filename"
+	//HeaderRequest request content
+	HeaderRequest string = "Request"
 )
 
 //LoginResponse response for login

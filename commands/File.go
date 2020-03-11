@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,9 +35,8 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 	//Make public if public name was specified
 	if len(publicName) > 0 {
 		public = true
-	}
+	} //bulid request
 
-	//bulid request
 	request := server.UploadRequest{
 		Name:       fileName,
 		Attributes: cData.FileAttributes,
@@ -44,11 +44,15 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		PublicName: publicName,
 	}
 
+	var payload []byte
+	contentType := ""
+
 	//Check for url/file
 	u, err := url.Parse(path)
 	if err == nil && (u.Scheme == "http" || u.Scheme == "https") {
 		request.UploadType = server.URLUploadType
 		request.URL = path
+		contentType = string(server.JSONContentType)
 	} else {
 		fileBytes, err := ioutil.ReadFile(path)
 
@@ -65,16 +69,34 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		}
 
 		request.UploadType = server.FileUploadType
-		request.Data = base64.StdEncoding.EncodeToString(fileBytes)
-		request.Sum = gaw.GetMD5Hash(request.Data)
+
+		bodybuff, ct, err := fileToBodypart(path)
+		if err != nil {
+			fmt.Println("Error:", err.Error())
+			return
+		}
+		contentType = ct
+		payload = bodybuff.Bytes()
 	}
+
+	//Make json header content
+	rbody, err := json.Marshal(request)
+	if err != nil {
+		fmt.Println("Invalid Json:", err)
+		return
+	}
+	rBase := base64.StdEncoding.EncodeToString(rbody)
 
 	//Do request
 	var resStruct server.UploadResponse
-	response, err := server.NewRequest(server.EPFileUpload, request, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&resStruct)
+	response, err := server.NewRequest(server.EPFileUpload, payload, cData.Config).
+		WithAuth(server.Authorization{
+			Type:    server.Bearer,
+			Palyoad: cData.Config.User.SessionToken,
+		}).WithHeader(server.HeaderRequest, rBase).
+		WithRequestType(server.RawRequestType).
+		WithContentType(server.ContentType(contentType)).
+		Do(&resStruct)
 
 	if err != nil {
 		if response != nil {

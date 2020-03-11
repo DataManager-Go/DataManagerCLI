@@ -84,12 +84,14 @@ const (
 
 //Request a rest server request
 type Request struct {
+	RequestType   RequestType
 	Endpoint      Endpoint
 	Payload       interface{}
 	Config        *models.Config
 	Method        Method
 	ContentType   ContentType
 	Authorization *Authorization
+	Headers       map[string]string
 }
 
 // FileListRequest contains file info (and a file)
@@ -138,9 +140,7 @@ type NamespaceRequest struct {
 // UploadRequest contains file info (and a file)
 type UploadRequest struct {
 	UploadType UploadType            `json:"type"`
-	Data       string                `json:"data"`
 	URL        string                `json:"url"`
-	Sum        string                `json:"sum"`
 	Name       string                `json:"name"`
 	Public     bool                  `json:"public"`
 	PublicName string                `json:"pbname"`
@@ -157,9 +157,19 @@ const (
 	URLUploadType
 )
 
+//RequestType type of request
+type RequestType uint8
+
+//Request types
+const (
+	JSONRequestType RequestType = iota
+	RawRequestType
+)
+
 //NewRequest creates a new post request
 func NewRequest(endpoint Endpoint, payload interface{}, config *models.Config) *Request {
 	return &Request{
+		RequestType: JSONRequestType,
 		Endpoint:    endpoint,
 		Payload:     payload,
 		Config:      config,
@@ -168,21 +178,48 @@ func NewRequest(endpoint Endpoint, payload interface{}, config *models.Config) *
 	}
 }
 
+//WithRequestType use different request type
+func (request *Request) WithRequestType(rType RequestType) *Request {
+	request.RequestType = rType
+	return request
+}
+
 //WithAuth with authorization
 func (request *Request) WithAuth(a Authorization) *Request {
 	request.Authorization = &a
 	return request
 }
 
-//DoHTTPRequest do plain http request
-func (request *Request) DoHTTPRequest() (*http.Response, error) {
-	client := &http.Client{
+//WithContentType with contenttype
+func (request *Request) WithContentType(ct ContentType) *Request {
+	request.ContentType = ct
+	return request
+}
+
+//WithHeader add header to request
+func (request *Request) WithHeader(name string, value string) *Request {
+	if request.Headers == nil {
+		request.Headers = make(map[string]string)
+	}
+
+	request.Headers[name] = value
+	return request
+}
+
+//BuildClient return client
+func (request *Request) BuildClient() *http.Client {
+	return &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: request.Config.Server.IgnoreCert,
 			},
 		},
 	}
+}
+
+//DoHTTPRequest do plain http request
+func (request *Request) DoHTTPRequest() (*http.Response, error) {
+	client := request.BuildClient()
 
 	//Build url
 	u, err := url.Parse(request.Config.Server.URL)
@@ -191,15 +228,29 @@ func (request *Request) DoHTTPRequest() (*http.Response, error) {
 	}
 	u.Path = path.Join(u.Path, string(request.Endpoint))
 
-	//Encode data
-	bda, err := json.Marshal(request.Payload)
-	if err != nil {
-		return nil, err
+	var bytePayload []byte
+
+	//Use correct payload
+	if request.RequestType == JSONRequestType {
+		//Encode data
+		var err error
+		bytePayload, err = json.Marshal(request.Payload)
+		if err != nil {
+			return nil, err
+		}
+	} else if request.RequestType == RawRequestType {
+		bytePayload = (request.Payload).([]byte)
 	}
 
 	//bulid request
-	req, _ := http.NewRequest("POST", u.String(), bytes.NewBuffer(bda))
+	req, _ := http.NewRequest("POST", u.String(), bytes.NewBuffer(bytePayload))
+
+	//Set contenttype header
 	req.Header.Set("Content-Type", string(request.ContentType))
+
+	for headerKey, headerValue := range request.Headers {
+		req.Header.Set(headerKey, headerValue)
+	}
 
 	//Set Authorization header
 	if request.Authorization != nil {
@@ -218,11 +269,9 @@ func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
 
 	var response *RestRequestResponse
 
-	if resp != nil {
-		response = &RestRequestResponse{
-			HTTPCode: resp.StatusCode,
-			Headers:  &resp.Header,
-		}
+	response = &RestRequestResponse{
+		HTTPCode: resp.StatusCode,
+		Headers:  &resp.Header,
 	}
 
 	//Read and validate headers

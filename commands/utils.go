@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -99,4 +100,33 @@ func previewFile(filepath string) {
 			fmt.Println("Error:\n", string(errCatcher.Bytes()))
 		}
 	}
+}
+
+func fileToBodypart(filename string) (*bytes.Buffer, string, error) {
+	bodyBuf := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuf)
+
+	// this step is very important
+	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
+	if err != nil {
+		fmt.Println("error writing to buffer")
+		return nil, "", err
+	}
+
+	// open file handle
+	fh, err := os.Open(filename)
+	if err != nil {
+		fmt.Println("error opening file")
+		return nil, "", err
+	}
+	defer fh.Close()
+
+	//iocopy
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		return nil, "", err
+	}
+
+	bodyWriter.Close()
+	return bodyBuf, bodyWriter.FormDataContentType(), nil
 }
