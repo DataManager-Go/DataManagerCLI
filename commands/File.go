@@ -68,14 +68,20 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 			request.FileType = ft.MIME.Value
 		}
 
+		//Set upload type
 		request.UploadType = server.FileUploadType
 
+		//Create bodybuffer from file
 		bodybuff, ct, err := fileToBodypart(path)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
 			return
 		}
+
+		//Set header
 		contentType = ct
+
+		//set body payload
 		payload = bodybuff.Bytes()
 	}
 
@@ -89,7 +95,8 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 
 	//Do request
 	var resStruct server.UploadResponse
-	response, err := server.NewRequest(server.EPFileUpload, payload, cData.Config).
+	response, err := server.
+		NewRequest(server.EPFileUpload, payload, cData.Config).
 		WithAuth(server.Authorization{
 			Type:    server.Bearer,
 			Palyoad: cData.Config.User.SessionToken,
@@ -116,7 +123,11 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 	if cData.OutputJSON {
 		fmt.Println(toJSON(resStruct))
 	} else {
-		fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
+		if len(resStruct.PublicFilename) != 0 {
+			fmt.Printf("Public name: %s\nName: %s\nID %d\n", resStruct.PublicFilename, fileName, resStruct.FileID)
+		} else {
+			fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
+		}
 	}
 }
 

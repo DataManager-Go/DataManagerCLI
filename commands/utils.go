@@ -102,6 +102,7 @@ func previewFile(filepath string) {
 	}
 }
 
+//Parse file to bytes.Buffer for http multipart request
 func fileToBodypart(filename string) (*bytes.Buffer, string, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
