@@ -166,7 +166,7 @@ func DeleteFile(cData CommandData, name string, id uint) {
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(cData CommandData, name string, id uint) {
+func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:     id,
@@ -232,6 +232,20 @@ func ListFiles(cData CommandData, name string, id uint) {
 				if !hasGroup && len(file.Attributes.Groups) > 0 {
 					hasGroup = true
 				}
+			}
+		}
+
+		//Order output
+		if len(sOrder) > 0 {
+			if order := models.OrderFromString(sOrder); order != nil {
+				//Sort
+				models.
+					NewSorter(filesResponse.Files).
+					Reversed(models.IsOrderReversed(sOrder)).
+					SortBy(*order)
+			} else {
+				fmt.Printf("Error: Sort by '%s' not supporded", sOrder)
+				return
 			}
 		}
 

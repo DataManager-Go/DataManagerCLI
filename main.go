@@ -75,17 +75,19 @@ var (
 
 	//
 	// ---------> File commands --------------------------------------
-	appFileCmd  = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd = app.Command("files", "List files").Alias("fs")
+	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
+	appFilesCmd   = app.Command("files", "List files").Alias("fs")
+	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
 
 	// -- Delete
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
 	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").Required().String()
 	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- List
-	fileListCmd  = appFileCmd.Command("list", "List files")
-	fileListName = fileListCmd.Arg("fileName", "Show files with this name").String()
-	fileListID   = fileListCmd.Arg("fileID", "The fileID").Uint()
+	fileListCmd   = appFileCmd.Command("list", "List files")
+	fileListName  = fileListCmd.Arg("fileName", "Show files with this name").String()
+	fileListID    = fileListCmd.Arg("fileID", "The fileID").Uint()
+	fileListOrder = fileListCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
 	// -- Update
 	fileUpdateCmd          = appFileCmd.Command("update", "Update a file")
 	fileUpdateName         = fileUpdateCmd.Arg("fileName", "Name of the file that should be updated").Required().String()
@@ -248,11 +250,11 @@ func main() {
 
 	//List files
 	case fileListCmd.FullCommand():
-		commands.ListFiles(commandData, *fileListName, *fileDownloadID)
+		commands.ListFiles(commandData, *fileListName, *fileDownloadID, *fileListOrder)
 
 	//List file(s)
 	case appFilesCmd.FullCommand():
-		commands.ListFiles(commandData, "", *fileDownloadID)
+		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
 
 	//Update File
 	case fileUpdateCmd.FullCommand():
