@@ -98,6 +98,7 @@ type Request struct {
 type FileListRequest struct {
 	FileID         uint                     `json:"fid"`
 	Name           string                   `json:"name"`
+	AllNamespaces  bool                     `json:"allns"`
 	OptionalParams OptionalRequetsParameter `json:"opt"`
 	Order          string                   `json:"order,omitempty"`
 	Attributes     models.FileAttributes    `json:"attributes"`

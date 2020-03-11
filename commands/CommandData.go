@@ -9,6 +9,7 @@ type CommandData struct {
 	Namespace      string
 	Details        uint8
 	All            bool
+	AllNamespaces  bool
 	NoRedaction    bool
 	OutputJSON     bool
 	Yes            bool

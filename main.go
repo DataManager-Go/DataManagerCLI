@@ -30,13 +30,14 @@ var (
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 
-	appNamespace   = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
-	appTags        = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups      = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appOutputJSON  = app.Flag("json", "Print output as json").Bool()
-	appNoRedaction = app.Flag("no-redact", "Don't redact secrets").Bool()
-	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
-	appAll         = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appNamespace     = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appTags          = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups        = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appOutputJSON    = app.Flag("json", "Print output as json").Bool()
+	appNoRedaction   = app.Flag("no-redact", "Don't redact secrets").Bool()
+	appDetails       = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appAll           = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
 
 	// --- :Commands: -------
 
@@ -224,6 +225,7 @@ func main() {
 		FileAttributes: fileAttributes,
 		Namespace:      *appNamespace,
 		All:            *appAll,
+		AllNamespaces:  *appAllNamespaces,
 		NoRedaction:    *appNoRedaction,
 		OutputJSON:     *appOutputJSON,
 		Yes:            *appYes,

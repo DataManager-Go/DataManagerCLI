@@ -31,7 +31,7 @@ func (sorter *Sorter) Reversed(reversed bool) *Sorter {
 }
 
 //AvailableOrders options fo ordering
-var AvailableOrders = []string{"id", "name", "size", "pubname", "created"}
+var AvailableOrders = []string{"id", "name", "size", "pubname", "created", "namespace"}
 
 //ReversedSuffixes suffixes for reversing sort
 var ReversedSuffixes = []string{"r", "d"}
@@ -44,6 +44,7 @@ const (
 	SizeOrder
 	PubNameOrder
 	CreatedOrder
+	NamespaceOrder
 )
 
 //OrderFromString return order from string
@@ -64,6 +65,8 @@ func OrderFromString(str string) *Order {
 		order = PubNameOrder
 	case AvailableOrders[4]:
 		order = CreatedOrder
+	case AvailableOrders[5]:
+		order = NamespaceOrder
 	default:
 		return nil
 	}
@@ -98,6 +101,8 @@ func (sorter Sorter) SortBy(by Order) {
 		sort.Slice(sorter.Files, sorter.sortLessPubName)
 	case CreatedOrder:
 		sort.Slice(sorter.Files, sorter.sortLessCreated)
+	case NamespaceOrder:
+		sort.Slice(sorter.Files, sorter.sortLessNamespace)
 	}
 }
 
@@ -134,4 +139,11 @@ func (sorter Sorter) sortLessCreated(i, j int) bool {
 		i, j = j, i
 	}
 	return sorter.Files[i].CreationDate.Unix() < sorter.Files[j].CreationDate.Unix()
+}
+
+func (sorter Sorter) sortLessNamespace(i, j int) bool {
+	if sorter.Reverse {
+		i, j = j, i
+	}
+	return sorter.Files[i].Attributes.Namespace < sorter.Files[j].Attributes.Namespace
 }

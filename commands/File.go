@@ -35,8 +35,9 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 	//Make public if public name was specified
 	if len(publicName) > 0 {
 		public = true
-	} //bulid request
+	}
 
+	//bulid request
 	request := server.UploadRequest{
 		Name:       fileName,
 		Attributes: cData.FileAttributes,
@@ -169,9 +170,10 @@ func DeleteFile(cData CommandData, name string, id uint) {
 func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
-		FileID:     id,
-		Name:       name,
-		Attributes: cData.FileAttributes,
+		FileID:        id,
+		Name:          name,
+		AllNamespaces: cData.AllNamespaces,
+		Attributes:    cData.FileAttributes,
 		OptionalParams: server.OptionalRequetsParameter{
 			Verbose: cData.Details,
 		},
@@ -262,7 +264,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 		header = append(header, headingColor.Sprint("Created"))
 
 		//Show namespace on -dd
-		if cData.Details > 2 {
+		if cData.Details > 2 || cData.AllNamespaces {
 			header = append(header, headingColor.Sprintf("Namespace"))
 		}
 
@@ -302,7 +304,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			rowItems = append(rowItems, humanTime.Difference(time.Now(), file.CreationDate))
 
 			//Show namespace on -dd
-			if cData.Details > 2 {
+			if cData.Details > 2 || cData.AllNamespaces {
 				rowItems = append(rowItems, file.Attributes.Namespace)
 			}
 
@@ -326,8 +328,6 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 //PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
-	// TODO print count of published files
-
 	request := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
 		FileID:     id,
