@@ -13,4 +13,5 @@ type CommandData struct {
 	NoRedaction    bool
 	OutputJSON     bool
 	Yes            bool
+	Force          bool
 }

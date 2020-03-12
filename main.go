@@ -38,6 +38,7 @@ var (
 	appDetails       = app.Flag("details", "Print more details of something").Short('d').Counter()
 	appAll           = app.Flag("all", "Do action for all found files").Short('a').Bool()
 	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
+	appForce         = app.Flag("force", "Forces an action").Short('f').Bool()
 
 	// --- :Commands: -------
 
@@ -229,6 +230,7 @@ func main() {
 		NoRedaction:    *appNoRedaction,
 		OutputJSON:     *appOutputJSON,
 		Yes:            *appYes,
+		Force:          *appForce,
 	}
 
 	// Execute the desired command

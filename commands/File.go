@@ -206,8 +206,6 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	if cData.OutputJSON {
 		fmt.Println(toJSON(filesResponse.Files))
 	} else {
-		fmt.Printf("There were %s found in '%s'\n", color.HiGreenString(strconv.Itoa(len(filesResponse.Files))+" files"), cData.Namespace)
-		// Print files
 		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
 		//Table setup
@@ -519,6 +517,11 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			io.Copy(os.Stdout, resp.Body)
 		}
 	} else if len(savePath) > 0 {
+		//Use server filename if a wildcard was used
+		if strings.HasSuffix(fileName, "%") || strings.HasPrefix(fileName, "%") {
+			fileName = serverFileName
+		}
+
 		//Determine output file/path
 		outFile := savePath
 		if strings.HasSuffix(savePath, "/") {
@@ -527,6 +530,9 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			stat, err := os.Stat(outFile)
 			if err == nil && stat.IsDir() {
 				outFile = filepath.Join(outFile, fileName)
+			} else if stat != nil && stat.Mode().IsRegular() && !cData.Force {
+				fmt.Println("File already exists. Use -f to overwrite it")
+				return
 			}
 		}
 

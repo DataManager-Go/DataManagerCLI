@@ -7,25 +7,25 @@ import (
 	"github.com/JojiiOfficial/gaw"
 )
 
-//Order order/sort stuff
-type Order int16
+//FileOrder order/sort stuff
+type FileOrder int16
 
-//Sorter a sorter
-type Sorter struct {
+//FileSorter a sorter
+type FileSorter struct {
 	Files   []FileResponseItem
 	Reverse bool
 }
 
 //NewSorter create a new sorter
-func NewSorter(files []FileResponseItem) *Sorter {
-	return &Sorter{
+func NewSorter(files []FileResponseItem) *FileSorter {
+	return &FileSorter{
 		Files:   files,
 		Reverse: false,
 	}
 }
 
 //Reversed Sort reversed
-func (sorter *Sorter) Reversed(reversed bool) *Sorter {
+func (sorter *FileSorter) Reversed(reversed bool) *FileSorter {
 	sorter.Reverse = reversed
 	return sorter
 }
@@ -38,7 +38,7 @@ var ReversedSuffixes = []string{"r", "d"}
 
 //Order
 const (
-	NoOrder Order = iota
+	NoOrder FileOrder = iota
 	IDOrder
 	NameOrder
 	SizeOrder
@@ -48,7 +48,7 @@ const (
 )
 
 //OrderFromString return order from string
-func OrderFromString(str string) *Order {
+func OrderFromString(str string) *FileOrder {
 	//remove direction
 	str = strings.Split(str, "/")[0]
 
@@ -85,7 +85,7 @@ func IsOrderReversed(str string) bool {
 }
 
 //SortBy order files
-func (sorter Sorter) SortBy(by Order) {
+func (sorter FileSorter) SortBy(by FileOrder) {
 	if by == NoOrder {
 		return
 	}
@@ -106,42 +106,42 @@ func (sorter Sorter) SortBy(by Order) {
 	}
 }
 
-func (sorter Sorter) sortLessID(i, j int) bool {
+func (sorter FileSorter) sortLessID(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
 	return sorter.Files[i].ID < sorter.Files[j].ID
 }
 
-func (sorter Sorter) sortLessName(i, j int) bool {
+func (sorter FileSorter) sortLessName(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
 	return sorter.Files[i].Name < sorter.Files[j].Name
 }
 
-func (sorter Sorter) sortLessSize(i, j int) bool {
+func (sorter FileSorter) sortLessSize(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
 	return sorter.Files[i].Size < sorter.Files[j].Size
 }
 
-func (sorter Sorter) sortLessPubName(i, j int) bool {
+func (sorter FileSorter) sortLessPubName(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
 	return sorter.Files[i].PublicName < sorter.Files[j].PublicName
 }
 
-func (sorter Sorter) sortLessCreated(i, j int) bool {
+func (sorter FileSorter) sortLessCreated(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
 	return sorter.Files[i].CreationDate.Unix() < sorter.Files[j].CreationDate.Unix()
 }
 
-func (sorter Sorter) sortLessNamespace(i, j int) bool {
+func (sorter FileSorter) sortLessNamespace(i, j int) bool {
 	if sorter.Reverse {
 		i, j = j, i
 	}
