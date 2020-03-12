@@ -237,16 +237,19 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 		//Order output
 		if len(sOrder) > 0 {
-			if order := models.OrderFromString(sOrder); order != nil {
+			if order := models.FileOrderFromString(sOrder); order != nil {
 				//Sort
 				models.
-					NewSorter(filesResponse.Files).
+					NewFileSorter(filesResponse.Files).
 					Reversed(models.IsOrderReversed(sOrder)).
 					SortBy(*order)
 			} else {
 				fmt.Printf("Error: Sort by '%s' not supporded", sOrder)
 				return
 			}
+		} else {
+			//By default sort by creation desc
+			models.NewFileSorter(filesResponse.Files).Reversed(true).SortBy(models.CreatedOrder)
 		}
 
 		header := []interface{}{

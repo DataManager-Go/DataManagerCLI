@@ -16,8 +16,8 @@ type FileSorter struct {
 	Reverse bool
 }
 
-//NewSorter create a new sorter
-func NewSorter(files []FileResponseItem) *FileSorter {
+//NewFileSorter create a new sorter
+func NewFileSorter(files []FileResponseItem) *FileSorter {
 	return &FileSorter{
 		Files:   files,
 		Reverse: false,
@@ -47,8 +47,8 @@ const (
 	NamespaceOrder
 )
 
-//OrderFromString return order from string
-func OrderFromString(str string) *FileOrder {
+//FileOrderFromString return order from string
+func FileOrderFromString(str string) *FileOrder {
 	//remove direction
 	str = strings.Split(str, "/")[0]
 
