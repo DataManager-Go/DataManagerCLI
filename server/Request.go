@@ -146,7 +146,6 @@ type UploadRequest struct {
 	Name       string                `json:"name"`
 	Public     bool                  `json:"public"`
 	PublicName string                `json:"pbname"`
-	FileType   string                `json:"ftype"`
 	Attributes models.FileAttributes `json:"attributes"`
 }
 

@@ -26,7 +26,7 @@ var (
 	app = kingpin.New(appName, "A DataManager")
 
 	// Global flags
-	appYes     = app.Flag("yes", "Skip confirmations").Bool()
+	appYes     = app.Flag("yes", "Skip confirmations").Short('y').Bool()
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 

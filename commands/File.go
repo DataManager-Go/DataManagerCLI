@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/url"
 	"os"
@@ -19,7 +18,6 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
-	"github.com/h2non/filetype"
 	humanTime "github.com/sbani/go-humanizer/time"
 	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
@@ -55,23 +53,6 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		request.URL = path
 		contentType = string(server.JSONContentType)
 	} else {
-		fileBytes, err := ioutil.ReadFile(path)
-
-		if err != nil {
-			printError("processing your file. Please check your input")
-			return
-		}
-
-		//Try to detect filetype
-		ft, err := filetype.Get(fileBytes)
-		if err == nil {
-			//Set filetype if detected successfully
-			request.FileType = ft.MIME.Value
-		}
-
-		//Set upload type
-		request.UploadType = server.FileUploadType
-
 		//Create bodybuffer from file
 		bodybuff, ct, err := fileToBodypart(path)
 		if err != nil {
@@ -125,7 +106,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		fmt.Println(toJSON(resStruct))
 	} else {
 		if len(resStruct.PublicFilename) != 0 {
-			fmt.Printf("Public name: %s\nName: %s\nID %d\n", resStruct.PublicFilename, fileName, resStruct.FileID)
+			fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(resStruct.PublicFilename), fileName, resStruct.FileID)
 		} else {
 			fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
 		}
@@ -134,6 +115,13 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(cData CommandData, name string, id uint) {
+	//Confirm 'delete everything'
+	if strings.TrimSpace(name) == "%" && !cData.Yes && cData.All {
+		if i, _ := gaw.ConfirmInput("Do you really want to delete all files in "+cData.Namespace+"? (y/n)> ", bufio.NewReader(os.Stdin)); !i {
+			return
+		}
+	}
+
 	var response server.CountResponse
 	resp, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
 		Name:       name,
@@ -385,7 +373,8 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 				fmt.Printf("File %s with ID %d Public name: %s\n", file.Filename, file.FileID, file.PublicFilename)
 			}
 		} else {
-			fmt.Printf((resp.(server.PublishResponse)).PublicFilename)
+			pubName := (resp.(server.PublishResponse)).PublicFilename
+			fmt.Printf(cData.Config.GetPreviewURL(pubName))
 		}
 	}
 }

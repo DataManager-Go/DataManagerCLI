@@ -26,8 +26,9 @@ type Config struct {
 }
 
 type serverConfig struct {
-	URL        string `required:"true"`
-	IgnoreCert bool
+	URL            string `required:"true"`
+	AlternativeURL string
+	IgnoreCert     bool
 }
 
 type clientConfig struct {
@@ -48,7 +49,7 @@ func getDefaultConfig() Config {
 			IgnoreCert: false,
 		},
 		Client: clientConfig{
-			MinFilesToDisplay: 10,
+			MinFilesToDisplay: 100,
 			AutoFilePreview:   true,
 		},
 		Default: defaultConfig{
@@ -116,6 +117,17 @@ func (config *Config) Validate() error {
 //IsLoggedIn return true if sessiondata is available
 func (config *Config) IsLoggedIn() bool {
 	return len(config.User.Username) > 0 && len(config.User.SessionToken) == 64
+}
+
+//GetPreviewURL gets preview URL
+func (config *Config) GetPreviewURL(file string) string {
+	//Use alternative url if available
+	if len(config.Server.AlternativeURL) != 0 {
+		return path.Join(config.Server.AlternativeURL, file)
+	}
+
+	//otherwise use default url and 'preview' folder
+	return path.Join(config.Server.URL, "preview", file)
 }
 
 //GetDefaultConfig return path of default config
