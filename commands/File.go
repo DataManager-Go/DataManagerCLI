@@ -206,6 +206,11 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	if cData.OutputJSON {
 		fmt.Println(toJSON(filesResponse.Files))
 	} else {
+		if len(filesResponse.Files) == 0 {
+			fmt.Printf("No files in namespace %s\n", cData.Namespace)
+			return
+		}
+
 		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
 		//Table setup

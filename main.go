@@ -125,7 +125,7 @@ var (
 	tagCmd = app.Command("tag", "Do something with tags")
 
 	// -- Delete
-	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag")
+	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag").Alias("rm").Alias("del")
 	tagDeleteName = tagDeleteCmd.Arg("tagName", "Name of tag to delete").Required().String()
 	// -- Update
 	tagUpdateCmd     = tagCmd.Command("update", "Update a tag")
@@ -137,7 +137,7 @@ var (
 	groupCmd = app.Command("group", "Do something with groups")
 
 	// -- Delete
-	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group")
+	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group").Alias("rm").Alias("del")
 	groupDeleteName = groupDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()
 	// -- Update
 	groupUpdateCmd     = groupCmd.Command("update", "Update a group")
@@ -151,14 +151,14 @@ var (
 
 	// -- Create
 	namespaceCreateCmd    = namespaceCmd.Command("create", "Create a namespace")
-	namespaceCreateName   = namespaceCreateCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
+	namespaceCreateName   = namespaceCreateCmd.Arg("namespaceName", "Name of namespace").Required().String()
 	namespaceCreateCustom = namespaceCreateCmd.Flag("custom", "Create a custom namespace (no username prefix)").Bool()
 	// -- Update
 	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a namespace")
 	namespaceUpdateName    = namespaceUpdateCmd.Arg("namespaceName", "Name of the namespace that should be updated").Required().String()
 	namespaceUpdateNewName = namespaceUpdateCmd.Flag("new-name", "Rename a namespace").String()
 	// -- Delete
-	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a namespace")
+	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a namespace").Alias("rm").Alias("del")
 	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
 	// -- List
 	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces")
