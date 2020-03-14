@@ -1,6 +1,10 @@
 package commands
 
-import "github.com/Yukaru-san/DataManager_Client/models"
+import (
+	"time"
+
+	"github.com/Yukaru-san/DataManager_Client/models"
+)
 
 //CommandData data for commands
 type CommandData struct {
@@ -14,4 +18,5 @@ type CommandData struct {
 	OutputJSON     bool
 	Yes            bool
 	Force          bool
+	BenchDone      chan time.Time
 }

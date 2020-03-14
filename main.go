@@ -9,6 +9,7 @@ import (
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -29,6 +30,7 @@ var (
 	appYes     = app.Flag("yes", "Skip confirmations").Short('y').Bool()
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
+	appBench   = app.Flag("bench", "Benchmark web calls").Bool()
 
 	appNamespace     = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
 	appTags          = app.Flag("tag", "Specify tags to use").Short('t').Strings()
@@ -233,6 +235,12 @@ func main() {
 		Force:          *appForce,
 	}
 
+	startTime := time.Now()
+	if *appBench {
+		//Create channel
+		commandData.BenchDone = make(chan time.Time, 1)
+	}
+
 	// Execute the desired command
 	switch parsed {
 	// -- File commands
@@ -317,6 +325,12 @@ func main() {
 		commands.ConfigUse(*commandData.Config, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
 		commands.ConfigView(*commandData.Config, *appOutputJSON, *appNoRedaction)
+	}
+
+	if *appBench {
+		endTime := <-commandData.BenchDone
+		fmt.Println()
+		logrus.Infof("Bench took %s", endTime.Sub(startTime).String())
 	}
 }
 

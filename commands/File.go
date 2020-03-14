@@ -85,6 +85,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		}).WithHeader(server.HeaderRequest, rBase).
 		WithRequestType(server.RawRequestType).
 		WithContentType(server.ContentType(contentType)).
+		WithBenchCallback(cData.BenchDone).
 		Do(&resStruct)
 
 	if err != nil {
@@ -131,7 +132,7 @@ func DeleteFile(cData CommandData, name string, id uint) {
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&response)
+	}).WithBenchCallback(cData.BenchDone).Do(&response)
 
 	if err != nil {
 		if resp != nil {
@@ -157,6 +158,7 @@ func DeleteFile(cData CommandData, name string, id uint) {
 // ListFiles lists the files corresponding to the args
 func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	var filesResponse server.FileListResponse
+
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:        id,
 		Name:          name,
@@ -168,7 +170,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&filesResponse)
+	}).WithBenchCallback(cData.BenchDone).Do(&filesResponse)
 
 	if err != nil {
 		if response != nil {
@@ -331,7 +333,7 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	})
+	}).WithBenchCallback(cData.BenchDone)
 
 	var err error
 	var response *server.RestRequestResponse
@@ -426,7 +428,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&response)
+	}).WithBenchCallback(cData.BenchDone).Do(&response)
 
 	// Error handling #1
 	if err != nil {

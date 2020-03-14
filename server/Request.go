@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"time"
 
 	"github.com/Yukaru-san/DataManager_Client/models"
 )
@@ -92,6 +93,7 @@ type Request struct {
 	ContentType   ContentType
 	Authorization *Authorization
 	Headers       map[string]string
+	BenchChan     chan time.Time
 }
 
 // FileListRequest contains file info (and a file)
@@ -191,6 +193,12 @@ func (request *Request) WithAuth(a Authorization) *Request {
 	return request
 }
 
+//WithBenchCallback with bench
+func (request *Request) WithBenchCallback(c chan time.Time) *Request {
+	request.BenchChan = c
+	return request
+}
+
 //WithContentType with contenttype
 func (request *Request) WithContentType(ct ContentType) *Request {
 	request.ContentType = ct
@@ -264,6 +272,12 @@ func (request *Request) DoHTTPRequest() (*http.Response, error) {
 //Do a better request method
 func (request Request) Do(retVar interface{}) (*RestRequestResponse, error) {
 	resp, err := request.DoHTTPRequest()
+
+	//Call bench callbac
+	if request.BenchChan != nil {
+		request.BenchChan <- time.Now()
+	}
+
 	if err != nil {
 		return nil, err
 	}
