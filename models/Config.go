@@ -1,7 +1,9 @@
 package models
 
 import (
+	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -123,11 +125,28 @@ func (config *Config) IsLoggedIn() bool {
 func (config *Config) GetPreviewURL(file string) string {
 	//Use alternative url if available
 	if len(config.Server.AlternativeURL) != 0 {
-		return path.Join(config.Server.AlternativeURL, file)
+		//Parse URL
+		u, err := url.Parse(config.Server.AlternativeURL)
+		if err != nil {
+			fmt.Println("Server alternative URL is not valid: ", err)
+			return ""
+		}
+
+		//Set new path
+		u.Path = path.Join(u.Path, file)
+		return u.String()
+	}
+
+	//Parse URL
+	u, err := url.Parse(config.Server.URL)
+	if err != nil {
+		log.Fatalln("Server URL is not valid: ", err)
+		return ""
 	}
 
 	//otherwise use default url and 'preview' folder
-	return path.Join(config.Server.URL, "preview", file)
+	u.Path = path.Join(u.Path, "preview", file)
+	return u.String()
 }
 
 //GetDefaultConfig return path of default config
