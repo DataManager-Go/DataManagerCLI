@@ -42,7 +42,7 @@ func attributeRequest(cData CommandData, attribute models.Attribute, action uint
 	response, err := server.NewRequest(endpoint, request, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(nil)
+	}).WithBenchCallback(cData.BenchDone).Do(nil)
 
 	// Error handling #1
 	if err != nil {

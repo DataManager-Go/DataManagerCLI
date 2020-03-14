@@ -27,7 +27,7 @@ func handleNamespaceCommand(cData CommandData, action uint8, name, newName strin
 	}, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&res)
+	}).WithBenchCallback(cData.BenchDone).Do(&res)
 
 	// Error handling #1
 	if err != nil {
@@ -77,7 +77,7 @@ func ListNamespace(cData CommandData) {
 	response, err := server.NewRequest(server.EPNamespaceList, nil, cData.Config).WithAuth(server.Authorization{
 		Type:    server.Bearer,
 		Palyoad: cData.Config.User.SessionToken,
-	}).Do(&resp)
+	}).WithBenchCallback(cData.BenchDone).Do(&resp)
 
 	if err != nil {
 		if response != nil {

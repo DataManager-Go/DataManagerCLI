@@ -18,5 +18,6 @@ type CommandData struct {
 	OutputJSON     bool
 	Yes            bool
 	Force          bool
+	Bench          bool
 	BenchDone      chan time.Time
 }

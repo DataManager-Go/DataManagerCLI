@@ -131,3 +131,10 @@ func fileToBodypart(filename string) (*bytes.Buffer, string, error) {
 	bodyWriter.Close()
 	return bodyBuf, bodyWriter.FormDataContentType(), nil
 }
+
+func benchCheck(cData CommandData) {
+	if cData.Bench {
+		fmt.Println("This command doesn't support benchmarks")
+		os.Exit(1)
+	}
+}

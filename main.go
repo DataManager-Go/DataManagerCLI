@@ -233,6 +233,7 @@ func main() {
 		OutputJSON:     *appOutputJSON,
 		Yes:            *appYes,
 		Force:          *appForce,
+		Bench:          *appBench,
 	}
 
 	startTime := time.Now()
@@ -312,19 +313,19 @@ func main() {
 
 	// -- Ping command
 	case appPing.FullCommand():
-		pingServer(config)
+		pingServer(commandData)
 
 	// -- User commands
 	case loginCmd.FullCommand():
-		commands.LoginCommand(commandData.Config, *loginCmdUser, *appYes)
+		commands.LoginCommand(commandData, *loginCmdUser)
 	case registerCmd:
-		commands.RegisterCommand(config)
+		commands.RegisterCommand(commandData)
 
 	// -- Config commands
 	case configUse.FullCommand():
-		commands.ConfigUse(*commandData.Config, *configUseTarget, *configUseTargetValue)
+		commands.ConfigUse(commandData, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
-		commands.ConfigView(*commandData.Config, *appOutputJSON, *appNoRedaction)
+		commands.ConfigView(commandData)
 	}
 
 	if *appBench {
@@ -350,7 +351,7 @@ func getEnVar(name string) string {
 	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
 }
 
-func pingServer(config *models.Config) {
+func pingServer(cData commands.CommandData) {
 	var response server.StringResponse
 	authorization := server.Authorization{}
 
@@ -360,7 +361,10 @@ func pingServer(config *models.Config) {
 		authorization.Palyoad = config.User.SessionToken
 	}
 
-	res, err := server.NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, config).WithAuth(authorization).Do(&response)
+	res, err := server.NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, cData.Config).
+		WithAuth(authorization).
+		WithBenchCallback(cData.BenchDone).
+		Do(&response)
 
 	if err != nil {
 		log.Error(err.Error())

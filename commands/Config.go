@@ -7,7 +7,6 @@ import (
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/fatih/color"
 )
 
@@ -15,7 +14,7 @@ import (
 var UseTargets = []string{"namespace", "tags", "groups"}
 
 //ConfigUse command for config use
-func ConfigUse(config models.Config, target string, values []string) {
+func ConfigUse(cData CommandData, target string, values []string) {
 	//Return if target not found
 	if !gaw.IsInStringArray(target, UseTargets) {
 		fmt.Println("Target not found")
@@ -27,10 +26,10 @@ func ConfigUse(config models.Config, target string, values []string) {
 		//Remove desired target
 		switch target {
 		case UseTargets[1]:
-			config.Default.Tags = []string{}
+			cData.Config.Default.Tags = []string{}
 			fmt.Println("Removing tags")
 		case UseTargets[2]:
-			config.Default.Groups = []string{}
+			cData.Config.Default.Groups = []string{}
 			fmt.Println("Removing groups")
 		}
 	} else {
@@ -42,19 +41,19 @@ func ConfigUse(config models.Config, target string, values []string) {
 					values = []string{"default"}
 				}
 				fmt.Printf("Using namespace '%s'\n", values[0])
-				config.Default.Namespace = values[0]
+				cData.Config.Default.Namespace = values[0]
 			}
 		//Use tags
 		case UseTargets[1]:
 			{
 				fmt.Printf("Using tags '%s'\n", strings.Join(values, ", "))
-				config.Default.Tags = values
+				cData.Config.Default.Tags = values
 			}
 		//Use Groups
 		case UseTargets[2]:
 			{
 				fmt.Printf("Using groups '%s'\n", strings.Join(values, ", "))
-				config.Default.Groups = values
+				cData.Config.Default.Groups = values
 			}
 		default:
 			fmt.Printf("Target not found")
@@ -63,7 +62,7 @@ func ConfigUse(config models.Config, target string, values []string) {
 	}
 
 	//Save config
-	err := configService.Save(config, config.File)
+	err := configService.Save(cData.Config, cData.Config.File)
 	if err != nil {
 		fmt.Println("Error saving config:", err.Error())
 	} else {
@@ -73,18 +72,18 @@ func ConfigUse(config models.Config, target string, values []string) {
 }
 
 //ConfigView view config
-func ConfigView(config models.Config, outputJSON, noRedaction bool) {
-	if !outputJSON {
+func ConfigView(cData CommandData) {
+	if !cData.OutputJSON {
 		//Print human output
-		fmt.Println(config.View(!noRedaction))
+		fmt.Println(cData.Config.View(!cData.NoRedaction))
 	} else {
 		//Redact secrets
-		if !noRedaction {
-			config.User.SessionToken = "<redacted>"
+		if !cData.NoRedaction {
+			cData.Config.User.SessionToken = "<redacted>"
 		}
 
 		//Make json
-		b, err := json.Marshal(config)
+		b, err := json.Marshal(cData.Config)
 		if err != nil {
 			fmt.Println(err)
 			return

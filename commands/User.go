@@ -9,7 +9,6 @@ import (
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 
 	"github.com/fatih/color"
@@ -18,9 +17,12 @@ import (
 )
 
 //LoginCommand login into the server
-func LoginCommand(config *models.Config, usernameArg string, appYes bool, args ...bool) {
+func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
+	//Print error if user tries to bench
+	benchCheck(cData)
+
 	//Print confirmation if user is already logged in
-	if config.IsLoggedIn() && !appYes && len(args) == 0 {
+	if cData.Config.IsLoggedIn() && !cData.Yes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
 		if !i {
 			return
@@ -36,7 +38,7 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 	resp, err := server.NewRequest(server.EPLogin, server.CredentialsRequest{
 		Password: pass,
 		Username: username,
-	}, config).Do(&response)
+	}, cData.Config).Do(&response)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -47,7 +49,7 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 		fmt.Println(color.HiRedString("Failure"))
 	} else if resp.Status == server.ResponseSuccess && len(response.Token) > 0 {
 		//put username and token in config
-		config.User = struct {
+		cData.Config.User = struct {
 			Username     string
 			SessionToken string
 		}{
@@ -56,10 +58,10 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 		}
 
 		//Set default namespace to users
-		config.Default.Namespace = response.Namespace
+		cData.Config.Default.Namespace = response.Namespace
 
 		//Save new config
-		err := configService.Save(config, config.File)
+		err := configService.Save(cData.Config, cData.Config.File)
 		if err != nil {
 			fmt.Println("Error saving config:", err.Error())
 			return
@@ -72,7 +74,10 @@ func LoginCommand(config *models.Config, usernameArg string, appYes bool, args .
 }
 
 //RegisterCommand create a new account
-func RegisterCommand(config *models.Config) {
+func RegisterCommand(cData CommandData) {
+	//Print error if user tries to bench
+	benchCheck(cData)
+
 	//Input for credentials
 	username, pass := credentials("", true, 0)
 	if len(username) == 0 || len(pass) == 0 {
@@ -83,7 +88,7 @@ func RegisterCommand(config *models.Config) {
 	resp, err := server.NewRequest(server.EPRegister, server.CredentialsRequest{
 		Username: username,
 		Password: pass,
-	}, config).Do(nil)
+	}, cData.Config).Do(nil)
 
 	if err != nil {
 		fmt.Println("Err", err.Error())
@@ -95,7 +100,7 @@ func RegisterCommand(config *models.Config) {
 
 		y, _ := gaw.ConfirmInput("Do you want to login to this account? [y/n]> ", bufio.NewReader(os.Stdin))
 		if y {
-			LoginCommand(config, username, true)
+			LoginCommand(cData, username, true)
 		}
 	} else {
 		printResponseError(resp)
