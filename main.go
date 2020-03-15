@@ -85,7 +85,7 @@ var (
 
 	// -- Delete
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
-	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").Required().String()
+	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").String()
 	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- List
 	fileListCmd   = appFileCmd.Command("list", "List files")

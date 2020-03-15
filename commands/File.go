@@ -116,6 +116,9 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(cData CommandData, name string, id uint) {
+	//Convert input
+	name, id = getFileCommandData(name, id)
+
 	//Confirm 'delete everything'
 	if strings.TrimSpace(name) == "%" && !cData.Yes && cData.All {
 		if i, _ := gaw.ConfirmInput("Do you really want to delete all files in "+cData.Namespace+"? (y/n)> ", bufio.NewReader(os.Stdin)); !i {
@@ -157,8 +160,10 @@ func DeleteFile(cData CommandData, name string, id uint) {
 
 // ListFiles lists the files corresponding to the args
 func ListFiles(cData CommandData, name string, id uint, sOrder string) {
-	var filesResponse server.FileListResponse
+	//Convert input
+	name, id = getFileCommandData(name, id)
 
+	var filesResponse server.FileListResponse
 	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
 		FileID:        id,
 		Name:          name,
@@ -324,6 +329,9 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 //PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
+	//Convert input
+	name, id = getFileCommandData(name, id)
+
 	request := server.NewRequest(server.EPFilePublish, server.FileRequest{
 		Name:       name,
 		FileID:     id,
@@ -385,6 +393,9 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 func UpdateFile(cData CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	//Process params: make t1,t2 -> [t1 t2]
 	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
+
+	//Convert input
+	name, id = getFileCommandData(name, id)
 
 	// Set attributes
 	attributes := models.FileAttributes{
@@ -454,6 +465,9 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 
 // GetFile requests the file from the server and displays or saves it
 func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) {
+	//Convert input
+	fileName, id = getFileCommandData(fileName, id)
+
 	shouldPreview := cData.Config.Client.AutoFilePreview || preview
 	if noPreview {
 		fmt.Println("noPreview")

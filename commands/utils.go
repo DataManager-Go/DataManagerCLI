@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/Yukaru-san/DataManager_Client/server"
@@ -137,4 +138,19 @@ func benchCheck(cData CommandData) {
 		fmt.Println("This command doesn't support benchmarks")
 		os.Exit(1)
 	}
+}
+
+func getFileCommandData(n string, fid uint) (name string, id uint) {
+	//Check if name is a fileID
+	siID, err := strconv.ParseUint(n, 10, 32)
+	if err == nil {
+		id = uint(siID)
+		return
+	}
+
+	name = n
+	id = fid
+
+	//otherwise return input
+	return
 }
