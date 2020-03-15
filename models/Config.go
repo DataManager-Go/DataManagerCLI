@@ -131,7 +131,6 @@ func (config *Config) GetPreviewURL(file string) string {
 			fmt.Println("Server alternative URL is not valid: ", err)
 			return ""
 		}
-
 		//Set new path
 		u.Path = path.Join(u.Path, file)
 		return u.String()
@@ -151,11 +150,11 @@ func (config *Config) GetPreviewURL(file string) string {
 
 //GetDefaultConfig return path of default config
 func GetDefaultConfig() string {
-	return path.Join(getDataPath(), constants.DefaultConfigFile)
+	return filepath.Join(getDataPath(), constants.DefaultConfigFile)
 }
 
 func getDataPath() string {
-	path := path.Join(gaw.GetHome(), constants.DataDir)
+	path := filepath.Join(gaw.GetHome(), constants.DataDir)
 	s, err := os.Stat(path)
 	if err != nil {
 		err = os.Mkdir(path, 0770)
