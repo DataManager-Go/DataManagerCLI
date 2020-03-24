@@ -38,6 +38,7 @@ var (
 	appOutputJSON    = app.Flag("json", "Print output as json").Bool()
 	appNoRedaction   = app.Flag("no-redact", "Don't redact secrets").Bool()
 	appDetails       = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appTrimName      = app.Flag("trim-name", "Trim name after n chars").Int()
 	appAll           = app.Flag("all", "Do action for all found files").Short('a').Bool()
 	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
 	appForce         = app.Flag("force", "Forces an action").Short('f').Bool()
@@ -189,7 +190,7 @@ func main() {
 
 	//Init config
 	var err error
-	config, err = models.InitConfig(models.GetDefaultConfig(), *appCfgFile)
+	config, err = models.InitConfig(models.GetDefaultConfigFile(), *appCfgFile)
 	if err != nil {
 		log.Error(err)
 		return
@@ -200,7 +201,7 @@ func main() {
 		return
 	}
 
-	//Use in config specified values for targets
+	// Use config default values if not set
 	if len(*appNamespace) == 0 || (*appNamespace) == "default" {
 		*appNamespace = config.Default.Namespace
 	}
@@ -209,6 +210,15 @@ func main() {
 	}
 	if len(*appGroups) == 0 {
 		*appGroups = config.Default.Groups
+	}
+	if *appDetails == 0 {
+		*appDetails = config.Client.DefaultDetails
+	}
+	if len(*appFilesOrder) == 0 {
+		*appFilesOrder = config.GetDefaultOrder()
+	}
+	if *appTrimName == 0 {
+		*appTrimName = config.Client.TrimNameAfter
 	}
 
 	//Process params: make t1,t2 -> [t1 t2]
@@ -234,6 +244,7 @@ func main() {
 		Yes:            *appYes,
 		Force:          *appForce,
 		Bench:          *appBench,
+		NameLen:        *appTrimName,
 	}
 
 	startTime := time.Now()

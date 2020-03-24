@@ -36,6 +36,9 @@ type serverConfig struct {
 type clientConfig struct {
 	MinFilesToDisplay uint16 `required:"true"`
 	AutoFilePreview   bool
+	DefaultOrder      string
+	DefaultDetails    int
+	TrimNameAfter     int
 }
 
 type defaultConfig struct {
@@ -53,6 +56,9 @@ func getDefaultConfig() Config {
 		Client: clientConfig{
 			MinFilesToDisplay: 100,
 			AutoFilePreview:   true,
+			DefaultDetails:    0,
+			DefaultOrder:      "created/r",
+			TrimNameAfter:     20,
 		},
 		Default: defaultConfig{
 			Namespace: "default",
@@ -121,6 +127,16 @@ func (config *Config) IsLoggedIn() bool {
 	return len(config.User.Username) > 0 && len(config.User.SessionToken) == 64
 }
 
+// GetDefaultOrder returns the default order. If empty returns the default order
+func (config *Config) GetDefaultOrder() string {
+	if len(config.Client.DefaultOrder) > 0 {
+		return config.Client.DefaultOrder
+	}
+
+	// Return default order
+	return getDefaultConfig().Client.DefaultOrder
+}
+
 //GetPreviewURL gets preview URL
 func (config *Config) GetPreviewURL(file string) string {
 	//Use alternative url if available
@@ -148,8 +164,8 @@ func (config *Config) GetPreviewURL(file string) string {
 	return u.String()
 }
 
-//GetDefaultConfig return path of default config
-func GetDefaultConfig() string {
+//GetDefaultConfigFile return path of default config
+func GetDefaultConfigFile() string {
 	return filepath.Join(getDataPath(), constants.DefaultConfigFile)
 }
 

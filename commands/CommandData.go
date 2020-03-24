@@ -20,4 +20,5 @@ type CommandData struct {
 	Force          bool
 	Bench          bool
 	BenchDone      chan time.Time
+	NameLen        int
 }

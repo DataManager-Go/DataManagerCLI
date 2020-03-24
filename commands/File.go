@@ -288,11 +288,12 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			if len(pubname) > 0 && !file.IsPublic {
 				pubname = color.HiMagentaString(pubname)
 			}
+			fmt.Println(cData.NameLen)
 
 			//Add items
 			rowItems := []interface{}{
 				file.ID,
-				file.Name,
+				formatFilename(file.Name, cData.NameLen),
 				units.BinarySuffix(float64(file.Size)),
 			}
 

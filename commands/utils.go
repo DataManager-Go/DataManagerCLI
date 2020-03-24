@@ -154,3 +154,10 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 	//otherwise return input
 	return
 }
+
+func formatFilename(name string, nameLen int) string {
+	if nameLen > 0 {
+		return name[:nameLen] + "..."
+	}
+	return name
+}
