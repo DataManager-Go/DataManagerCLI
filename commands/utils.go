@@ -157,7 +157,11 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 
 func formatFilename(name string, nameLen int) string {
 	if nameLen > 0 {
-		return name[:nameLen] + "..."
+		end := nameLen
+		if len(name) < nameLen {
+			end = len(name)
+		}
+		return name[:end] + "..."
 	}
 	return name
 }
