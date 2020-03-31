@@ -24,4 +24,5 @@ type CommandData struct {
 	Encryption     string
 	EncryptionKey  string
 	NoDecrypt      bool
+	NoEmojis       bool
 }

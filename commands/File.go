@@ -30,12 +30,12 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		fileName = name
 	}
 
-	//Make public if public name was specified
+	// Make public if public name was specified
 	if len(publicName) > 0 {
 		public = true
 	}
 
-	//bulid request
+	// Bulid request
 	request := server.UploadRequest{
 		Name:       fileName,
 		Attributes: cData.FileAttributes,
@@ -68,7 +68,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		payload = bodybuff.Bytes()
 	}
 
-	//Make json header content
+	// Make json header content
 	rbody, err := json.Marshal(request)
 	if err != nil {
 		fmt.Println("Invalid Json:", err)
@@ -76,7 +76,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 	}
 	rBase := base64.StdEncoding.EncodeToString(rbody)
 
-	//Do request
+	// Do request
 	var resStruct server.UploadResponse
 	response, err := server.
 		NewRequest(server.EPFileUpload, payload, cData.Config).
@@ -97,13 +97,13 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		log.Fatalln(err)
 	}
 
-	//Verifying response status
+	// Verifying response status
 	if response.Status == server.ResponseError {
 		printResponseError(response, "uploading your file")
 		return
 	}
 
-	//print output
+	// Print output
 	if cData.OutputJSON {
 		fmt.Println(toJSON(resStruct))
 	} else {
@@ -117,10 +117,10 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 
 // DeleteFile deletes the desired file(s)
 func DeleteFile(cData CommandData, name string, id uint) {
-	//Convert input
+	// Convert input
 	name, id = getFileCommandData(name, id)
 
-	//Confirm 'delete everything'
+	// Confirm 'delete everything'
 	if strings.TrimSpace(name) == "%" && !cData.Yes && cData.All {
 		if i, _ := gaw.ConfirmInput("Do you really want to delete all files in "+cData.Namespace+"? (y/n)> ", bufio.NewReader(os.Stdin)); !i {
 			return
@@ -161,7 +161,7 @@ func DeleteFile(cData CommandData, name string, id uint) {
 
 // ListFiles lists the files corresponding to the args
 func ListFiles(cData CommandData, name string, id uint, sOrder string) {
-	//Convert input
+	// Convert input
 	name, id = getFileCommandData(name, id)
 
 	var filesResponse server.FileListResponse
@@ -198,7 +198,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 		}
 	}
 
-	//Print as json if desired
+	// Print as json if desired
 	if cData.OutputJSON {
 		fmt.Println(toJSON(filesResponse.Files))
 	} else {
@@ -209,7 +209,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 		headingColor := color.New(color.FgHiGreen, color.Underline, color.Bold)
 
-		//Table setup
+		// Table setup
 		table := clitable.New()
 		table.ColSeparator = " "
 		table.Padding = 4
@@ -224,22 +224,22 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 			// only need to do if requested more details
 			if cData.Details > 1 {
-				//Has tag
+				// Has tag
 				if !hasTag && len(file.Attributes.Tags) > 0 {
 					hasTag = true
 				}
 
-				//Has group
+				// Has group
 				if !hasGroup && len(file.Attributes.Groups) > 0 {
 					hasGroup = true
 				}
 			}
 		}
 
-		//Order output
+		// Order output
 		if len(sOrder) > 0 {
 			if order := models.FileOrderFromString(sOrder); order != nil {
-				//Sort
+				// Sort
 				models.
 					NewFileSorter(filesResponse.Files).
 					Reversed(models.IsOrderReversed(sOrder)).
@@ -249,7 +249,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 				return
 			}
 		} else {
-			//By default sort by creation desc
+			// By default sort by creation desc
 			models.NewFileSorter(filesResponse.Files).Reversed(true).SortBy(models.CreatedOrder)
 		}
 
@@ -257,20 +257,20 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			headingColor.Sprint("ID"), headingColor.Sprint("Name"), headingColor.Sprint("Size"),
 		}
 
-		//Add public name
+		// Add public name
 		if hasPublicFile {
 			header = append(header, headingColor.Sprint("Public name"))
 		}
 
-		//Add created
+		// Add created
 		header = append(header, headingColor.Sprint("Created"))
 
-		//Show namespace on -dd
+		// Show namespace on -dd
 		if cData.Details > 2 || cData.AllNamespaces {
 			header = append(header, headingColor.Sprintf("Namespace"))
 		}
 
-		//Show groups and tags on -d
+		// Show groups and tags on -d
 		if cData.Details > 1 {
 			if hasGroup {
 				header = append(header, headingColor.Sprintf("Groups"))
@@ -284,16 +284,16 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 		table.AddRow(header...)
 
 		for _, file := range filesResponse.Files {
-			//Colorize private pubNames if not public
+			// Colorize private pubNames if not public
 			pubname := file.PublicName
 			if len(pubname) > 0 && !file.IsPublic {
 				pubname = color.HiMagentaString(pubname)
 			}
 
-			//Add items
+			// Add items
 			rowItems := []interface{}{
 				file.ID,
-				formatFilename(file.Name, cData.NameLen),
+				formatFilename(&file, cData.NameLen, &cData),
 				units.BinarySuffix(float64(file.Size)),
 			}
 
@@ -302,15 +302,15 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 				rowItems = append(rowItems, pubname)
 			}
 
-			//Append time
+			// Append time
 			rowItems = append(rowItems, humanTime.Difference(time.Now(), file.CreationDate))
 
-			//Show namespace on -dd
+			// Show namespace on -dd
 			if cData.Details > 2 || cData.AllNamespaces {
 				rowItems = append(rowItems, file.Attributes.Namespace)
 			}
 
-			//Show groups and tags on -d
+			// Show groups and tags on -d
 			if cData.Details > 1 {
 				if hasGroup {
 					rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
@@ -328,9 +328,9 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	}
 }
 
-//PublishFile publishes a file
+// PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
-	//Convert input
+	// Convert input
 	name, id = getFileCommandData(name, id)
 
 	request := server.NewRequest(server.EPFilePublish, server.FileRequest{
@@ -392,10 +392,10 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 
 // UpdateFile updates a file on the server
 func UpdateFile(cData CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
-	//Process params: make t1,t2 -> [t1 t2]
+	// Process params: make t1,t2 -> [t1 t2]
 	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
-	//Convert input
+	// Convert input
 	name, id = getFileCommandData(name, id)
 
 	// Set attributes
@@ -403,7 +403,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 		Namespace: cData.Namespace,
 	}
 
-	//Can't use both
+	// Can't use both
 	if setPrivate && setPublic {
 		fmt.Println("Illegal flag combination")
 		return
@@ -466,7 +466,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 
 // GetFile requests the file from the server and displays or saves it
 func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) {
-	//Convert input
+	// Convert input
 	fileName, id = getFileCommandData(fileName, id)
 
 	shouldPreview := cData.Config.Client.AutoFilePreview || preview
@@ -474,7 +474,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		shouldPreview = false
 	}
 
-	//Errorhandling 100
+	// Errorhandling 100
 	if noPreview && preview {
 		fmt.Print("rlly?")
 		return
@@ -491,23 +491,23 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		Palyoad: cData.Config.User.SessionToken,
 	}).DoHTTPRequest()
 
-	//Check for error
+	// Check for error
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	//Check response headers
+	// Check response headers
 	if resp.Header.Get(server.HeaderStatus) == strconv.Itoa(int(server.ResponseError)) {
 		statusMessage := resp.Header.Get(server.HeaderStatusMessage)
 		fmt.Println(color.HiRedString("Error: ") + statusMessage)
 		return
 	}
 
-	//Get filename from response headers
+	// Get filename from response headers
 	serverFileName := resp.Header.Get(server.HeaderFileName)
 
-	//Check headers
+	// Check headers
 	if len(serverFileName) == 0 {
 		fmt.Println(color.HiRedString("Error:") + " Received corrupted Data from the server")
 		return
@@ -525,9 +525,9 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 	}
 
-	//Display or save file
+	// Display or save file
 	if displayOutput && len(savePath) == 0 {
-		//Only write to tmpfile if preview needed
+		// Only write to tmpfile if preview needed
 		if shouldPreview {
 			file, err := SaveToTempFile(respData, serverFileName)
 			if err != nil {
@@ -535,19 +535,19 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 				return
 			}
 
-			//Preview file
+			// Preview file
 			previewFile(file)
 		} else {
-			//Printf like a boss
+			// Printf like a boss
 			io.Copy(os.Stdout, respData)
 		}
 	} else if len(savePath) > 0 {
-		//Use server filename if a wildcard was used
+		// Use server filename if a wildcard was used
 		if strings.HasSuffix(fileName, "%") || strings.HasPrefix(fileName, "%") {
 			fileName = serverFileName
 		}
 
-		//Determine output file/path
+		// Determine output file/path
 		outFile := savePath
 		if strings.HasSuffix(savePath, "/") {
 			outFile = filepath.Join(savePath, fileName)
@@ -561,21 +561,21 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			}
 		}
 
-		//Create or truncate file
+		// Create or truncate file
 		f, err := os.Create(outFile)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		//Write file
+		// Vrite file
 		_, err = io.Copy(f, respData)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		//Close file
+		// Close file
 		f.Close()
 
 		// Preview
@@ -583,13 +583,13 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			previewFile(savePath)
 		}
 
-		//Print success message
+		// Print success message
 		fmt.Printf("Saved file into %s\n", outFile)
 	} else if !displayOutput && len(savePath) == 0 {
 		fmt.Println("Can't save file if you don't specify a path.")
 		return
 	}
 
-	//Close body
+	// Close body
 	resp.Body.Close()
 }

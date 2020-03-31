@@ -44,6 +44,7 @@ var (
 	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
 	appForce         = app.Flag("force", "Forces an action").Short('f').Bool()
 	appNoDecrypt     = app.Flag("no-decrypt", "Don't decrypt files").Bool()
+	appNoEmojis      = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
 
 	// --- :Commands: -------
 
@@ -251,6 +252,7 @@ func main() {
 		Encryption:     *appFileEncryption,
 		EncryptionKey:  *appFileEncryptionKey,
 		NoDecrypt:      *appNoDecrypt,
+		NoEmojis:       *appNoEmojis,
 	}
 
 	if len(commandData.Encryption) > 0 && !constants.IsValidCipher(commandData.Encryption) {
@@ -365,6 +367,7 @@ const (
 	//EnVarPrefix prefix of all used env vars
 	EnVarLogLevel   = "LOG_LEVEL"
 	EnVarNoColor    = "NO_COLOR"
+	EnVarNoEmojis   = "NO_EMOJIS"
 	EnVarConfigFile = "CONFIG"
 )
 

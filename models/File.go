@@ -29,4 +29,5 @@ type FileResponseItem struct {
 	IsPublic     bool           `json:"isPub"`
 	PublicName   string         `json:"pubname"`
 	Attributes   FileAttributes `json:"attrib"`
+	Encryption   string         `json:"e"`
 }

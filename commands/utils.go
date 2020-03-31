@@ -21,8 +21,10 @@ import (
 	"strings"
 
 	"github.com/Yukaru-san/DataManager_Client/constants"
+	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
+	"github.com/kyokomi/emoji"
 )
 
 func printResponseError(response *server.RestRequestResponse, add ...string) {
@@ -168,15 +170,50 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 	return
 }
 
-func formatFilename(name string, nameLen int) string {
+func formatFilename(file *models.FileResponseItem, nameLen int, cData *CommandData) string {
+	name := file.Name
+
 	if nameLen > 0 {
 		end := nameLen
 		if len(name) < nameLen {
 			end = len(name)
 		}
-		return name[:end] + "..."
+		name = name[:end] + "..."
 	}
+
+	// Add emojis
+	if !cData.NoEmojis {
+		return filenameAddEmojis(name, file)
+	}
+
 	return name
+}
+
+func filenameAddEmojis(filename string, file *models.FileResponseItem) string {
+	added := false
+
+	// Public globe
+	if len(file.PublicName) != 0 && file.IsPublic {
+		filename = addEmoji(filename, "globe_with_meridians", !added)
+		added = true
+	}
+
+	// Encryption lock
+	if len(file.Encryption) != 0 {
+		filename = addEmoji(filename, "lock", !added)
+		added = true
+	}
+
+	return filename
+}
+
+func addEmoji(name, emojiStr string, addSpace bool) string {
+	format := "%s:%s:"
+	if addSpace {
+		format = "%s :%s:"
+	}
+
+	return emoji.Sprintf(fmt.Sprintf(format, name, emojiStr))
 }
 
 func encodeBase64(b []byte) []byte {
