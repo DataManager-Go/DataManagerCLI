@@ -146,9 +146,10 @@ type UploadRequest struct {
 	UploadType UploadType            `json:"type"`
 	URL        string                `json:"url"`
 	Name       string                `json:"name"`
-	Public     bool                  `json:"public"`
-	PublicName string                `json:"pbname"`
-	Attributes models.FileAttributes `json:"attributes"`
+	Public     bool                  `json:"pb"`
+	PublicName string                `json:"pbname,omitempty"`
+	Attributes models.FileAttributes `json:"attr"`
+	Encryption string                `json:"e,omitempty"`
 }
 
 //UploadType type of upload

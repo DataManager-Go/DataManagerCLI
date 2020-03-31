@@ -41,29 +41,30 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		Attributes: cData.FileAttributes,
 		Public:     public,
 		PublicName: publicName,
+		Encryption: cData.Encryption,
 	}
 
 	var payload []byte
 	contentType := ""
 
-	//Check for url/file
+	// Check for url/file
 	u, err := url.Parse(path)
 	if err == nil && (u.Scheme == "http" || u.Scheme == "https") {
 		request.UploadType = server.URLUploadType
 		request.URL = path
 		contentType = string(server.JSONContentType)
 	} else {
-		//Create bodybuffer from file
-		bodybuff, ct, err := fileToBodypart(path)
+		// Create bodybuffer from file
+		bodybuff, ct, err := fileToBodypart(path, &cData)
 		if err != nil {
 			fmt.Println("Error:", err.Error())
 			return
 		}
 
-		//Set header
+		// Set header
 		contentType = ct
 
-		//set body payload
+		// Set body payload
 		payload = bodybuff.Bytes()
 	}
 
@@ -470,7 +471,6 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 	shouldPreview := cData.Config.Client.AutoFilePreview || preview
 	if noPreview {
-		fmt.Println("noPreview")
 		shouldPreview = false
 	}
 
@@ -513,11 +513,23 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
+	var respData io.Reader
+
+	// Set respData to designed source
+	if cData.NoDecrypt {
+		respData = resp.Body
+	} else {
+		respData, err = respToDecrypted(&cData, resp)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	//Display or save file
 	if displayOutput && len(savePath) == 0 {
 		//Only write to tmpfile if preview needed
 		if shouldPreview {
-			file, err := SaveToTempFile(resp.Body, serverFileName)
+			file, err := SaveToTempFile(respData, serverFileName)
 			if err != nil {
 				fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
 				return
@@ -527,7 +539,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			previewFile(file)
 		} else {
 			//Printf like a boss
-			io.Copy(os.Stdout, resp.Body)
+			io.Copy(os.Stdout, respData)
 		}
 	} else if len(savePath) > 0 {
 		//Use server filename if a wildcard was used
@@ -557,7 +569,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 
 		//Write file
-		_, err = io.Copy(f, resp.Body)
+		_, err = io.Copy(f, respData)
 		if err != nil {
 			fmt.Println(err)
 			return

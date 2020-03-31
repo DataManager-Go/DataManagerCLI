@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Yukaru-san/DataManager_Client/commands"
+	"github.com/Yukaru-san/DataManager_Client/constants"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 
@@ -42,6 +43,7 @@ var (
 	appAll           = app.Flag("all", "Do action for all found files").Short('a').Bool()
 	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
 	appForce         = app.Flag("force", "Forces an action").Short('f').Bool()
+	appNoDecrypt     = app.Flag("no-decrypt", "Don't decrypt files").Bool()
 
 	// --- :Commands: -------
 
@@ -80,9 +82,11 @@ var (
 
 	//
 	// ---------> File commands --------------------------------------
-	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd   = app.Command("files", "List files").Alias("fs")
-	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
+	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
+	appFilesCmd          = app.Command("files", "List files").Alias("fs")
+	appFilesOrder        = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
+	appFileEncryption    = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
+	appFileEncryptionKey = app.Flag("key", "Encryption/Decryption key").Short('k').String()
 
 	// -- Delete
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
@@ -168,8 +172,7 @@ var (
 )
 
 var (
-	config  *models.Config
-	isDebug = false
+	config *models.Config
 )
 
 func main() {
@@ -245,6 +248,14 @@ func main() {
 		Force:          *appForce,
 		Bench:          *appBench,
 		NameLen:        *appTrimName,
+		Encryption:     *appFileEncryption,
+		EncryptionKey:  *appFileEncryptionKey,
+		NoDecrypt:      *appNoDecrypt,
+	}
+
+	if len(commandData.Encryption) > 0 && !constants.IsValidCipher(commandData.Encryption) {
+		fmt.Println("Invalid encryption cipter")
+		return
 	}
 
 	startTime := time.Now()

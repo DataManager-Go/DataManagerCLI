@@ -21,4 +21,7 @@ type CommandData struct {
 	Bench          bool
 	BenchDone      chan time.Time
 	NameLen        int
+	Encryption     string
+	EncryptionKey  string
+	NoDecrypt      bool
 }

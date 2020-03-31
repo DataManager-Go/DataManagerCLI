@@ -2,10 +2,17 @@ package commands
 
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/Yukaru-san/DataManager_Client/constants"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
 )
@@ -29,7 +37,7 @@ func printError(message interface{}) {
 	fmt.Printf("%s %s\n", color.HiRedString("Error"), message)
 }
 
-//ProcesStrSliceParam divides args by ,
+// ProcesStrSliceParam divides args by ,
 func ProcesStrSliceParam(slice *[]string) {
 	var newSlice []string
 
@@ -40,7 +48,7 @@ func ProcesStrSliceParam(slice *[]string) {
 	*slice = newSlice
 }
 
-//ProcesStrSliceParams divides args by ,
+// ProcesStrSliceParams divides args by ,
 func ProcesStrSliceParams(slices ...*[]string) {
 	for i := range slices {
 		ProcesStrSliceParam(slices[i])
@@ -55,8 +63,8 @@ func toJSON(in interface{}) string {
 	return string(b)
 }
 
-//SaveToTempFile saves a stream to a temporary file
-func SaveToTempFile(reader io.ReadCloser, fileName string) (string, error) {
+// SaveToTempFile saves a stream to a temporary file
+func SaveToTempFile(reader io.Reader, fileName string) (string, error) {
 	filePath := filepath.Join(os.TempDir(), fileName)
 	//Create temp file
 	f, err := os.Create(filePath)
@@ -103,8 +111,8 @@ func previewFile(filepath string) {
 	}
 }
 
-//Parse file to bytes.Buffer for http multipart request
-func fileToBodypart(filename string) (*bytes.Buffer, string, error) {
+// Parse file to bytes.Buffer for http multipart request
+func fileToBodypart(filename string, cData *CommandData) (*bytes.Buffer, string, error) {
 	bodyBuf := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuf)
 
@@ -123,8 +131,13 @@ func fileToBodypart(filename string) (*bytes.Buffer, string, error) {
 	}
 	defer fh.Close()
 
-	//iocopy
-	_, err = io.Copy(fileWriter, fh)
+	reader, err := getFileReader(filename, fh, cData)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// copy to filewriter
+	_, err = io.Copy(fileWriter, *reader)
 	if err != nil {
 		return nil, "", err
 	}
@@ -141,7 +154,7 @@ func benchCheck(cData CommandData) {
 }
 
 func getFileCommandData(n string, fid uint) (name string, id uint) {
-	//Check if name is a fileID
+	// Check if name is a fileID
 	siID, err := strconv.ParseUint(n, 10, 32)
 	if err == nil {
 		id = uint(siID)
@@ -151,7 +164,7 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 	name = n
 	id = fid
 
-	//otherwise return input
+	// otherwise return input
 	return
 }
 
@@ -164,4 +177,140 @@ func formatFilename(name string, nameLen int) string {
 		return name[:end] + "..."
 	}
 	return name
+}
+
+func encodeBase64(b []byte) []byte {
+	return []byte(base64.StdEncoding.EncodeToString(b))
+}
+
+func decodeBase64(b []byte) []byte {
+	data, err := base64.StdEncoding.DecodeString(string(b))
+	if err != nil {
+		fmt.Println("Error: Bad Key!")
+		os.Exit(1)
+	}
+	return data
+}
+
+// returns a reader to the correct source of data
+func getFileReader(filename string, fh *os.File, cData *CommandData) (*io.Reader, error) {
+	var reader io.Reader
+
+	switch cData.Encryption {
+	case constants.EncryptionCiphers[0]:
+		{
+			// AES
+			block, err := aes.NewCipher([]byte(cData.EncryptionKey))
+			if err != nil {
+				return nil, err
+			}
+
+			// Get file content
+			b, err := fileToBase64(filename, fh)
+			if err != nil {
+				return nil, err
+			}
+
+			// Set Ciphertext 0->16 to Iv
+			ciphertext := make([]byte, aes.BlockSize+len(b))
+			iv := ciphertext[:aes.BlockSize]
+			if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+				return nil, err
+			}
+
+			// Encrypt file
+			cfb := cipher.NewCFBEncrypter(block, iv)
+			cfb.XORKeyStream(ciphertext[aes.BlockSize:], b)
+
+			// Set reader to reader from bytes
+			reader = bytes.NewReader(ciphertext)
+		}
+	case "":
+		{
+			// Set reader to reader of file
+			reader = fh
+		}
+	default:
+		{
+			// Return error if cipher is not implemented
+			return nil, errors.New("cipher not supported")
+		}
+	}
+
+	return &reader, nil
+}
+
+// Return byte slice with base64 encoded file content
+func fileToBase64(filename string, fh *os.File) ([]byte, error) {
+	s, err := os.Stat(filename)
+	if err != nil {
+		return nil, err
+	}
+	src := make([]byte, s.Size())
+	_, err = fh.Read(src)
+	if err != nil {
+		return nil, err
+	}
+
+	return encodeBase64(src), nil
+}
+
+func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error) {
+	var reader io.Reader
+
+	key := []byte(cData.EncryptionKey)
+	if len(key) == 0 && len(resp.Header.Get(server.HeaderEncryption)) > 0 {
+		fmt.Println("Error: file is encrypted but no key was given. To ignore this use --no-decrypt")
+		os.Exit(1)
+	}
+
+	switch resp.Header.Get(server.HeaderEncryption) {
+	case constants.EncryptionCiphers[0]:
+		{
+			// AES
+
+			// Read response
+			text, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+
+			// Create Cipher
+			block, err := aes.NewCipher(key)
+			if err != nil {
+				panic(err)
+			}
+
+			// Validate text length
+			if len(text) < aes.BlockSize {
+				fmt.Printf("Error!\n")
+				os.Exit(0)
+			}
+
+			iv := text[:aes.BlockSize]
+			text = text[aes.BlockSize:]
+
+			// Decrypt
+			cfb := cipher.NewCFBDecrypter(block, iv)
+			cfb.XORKeyStream(text, text)
+
+			reader = bytes.NewReader(decodeBase64(text))
+		}
+	/*case constants.EncryptionCiphers[1]:
+	{
+		// RSA
+		fmt.Println("would decrypt rsa here")
+		os.Exit(1)
+	}*/
+	case "":
+		{
+			reader = resp.Body
+		}
+	default:
+		{
+			return nil, errors.New("Cipher not supported")
+		}
+	}
+
+	return reader, nil
 }

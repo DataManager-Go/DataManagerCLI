@@ -27,6 +27,8 @@ const (
 	HeaderFileName string = "X-Filename"
 	//HeaderRequest request content
 	HeaderRequest string = "Request"
+	//HeaderEncryption encryption header
+	HeaderEncryption string = "X-Encryption"
 )
 
 //LoginResponse response for login
