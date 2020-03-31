@@ -173,7 +173,7 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 func formatFilename(file *models.FileResponseItem, nameLen int, cData *CommandData) string {
 	name := file.Name
 
-	if nameLen > 0 {
+	if nameLen > 0 && len(name) > cData.NameLen {
 		end := nameLen
 		if len(name) < nameLen {
 			end = len(name)
