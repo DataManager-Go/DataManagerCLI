@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/commands"
-	"github.com/Yukaru-san/DataManager_Client/constants"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 

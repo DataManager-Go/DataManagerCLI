@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Yukaru-san/DataManager_Client/constants"
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 )

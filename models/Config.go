@@ -8,9 +8,9 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/constants"
 	"gopkg.in/yaml.v2"
 )
 
