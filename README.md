@@ -1,4 +1,4 @@
-# DataManager_Client
+# DataManager Client
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
 # Installation
