@@ -3,7 +3,7 @@ module github.com/Yukaru-san/DataManager_Client
 go 1.14
 
 require (
-	github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401134239-f1e5ab8b9c87
+	github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.1.56
 	github.com/fatih/color v1.9.0

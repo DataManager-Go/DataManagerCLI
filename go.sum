@@ -1,7 +1,7 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401134239-f1e5ab8b9c87 h1:2FJ2fGImNX95jUX9VDmX+t5Ta+c7/cIY67TM3n2EhXg=
-github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401134239-f1e5ab8b9c87/go.mod h1:SfoNmfkURiJd+uegWDp0nRU4akilTL4rjQ9SBwmBaXo=
+github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef h1:P4sbebq11fI+KN/QD6Q0p2NunSqNQcBpl+mZDtmrtY4=
+github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef/go.mod h1:SfoNmfkURiJd+uegWDp0nRU4akilTL4rjQ9SBwmBaXo=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.1.56 h1:wZyPKe3PTbSlPOgQ/4jbwsYCDlaBdc6mhaF0wUkIAf8=
@@ -23,8 +23,6 @@ github.com/golang-sql/civil v0.0.0-20190719163853-cb61b32ac6fe/go.mod h1:8vg3r2V
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/h2non/filetype v1.0.12/go.mod h1:319b3zT68BvV+WRj7cwy856M2ehB3HqNOt6sy1HndBY=
-github.com/jchavannes/go-pgp v0.0.0-20200131171414-e5978e6d02b4 h1:AfTUqDjVFyY40SghT85bXRhpj34DOuIUQLB4DwExzkQ=
-github.com/jchavannes/go-pgp v0.0.0-20200131171414-e5978e6d02b4/go.mod h1:dtFptCZ3M/9AWU38htm1xFvWqaJr5ZvkiOiozne99Ps=
 github.com/jinzhu/gorm v1.9.12/go.mod h1:vhTjlKSJUTWNtcbQtrMBFCxy7eXTzeCAzfL5fBZT/Qs=
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
