@@ -143,13 +143,14 @@ type NamespaceRequest struct {
 
 // UploadRequest contains file info (and a file)
 type UploadRequest struct {
-	UploadType UploadType            `json:"type"`
-	URL        string                `json:"url"`
-	Name       string                `json:"name"`
-	Public     bool                  `json:"pb"`
-	PublicName string                `json:"pbname,omitempty"`
-	Attributes models.FileAttributes `json:"attr"`
-	Encryption string                `json:"e,omitempty"`
+	UploadType  UploadType            `json:"type"`
+	URL         string                `json:"url"`
+	Name        string                `json:"name"`
+	Public      bool                  `json:"pb"`
+	PublicName  string                `json:"pbname,omitempty"`
+	Attributes  models.FileAttributes `json:"attr"`
+	Encryption  string                `json:"e,omitempty"`
+	ReplaceFile uint                  `json:"r,omitempty"`
 }
 
 //UploadType type of upload

@@ -80,6 +80,7 @@ var (
 	fileUploadName       = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
+	fileUploadReplace    = appUpload.Flag("replace-file", "Replace a file").Uint()
 
 	//
 	// ---------> File commands --------------------------------------
@@ -279,7 +280,7 @@ func main() {
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadReplace)
 
 	//Delete file
 	case fileDeleteCmd.FullCommand():

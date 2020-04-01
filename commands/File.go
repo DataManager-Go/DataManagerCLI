@@ -24,7 +24,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData CommandData, path, name, publicName string, public bool) {
+func UploadFile(cData CommandData, path, name, publicName string, public bool, replaceFile uint) {
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
@@ -42,6 +42,10 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool) {
 		Public:     public,
 		PublicName: publicName,
 		Encryption: cData.Encryption,
+	}
+
+	if replaceFile != 0 {
+		request.ReplaceFile = replaceFile
 	}
 
 	var payload []byte
