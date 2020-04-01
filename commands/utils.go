@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -374,4 +375,13 @@ func hashFileMd5(filePath string) (string, error) {
 	returnMD5String = hex.EncodeToString(hashInBytes)
 	return returnMD5String, nil
 
+}
+
+func fileMd5(file string) string {
+	md5, err := hashFileMd5(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return md5
 }

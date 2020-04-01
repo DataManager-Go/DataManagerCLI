@@ -470,7 +470,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) (success bool, encryption string) {
+func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) (success bool, encryption, serverFileName string) {
 	// Convert input
 	fileName, id = getFileCommandData(fileName, id)
 
@@ -510,7 +510,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 	}
 
 	// Get filename from response headers
-	serverFileName := resp.Header.Get(server.HeaderFileName)
+	serverFileName = resp.Header.Get(server.HeaderFileName)
 
 	// Check headers
 	if len(serverFileName) == 0 {
@@ -613,8 +613,8 @@ func EditFile(cData CommandData, id uint) {
 		os.Remove(filePath)
 	}()
 
-	success, encryption := GetFile(cData, "", id, filePath, false, true, false)
 	// Download File
+	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false)
 	if !success {
 		return
 	}
@@ -622,6 +622,7 @@ func EditFile(cData CommandData, id uint) {
 	// Generate md5 of original file
 	fileOldMd5 := fileMd5(filePath)
 
+	// Edit file. Return on error
 	if !editFile(filePath) {
 		return
 	}
@@ -641,7 +642,7 @@ func EditFile(cData CommandData, id uint) {
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, filePath, "", "", false, id)
+	UploadFile(cData, filePath, serverName, "", false, id)
 }
 
 func editFile(file string) bool {
@@ -670,13 +671,4 @@ func editFile(file string) bool {
 	}
 
 	return true
-}
-
-func fileMd5(file string) string {
-	md5, err := hashFileMd5(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return md5
 }
