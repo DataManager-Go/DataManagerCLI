@@ -49,7 +49,7 @@ func (cData *CommandData) Init() bool {
 	}
 
 	// Generate random key
-	if cData.RandKey > 0 && !cData.EncryptionPassKey && cData.supportInputKey() {
+	if cData.RandKey > 0 && !cData.EncryptionPassKey && cData.supportRandKey() {
 		switch cData.RandKey {
 		case 16, 24, 32:
 		default:
@@ -87,8 +87,16 @@ func (cData *CommandData) Init() bool {
 }
 
 // Return true if current command needs a key input
-func (cData *CommandData) supportInputKey() bool {
+func (cData *CommandData) supportRandKey() bool {
 	return gaw.IsInStringArray(cData.Command, []string{"upload"})
+}
+
+// Return true if current command needs a key input
+func (cData *CommandData) supportInputKey() bool {
+	if cData.supportRandKey() {
+		return true
+	}
+	return gaw.IsInStringArray(cData.Command, []string{"file view"})
 }
 
 // Gen filename for args
@@ -114,7 +122,7 @@ func readPassword(message string) string {
 		return ""
 	}
 
-	pass := ""
+	var pass string
 
 	for _, a := range bytePassword {
 		if int(a) != 0 && int(a) != 32 {
