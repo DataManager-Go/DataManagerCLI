@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -469,7 +470,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) {
+func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) (success bool, encryption string) {
 	// Convert input
 	fileName, id = getFileCommandData(fileName, id)
 
@@ -524,6 +525,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		respData = resp.Body
 	} else {
 		respData, err = respToDecrypted(&cData, resp)
+		encryption = resp.Header.Get(server.HeaderEncryption)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -596,4 +598,85 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 	// Close body
 	resp.Body.Close()
+
+	success = true
+	return
+}
+
+// EditFile edits a file
+func EditFile(cData CommandData, id uint) {
+	// Generate temp-filePath
+	filePath := GetTempFile(gaw.RandString(10))
+
+	// Delete temp file
+	defer func() {
+		os.Remove(filePath)
+	}()
+
+	success, encryption := GetFile(cData, "", id, filePath, false, true, false)
+	// Download File
+	if !success {
+		return
+	}
+
+	// Generate md5 of original file
+	fileOldMd5 := fileMd5(filePath)
+
+	if !editFile(filePath) {
+		return
+	}
+
+	// Generate md5 of original file
+	fileNewMd5 := fileMd5(filePath)
+
+	// Check for file changes
+	if fileNewMd5 == fileOldMd5 {
+		fmt.Println("Nothing changed")
+		return
+	}
+
+	// Set encryption to keep its encrypted state
+	if len(encryption) != 0 {
+		cData.Encryption = encryption
+	}
+
+	// Replace file on server with new file
+	UploadFile(cData, filePath, "", "", false, id)
+}
+
+func editFile(file string) bool {
+	editor := os.Getenv("EDITOR")
+	if len(editor) == 0 {
+		editor = "/usr/bin/nano"
+	}
+
+	// Check editor
+	if _, err := os.Stat(editor); err != nil {
+		fmt.Println("Error finding editor. Either install nano or set $EDITOR to your desired editor")
+		return false
+	}
+
+	// Launch editor
+	cmd := exec.Command(editor, file)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	// Wait for it to finish
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+func fileMd5(file string) string {
+	md5, err := hashFileMd5(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return md5
 }

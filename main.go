@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/commands"
 	"github.com/Yukaru-san/DataManager_Client/constants"
 	"github.com/Yukaru-san/DataManager_Client/models"
@@ -89,6 +90,10 @@ var (
 	appFilesOrder        = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
 	appFileEncryption    = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
 	appFileEncryptionKey = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+
+	// -- Edit
+	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
+	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
 
 	// -- Delete
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
@@ -180,6 +185,8 @@ var (
 func main() {
 	app.HelpFlag.Short('h')
 	app.Version(version)
+
+	gaw.Init()
 
 	//parsing the args
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
@@ -301,6 +308,10 @@ func main() {
 	//Publish file
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
+
+	// Edit file
+	case fileEditCmd.FullCommand():
+		commands.EditFile(commandData, *fileEditID)
 
 	// -- Attributes commands
 	//Update tag

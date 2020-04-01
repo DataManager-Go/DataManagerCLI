@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -65,9 +67,14 @@ func toJSON(in interface{}) string {
 	return string(b)
 }
 
+// GetTempFile returns tempfile from fileName
+func GetTempFile(fileName string) string {
+	return filepath.Join(os.TempDir(), fileName)
+}
+
 // SaveToTempFile saves a stream to a temporary file
 func SaveToTempFile(reader io.Reader, fileName string) (string, error) {
-	filePath := filepath.Join(os.TempDir(), fileName)
+	filePath := GetTempFile(fileName)
 	//Create temp file
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -350,4 +357,21 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 	}
 
 	return reader, nil
+}
+
+func hashFileMd5(filePath string) (string, error) {
+	var returnMD5String string
+	file, err := os.Open(filePath)
+	if err != nil {
+		return returnMD5String, err
+	}
+	defer file.Close()
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return returnMD5String, err
+	}
+	hashInBytes := hash.Sum(nil)[:16]
+	returnMD5String = hex.EncodeToString(hashInBytes)
+	return returnMD5String, nil
+
 }
