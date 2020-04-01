@@ -26,3 +26,43 @@ Use `manager login` to login into your account
 `namespace` The default namespace to use<br>
 `tags` Specify tags to use as default for uploading filetags<br>
 `groups` Specify groups to use as default for uploading filegroups<br>
+
+# Usage
+```bash
+manager [<flags>] <command> [<args> ...]
+```
+
+Tipp: Run `manager --help-man | man -l -` to view the manpage of manager<br>
+
+### Autocompletion
+#### Bash
+```bash
+eval "$(manager --completion-script-bash)"
+```
+#### Zsh
+```zsh
+eval "$(manager --completion-script-zsh)"
+```
+
+### Examples
+
+#### User
+- Register `manager register`
+- Login `manager login`
+
+#### Files
+- Upload and share your .bashrc `manager upload -t dotfile -g myLinuxGroup --public ~/.bashrc`
+- Upload and encrypt your .bashrc `manager upload ~/.bashrc --encrypt aes -r`
+- List files `manager files`
+- List files having the a tag called 'dotfile' `manager files -t dotfile`
+- Delete file by ID `manager file rm 123`
+- Delete file by Name  `manager file rm aUniqueName.go`
+- Delete all files in namespace `manager file rm % -ay`
+- Edit a file `manager file edit 123`
+- Add tags to a file `manager file update --ad-tags t1,t2`
+- Publish a file `manager file publish <fileID>`
+
+#### Namespace
+- List all your namespaces `manager namespaces`
+- Create a namespace `manager namespace create <name>`
+- Delete a namespace `manager namespace delete <name>`
