@@ -19,9 +19,6 @@ import (
 const (
 	appName = "manager"
 	version = "1.0.0"
-
-	//Datapath the default path for data files
-	Datapath = "./data"
 )
 
 //App commands
@@ -34,20 +31,22 @@ var (
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 	appBench   = app.Flag("bench", "Benchmark web calls").Bool()
 
-	appNamespace     = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
-	appTags          = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups        = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appOutputJSON    = app.Flag("json", "Print output as json").Bool()
-	appNoRedaction   = app.Flag("no-redact", "Don't redact secrets").Bool()
-	appDetails       = app.Flag("details", "Print more details of something").Short('d').Counter()
-	appTrimName      = app.Flag("trim-name", "Trim name after n chars").Int()
-	appAll           = app.Flag("all", "Do action for all found files").Short('a').Bool()
-	appAllNamespaces = app.Flag("all-namespaces", "Do action for all found files").Bool()
-	appForce         = app.Flag("force", "Forces an action").Short('f').Bool()
-	appNoDecrypt     = app.Flag("no-decrypt", "Don't decrypt files").Bool()
-	appNoEmojis      = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
-
-	// --- :Commands: -------
+	appNamespace             = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appTags                  = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups                = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appOutputJSON            = app.Flag("json", "Print output as json").Bool()
+	appNoRedaction           = app.Flag("no-redact", "Don't redact secrets").Bool()
+	appDetails               = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appTrimName              = app.Flag("trim-name", "Trim name after n chars").Int()
+	appAll                   = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appAllNamespaces         = app.Flag("all-namespaces", "Do action for all found files").Bool()
+	appForce                 = app.Flag("force", "Forces an action").Short('f').Bool()
+	appNoDecrypt             = app.Flag("no-decrypt", "Don't decrypt files").Bool()
+	appNoEmojis              = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
+	appFileEncryption        = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
+	appFileEncryptionKey     = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+	appFileEncryptionRandKey = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
+	appFileEncryptionPassKey = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
 
 	//
 	// ---------> Ping --------------------------------------
@@ -85,11 +84,9 @@ var (
 
 	//
 	// ---------> File commands --------------------------------------
-	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd          = app.Command("files", "List files").Alias("fs")
-	appFilesOrder        = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
-	appFileEncryption    = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
-	appFileEncryptionKey = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
+	appFilesCmd   = app.Command("files", "List files").Alias("fs")
+	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
 
 	// -- Edit
 	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
@@ -245,26 +242,28 @@ func main() {
 
 	//Command data
 	commandData := commands.CommandData{
-		Config:         config,
-		Details:        uint8(*appDetails),
-		FileAttributes: fileAttributes,
-		Namespace:      *appNamespace,
-		All:            *appAll,
-		AllNamespaces:  *appAllNamespaces,
-		NoRedaction:    *appNoRedaction,
-		OutputJSON:     *appOutputJSON,
-		Yes:            *appYes,
-		Force:          *appForce,
-		Bench:          *appBench,
-		NameLen:        *appTrimName,
-		Encryption:     *appFileEncryption,
-		EncryptionKey:  *appFileEncryptionKey,
-		NoDecrypt:      *appNoDecrypt,
-		NoEmojis:       *appNoEmojis,
+		Command:           parsed,
+		Config:            config,
+		Details:           uint8(*appDetails),
+		FileAttributes:    fileAttributes,
+		Namespace:         *appNamespace,
+		All:               *appAll,
+		AllNamespaces:     *appAllNamespaces,
+		NoRedaction:       *appNoRedaction,
+		OutputJSON:        *appOutputJSON,
+		Yes:               *appYes,
+		Force:             *appForce,
+		Bench:             *appBench,
+		NameLen:           *appTrimName,
+		Encryption:        *appFileEncryption,
+		EncryptionKey:     *appFileEncryptionKey,
+		EncryptionPassKey: *appFileEncryptionPassKey,
+		NoDecrypt:         *appNoDecrypt,
+		NoEmojis:          *appNoEmojis,
+		RandKey:           *appFileEncryptionRandKey,
 	}
 
-	if len(commandData.Encryption) > 0 && !constants.IsValidCipher(commandData.Encryption) {
-		fmt.Println("Invalid encryption cipter")
+	if !commandData.Init() {
 		return
 	}
 

@@ -8,10 +8,15 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	"gopkg.in/yaml.v2"
+)
+
+// ...
+const (
+	DataDir           = ".dmanager"
+	DefaultConfigFile = "config.yaml"
 )
 
 //Config Configuration structure
@@ -166,11 +171,11 @@ func (config *Config) GetPreviewURL(file string) string {
 
 //GetDefaultConfigFile return path of default config
 func GetDefaultConfigFile() string {
-	return filepath.Join(getDataPath(), constants.DefaultConfigFile)
+	return filepath.Join(getDataPath(), DefaultConfigFile)
 }
 
 func getDataPath() string {
-	path := filepath.Join(gaw.GetHome(), constants.DataDir)
+	path := filepath.Join(gaw.GetHome(), DataDir)
 	s, err := os.Stat(path)
 	if err != nil {
 		err = os.Mkdir(path, 0770)
