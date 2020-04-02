@@ -543,7 +543,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 	} else if len(savePath) > 0 {
 		// Use server filename if a wildcard was used
-		if strings.HasSuffix(fileName, "%") || strings.HasPrefix(fileName, "%") {
+		if strings.HasSuffix(fileName, "%") || strings.HasPrefix(fileName, "%") || len(fileName) == 0 {
 			fileName = serverFileName
 		}
 
