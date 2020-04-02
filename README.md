@@ -1,6 +1,9 @@
 # DataManager Client
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
+# Screenshot
+![File List](https://very.highly.illegal-dark-web-server.xyz/preview/raw/5eFeAZ5HRIxuUMIxx4SzUbYwZ)
+
 # Installation
 Go 1.11+ is required
 ```go
