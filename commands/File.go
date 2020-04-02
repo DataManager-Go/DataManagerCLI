@@ -49,8 +49,8 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		request.ReplaceFile = replaceFile
 	}
 
-	var payload []byte
-	contentType := ""
+	var contentType string
+	var body io.Reader
 
 	// Check for url/file
 	u, err := url.Parse(path)
@@ -59,18 +59,8 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		request.URL = path
 		contentType = string(server.JSONContentType)
 	} else {
-		// Create bodybuffer from file
-		bodybuff, ct, err := fileToBodypart(path, &cData)
-		if err != nil {
-			fmt.Println("Error:", err.Error())
-			return
-		}
-
-		// Set header
-		contentType = ct
-
-		// Set body payload
-		payload = bodybuff.Bytes()
+		// Init upload stuff
+		body, contentType, request.Size = uploadFile(path, !cData.Quiet)
 	}
 
 	// Make json header content
@@ -84,7 +74,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	// Do request
 	var resStruct server.UploadResponse
 	response, err := server.
-		NewRequest(server.EPFileUpload, payload, cData.Config).
+		NewRequest(server.EPFileUpload, body, cData.Config).
 		WithMethod(server.PUT).
 		WithAuth(server.Authorization{
 			Type:    server.Bearer,

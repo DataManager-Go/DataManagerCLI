@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -151,6 +152,7 @@ type UploadRequest struct {
 	Attributes  models.FileAttributes `json:"attr,omitempty"`
 	Encryption  string                `json:"e,omitempty"`
 	ReplaceFile uint                  `json:"r,omitempty"`
+	Size        int64                 `json:"s"`
 }
 
 //UploadType type of upload
@@ -231,6 +233,7 @@ func (request *Request) BuildClient() *http.Client {
 				InsecureSkipVerify: request.Config.Server.IgnoreCert,
 			},
 		},
+		Timeout: 0,
 	}
 }
 
@@ -245,22 +248,35 @@ func (request *Request) DoHTTPRequest() (*http.Response, error) {
 	}
 	u.Path = path.Join(u.Path, string(request.Endpoint))
 
-	var bytePayload []byte
+	var reader io.Reader
 
 	//Use correct payload
 	if request.RequestType == JSONRequestType {
 		//Encode data
 		var err error
-		bytePayload, err = json.Marshal(request.Payload)
+		bytePayload, err := json.Marshal(request.Payload)
 		if err != nil {
 			return nil, err
 		}
+
+		reader = bytes.NewReader(bytePayload)
 	} else if request.RequestType == RawRequestType {
-		bytePayload = (request.Payload).([]byte)
+		switch request.Payload.(type) {
+		case []byte:
+			reader = bytes.NewReader((request.Payload).([]byte))
+		case io.Reader:
+			reader = (request.Payload).(io.Reader)
+		case io.PipeReader:
+			reader = (request.Payload).(*io.PipeReader)
+		}
+	}
+
+	if reader == nil {
+		reader = bytes.NewBuffer([]byte(""))
 	}
 
 	//bulid request
-	req, _ := http.NewRequest(string(request.Method), u.String(), bytes.NewBuffer(bytePayload))
+	req, _ := http.NewRequest(string(request.Method), u.String(), reader)
 
 	//Set contenttype header
 	req.Header.Set("Content-Type", string(request.ContentType))

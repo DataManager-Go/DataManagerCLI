@@ -30,6 +30,7 @@ var (
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 	appBench   = app.Flag("bench", "Benchmark web calls").Bool()
+	appQuiet   = app.Flag("quiet", "Less verbose output").Short('q').Bool()
 
 	appNamespace             = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
 	appTags                  = app.Flag("tag", "Specify tags to use").Short('t').Strings()
@@ -261,6 +262,7 @@ func main() {
 		NoDecrypt:         *appNoDecrypt,
 		NoEmojis:          *appNoEmojis,
 		RandKey:           *appFileEncryptionRandKey,
+		Quiet:             *appQuiet,
 	}
 
 	if !commandData.Init() {

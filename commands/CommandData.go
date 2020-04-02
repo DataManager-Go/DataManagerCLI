@@ -26,7 +26,7 @@ type CommandData struct {
 	NameLen, RandKey          int
 	All, AllNamespaces        bool
 	NoRedaction, OutputJSON   bool
-	Yes, Force, Bench         bool
+	Yes, Force, Bench, Quiet  bool
 	EncryptionPassKey         bool
 	NoDecrypt, NoEmojis       bool
 	BenchDone                 chan time.Time

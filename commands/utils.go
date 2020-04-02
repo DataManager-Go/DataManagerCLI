@@ -19,6 +19,7 @@ import (
 
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
 )
@@ -269,4 +270,61 @@ func fileMd5(file string) string {
 	}
 
 	return md5
+}
+
+const boundary = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
+
+func uploadFile(path string, showBar bool) (r *io.PipeReader, contentType string, size int64) {
+	// Open file
+	f, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Retrieve fileSize
+	fi, err := f.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	size = fi.Size()
+
+	// Create progressbar
+	bar := pb.New64(fi.Size()).SetMaxWidth(100)
+	if showBar {
+		bar.Start()
+	}
+
+	r, w := io.Pipe()
+	mpw := multipart.NewWriter(w)
+	mpw.SetBoundary(boundary)
+
+	contentType = mpw.FormDataContentType()
+
+	go func() {
+		part, err := mpw.CreateFormFile("file", fi.Name())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if showBar {
+			part = bar.NewProxyWriter(part)
+		}
+
+		buf := make([]byte, 512)
+
+		for {
+			n, err := f.Read(buf)
+			if err != nil {
+				break
+			}
+			part.Write(buf[:n])
+		}
+
+		bar.Finish()
+		w.Close()
+		f.Close()
+		mpw.Close()
+	}()
+
+	return
 }
