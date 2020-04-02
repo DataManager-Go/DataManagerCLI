@@ -6,6 +6,8 @@ github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYo
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.1.56 h1:wZyPKe3PTbSlPOgQ/4jbwsYCDlaBdc6mhaF0wUkIAf8=
 github.com/JojiiOfficial/gaw v1.1.56/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/shred v1.0.1 h1:5WIaDlDzcIuYIj7wk+P2H05+LHxcdctCL5LUnS51frk=
+github.com/JojiiOfficial/shred v1.0.1/go.mod h1:5bGv1PyUFAzdVb/+dvQYrfrIvJFcUsO7hJ1yoBR5A+o=
 github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=

@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/JojiiOfficial/shred"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/cheggaaa/pb/v3"
@@ -70,6 +71,7 @@ func GetTempFile(fileName string) string {
 // SaveToTempFile saves a stream to a temporary file
 func SaveToTempFile(reader io.Reader, fileName string) (string, error) {
 	filePath := GetTempFile(fileName)
+
 	//Create temp file
 	f, err := os.Create(filePath)
 	if err != nil {
@@ -103,14 +105,12 @@ func previewFile(filepath string) {
 		// Linux
 	} else if runtime.GOOS == "linux" {
 		cmd := exec.Command("xdg-open", filepath)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
 
-		var errCatcher bytes.Buffer
-		cmd.Stderr = &errCatcher
-
-		cmd.Run()
-
-		if errCatcher.Len() > 0 {
-			fmt.Println("Error:\n", string(errCatcher.Bytes()))
+		if err != nil {
+			fmt.Println("Error:\n", err)
 		}
 	}
 }
@@ -327,4 +327,41 @@ func uploadFile(path string, showBar bool) (r *io.PipeReader, contentType string
 	}()
 
 	return
+}
+
+// ShredderFile shreddres a file
+func ShredderFile(localFile string, size int64) {
+	shredder := shred.Shredder{}
+
+	var shredConfig *shred.ShredderConf
+	if size < 0 {
+		s, err := os.Stat(localFile)
+		if err != nil {
+			fmt.Println("File to shredder not found")
+			return
+		}
+		size = s.Size()
+	}
+
+	if size >= 1000000000 {
+		// Size >= 1GB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros, 1, true)
+	} else if size >= 1000000000 {
+		// Size >= 1GB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 2, true)
+	} else {
+		// Size < 10MB
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
+	}
+
+	// Shredder & Delete local file
+	err := shredConfig.ShredFile(localFile)
+	if err != nil {
+		fmt.Println(err)
+		// Delete file if shredder didn't
+		err = os.Remove(localFile)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 }

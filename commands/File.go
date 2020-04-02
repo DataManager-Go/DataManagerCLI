@@ -534,6 +534,9 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 			// Preview file
 			previewFile(file)
+
+			// Shredder/Delete file
+			ShredderFile(file, -1)
 		} else {
 			// Printf like a boss
 			io.Copy(os.Stdout, respData)
@@ -601,7 +604,7 @@ func EditFile(cData CommandData, id uint) {
 
 	// Delete temp file
 	defer func() {
-		os.Remove(filePath)
+		ShredderFile(filePath, -1)
 	}()
 
 	// Download File
