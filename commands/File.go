@@ -85,6 +85,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	var resStruct server.UploadResponse
 	response, err := server.
 		NewRequest(server.EPFileUpload, payload, cData.Config).
+		WithMethod(server.PUT).
 		WithAuth(server.Authorization{
 			Type:    server.Bearer,
 			Palyoad: cData.Config.User.SessionToken,

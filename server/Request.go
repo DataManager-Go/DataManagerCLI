@@ -183,6 +183,12 @@ func NewRequest(endpoint Endpoint, payload interface{}, config *models.Config) *
 	}
 }
 
+// WithMethod use a different method
+func (request *Request) WithMethod(m Method) *Request {
+	request.Method = m
+	return request
+}
+
 //WithRequestType use different request type
 func (request *Request) WithRequestType(rType RequestType) *Request {
 	request.RequestType = rType
@@ -254,7 +260,7 @@ func (request *Request) DoHTTPRequest() (*http.Response, error) {
 	}
 
 	//bulid request
-	req, _ := http.NewRequest("POST", u.String(), bytes.NewBuffer(bytePayload))
+	req, _ := http.NewRequest(string(request.Method), u.String(), bytes.NewBuffer(bytePayload))
 
 	//Set contenttype header
 	req.Header.Set("Content-Type", string(request.ContentType))
