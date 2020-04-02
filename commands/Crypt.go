@@ -71,29 +71,29 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 }
 
 // returns a reader to the correct source of data
-func getFileEncrypter(filename string, fh *os.File, cData *CommandData) (*io.Reader, error) {
+func getFileEncrypter(filename string, fh *os.File, cData *CommandData) (io.Reader, int64, error) {
 	var reader io.Reader
-
+	var ln int64
 	switch cData.Encryption {
 	case constants.EncryptionCiphers[0]:
 		{
 			// AES
 			block, err := aes.NewCipher([]byte(cData.EncryptionKey))
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
 			// Get file content
 			b, err := fileToBase64(filename, fh)
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
 			// Set Ciphertext 0->16 to Iv
 			ciphertext := make([]byte, aes.BlockSize+len(b))
 			iv := ciphertext[:aes.BlockSize]
 			if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 
 			// Encrypt file
@@ -102,6 +102,7 @@ func getFileEncrypter(filename string, fh *os.File, cData *CommandData) (*io.Rea
 
 			// Set reader to reader from bytes
 			reader = bytes.NewReader(ciphertext)
+			ln = int64(len(ciphertext))
 		}
 	case "":
 		{
@@ -111,9 +112,9 @@ func getFileEncrypter(filename string, fh *os.File, cData *CommandData) (*io.Rea
 	default:
 		{
 			// Return error if cipher is not implemented
-			return nil, errors.New("cipher not supported")
+			return nil, 0, errors.New("cipher not supported")
 		}
 	}
 
-	return &reader, nil
+	return reader, ln, nil
 }

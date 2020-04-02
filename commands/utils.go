@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -113,41 +112,6 @@ func previewFile(filepath string) {
 			fmt.Println("Error:\n", err)
 		}
 	}
-}
-
-// Parse file to bytes.Buffer for http multipart request
-func fileToBodypart(filename string, cData *CommandData) (*bytes.Buffer, string, error) {
-	bodyBuf := &bytes.Buffer{}
-	bodyWriter := multipart.NewWriter(bodyBuf)
-
-	// this step is very important
-	fileWriter, err := bodyWriter.CreateFormFile("uploadfile", filename)
-	if err != nil {
-		fmt.Println("error writing to buffer")
-		return nil, "", err
-	}
-
-	// open file handle
-	fh, err := os.Open(filename)
-	if err != nil {
-		fmt.Println("error opening file")
-		return nil, "", err
-	}
-	defer fh.Close()
-
-	reader, err := getFileEncrypter(filename, fh, cData)
-	if err != nil {
-		return nil, "", err
-	}
-
-	// copy to filewriter
-	_, err = io.Copy(fileWriter, *reader)
-	if err != nil {
-		return nil, "", err
-	}
-
-	bodyWriter.Close()
-	return bodyBuf, bodyWriter.FormDataContentType(), nil
 }
 
 func benchCheck(cData CommandData) {
@@ -274,7 +238,7 @@ func fileMd5(file string) string {
 
 const boundary = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
 
-func uploadFile(path string, showBar bool) (r *io.PipeReader, contentType string, size int64) {
+func uploadFile(cData *CommandData, path string, showBar bool) (r *io.PipeReader, contentType string, size int64) {
 	// Open file
 	f, err := os.Open(path)
 	if err != nil {
@@ -286,7 +250,17 @@ func uploadFile(path string, showBar bool) (r *io.PipeReader, contentType string
 	if err != nil {
 		log.Fatal(err)
 	}
-	size = fi.Size()
+
+	reader, ln, err := getFileEncrypter(path, f, cData)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if ln > 0 {
+		size = ln
+	} else {
+		size = fi.Size()
+	}
 
 	// Create progressbar
 	bar := pb.New64(fi.Size()).SetMaxWidth(100)
@@ -313,7 +287,7 @@ func uploadFile(path string, showBar bool) (r *io.PipeReader, contentType string
 		buf := make([]byte, 512)
 
 		for {
-			n, err := f.Read(buf)
+			n, err := reader.Read(buf)
 			if err != nil {
 				break
 			}

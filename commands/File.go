@@ -60,7 +60,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		contentType = string(server.JSONContentType)
 	} else {
 		// Init upload stuff
-		body, contentType, request.Size = uploadFile(path, !cData.Quiet)
+		body, contentType, request.Size = uploadFile(&cData, path, !cData.Quiet)
 	}
 
 	// Make json header content
