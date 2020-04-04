@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-//CommandData data for commands
+// CommandData data for commands
 type CommandData struct {
 	Command                   string
 	Config                    *models.Config

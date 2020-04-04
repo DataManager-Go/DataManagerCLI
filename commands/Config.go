@@ -10,18 +10,18 @@ import (
 	"github.com/fatih/color"
 )
 
-//UseTargets targets for config use
+// UseTargets targets for config use
 var UseTargets = []string{"namespace", "tags", "groups"}
 
-//ConfigUse command for config use
+// ConfigUse command for config use
 func ConfigUse(cData CommandData, target string, values []string) {
-	//Return if target not found
+	// Return if target not found
 	if !gaw.IsInStringArray(target, UseTargets) {
 		fmt.Println("Target not found")
 		return
 	}
 
-	//Removing target
+	// Removing target
 	if len(values) == 0 && target != "namespace" {
 		//Remove desired target
 		switch target {
@@ -34,7 +34,7 @@ func ConfigUse(cData CommandData, target string, values []string) {
 		}
 	} else {
 		switch target {
-		//Use namespace
+		// Use namespace
 		case UseTargets[0]:
 			{
 				if len(values) == 0 {
@@ -43,13 +43,13 @@ func ConfigUse(cData CommandData, target string, values []string) {
 				fmt.Printf("Using namespace '%s'\n", values[0])
 				cData.Config.Default.Namespace = values[0]
 			}
-		//Use tags
+		// Use tags
 		case UseTargets[1]:
 			{
 				fmt.Printf("Using tags '%s'\n", strings.Join(values, ", "))
 				cData.Config.Default.Tags = values
 			}
-		//Use Groups
+		// Use Groups
 		case UseTargets[2]:
 			{
 				fmt.Printf("Using groups '%s'\n", strings.Join(values, ", "))

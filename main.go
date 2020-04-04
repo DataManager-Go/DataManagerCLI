@@ -186,7 +186,7 @@ func main() {
 
 	gaw.Init()
 
-	//parsing the args
+	// Parsing the args
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	log.SetOutput(os.Stdout)
@@ -198,7 +198,7 @@ func main() {
 		DisableColors:    *appNoColor,
 	})
 
-	//Init config
+	// Init config
 	var err error
 	config, err = models.InitConfig(models.GetDefaultConfigFile(), *appCfgFile)
 	if err != nil {
@@ -231,17 +231,17 @@ func main() {
 		*appTrimName = config.Client.TrimNameAfter
 	}
 
-	//Process params: make t1,t2 -> [t1 t2]
+	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
-	//Generate  file attributes
+	// Generate  file attributes
 	fileAttributes := models.FileAttributes{
 		Namespace: *appNamespace,
 		Groups:    *appGroups,
 		Tags:      *appTags,
 	}
 
-	//Command data
+	// Command data
 	commandData := commands.CommandData{
 		Command:           parsed,
 		Config:            config,
@@ -271,7 +271,7 @@ func main() {
 
 	startTime := time.Now()
 	if *appBench {
-		//Create channel
+		// Create channel
 		commandData.BenchDone = make(chan time.Time, 1)
 	}
 
@@ -279,10 +279,10 @@ func main() {
 	switch parsed {
 	// -- File commands
 	case fileDownloadCmd.FullCommand():
-		//Download file
+		// Download file
 		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
-	//View file
+	// iew file
 	case viewCmd.FullCommand():
 		commands.GetFile(commandData, *viewFileName, *viewFileID, "", true, *viewNoPreview, *viewPreview)
 
@@ -290,23 +290,23 @@ func main() {
 	case appUpload.FullCommand():
 		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadReplace)
 
-	//Delete file
+	// Delete file
 	case fileDeleteCmd.FullCommand():
 		commands.DeleteFile(commandData, *fileDeleteName, *fileDeleteID)
 
-	//List files
+	// List files
 	case fileListCmd.FullCommand():
 		commands.ListFiles(commandData, *fileListName, *fileDownloadID, *fileListOrder)
 
-	//List file(s)
+	// List file(s)
 	case appFilesCmd.FullCommand():
 		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
 
-	//Update File
+	// Update File
 	case fileUpdateCmd.FullCommand():
 		commands.UpdateFile(commandData, *fileUpdateName, *fileUpdateID, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
 
-	//Publish file
+	// Publish file
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
 
@@ -315,36 +315,36 @@ func main() {
 		commands.EditFile(commandData, *fileEditID)
 
 	// -- Attributes commands
-	//Update tag
+	// Update tag
 	case tagUpdateCmd.FullCommand():
 		commands.UpdateAttribute(commandData, models.TagAttribute, *tagUpdateName, *tagUpdateNewName)
 
-	//Delete Tag
+	// Delete Tag
 	case tagDeleteCmd.FullCommand():
 		commands.DeleteAttribute(commandData, models.TagAttribute, *tagDeleteName)
 
-	//Update group
+	// Update group
 	case groupUpdateCmd.FullCommand():
 		commands.UpdateAttribute(commandData, models.GroupAttribute, *groupUpdateName, *groupUpdateNewName)
 
-	//Delete Group
+	// Delete Group
 	case groupDeleteCmd.FullCommand():
 		commands.DeleteAttribute(commandData, models.GroupAttribute, *groupDeleteName)
 
 	// -- Namespace commands
-	//Create namespace
+	// Create namespace
 	case namespaceCreateCmd.FullCommand():
 		commands.CreateNamespace(commandData, *namespaceCreateName, *namespaceCreateCustom)
 
-	//Update namespace
+	// Update namespace
 	case namespaceUpdateCmd.FullCommand():
 		commands.UpdateNamespace(commandData, *namespaceUpdateName, *namespaceUpdateNewName, *namespaceCreateCustom)
 
-	//Delete namespace
+	// Delete namespace
 	case namespaceDeleteCmd.FullCommand():
 		commands.DeleteNamespace(commandData, *namespaceDeleteName)
 
-	//List namespaces
+	// List namespaces
 	case namespaceListCmd.FullCommand(), namespacesCmd.FullCommand():
 		commands.ListNamespace(commandData)
 
@@ -374,10 +374,10 @@ func main() {
 
 // Env vars
 const (
-	//EnVarPrefix prefix for env vars
+	// EnVarPrefix prefix for env vars
 	EnVarPrefix = "MANAGER"
 
-	//EnVarPrefix prefix of all used env vars
+	// EnVarPrefix prefix of all used env vars
 	EnVarLogLevel   = "LOG_LEVEL"
 	EnVarNoColor    = "NO_COLOR"
 	EnVarNoEmojis   = "NO_EMOJIS"

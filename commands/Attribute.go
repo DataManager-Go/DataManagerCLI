@@ -13,7 +13,7 @@ import (
 func attributeRequest(cData CommandData, attribute models.Attribute, action uint8, name string, newName ...string) {
 	var endpoint server.Endpoint
 
-	//Pick right endpoint
+	// Pick right endpoint
 	if action == 1 {
 		if attribute == models.GroupAttribute {
 			endpoint = server.EPGroupUpdate

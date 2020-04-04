@@ -129,11 +129,8 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 		return
 	}
 
-	name = n
-	id = fid
-
 	// otherwise return input
-	return
+	return n, fid
 }
 
 func formatFilename(file *models.FileResponseItem, nameLen int, cData *CommandData) string {
@@ -263,7 +260,7 @@ func uploadFile(cData *CommandData, path string, showBar bool) (r *io.PipeReader
 	}
 
 	// Create progressbar
-	bar := pb.New64(fi.Size()).SetMaxWidth(100)
+	bar := pb.New64(size).SetMaxWidth(100)
 	if showBar {
 		bar.Start()
 	}
