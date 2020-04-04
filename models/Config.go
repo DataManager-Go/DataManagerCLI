@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"os/user"
 	"path"
 	"path/filepath"
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/denisbrodbeck/machineid"
 	"gopkg.in/yaml.v2"
 )
 
@@ -21,8 +23,9 @@ const (
 
 //Config Configuration structure
 type Config struct {
-	File string
-	User struct {
+	File      string
+	MachineID string
+	User      struct {
 		Username     string
 		SessionToken string
 	}
@@ -54,6 +57,7 @@ type defaultConfig struct {
 
 func getDefaultConfig() Config {
 	return Config{
+		MachineID: GenMachineID(),
 		Server: serverConfig{
 			URL:        "http://localhost:9999",
 			IgnoreCert: false,
@@ -118,13 +122,39 @@ func InitConfig(defaultFile, file string) (*Config, error) {
 	}
 
 	config.File = file
+	config.SetMachineID()
+
 	return &config, nil
+}
+
+// SetMachineID sets machineID if empty
+func (config *Config) SetMachineID() {
+	if len(config.MachineID) == 0 {
+		config.MachineID = GenMachineID()
+		configService.Save(config, config.File)
+	}
 }
 
 //Validate check the config
 func (config *Config) Validate() error {
 	//Put in your validation logic here
 	return nil
+}
+
+// GetMachineID returns the machineID
+func (config *Config) GetMachineID() string {
+	// Gen new MachineID if empty
+	if len(config.MachineID) == 0 {
+		config.SetMachineID()
+	}
+
+	// Check length of machineID
+	if len(config.MachineID) > 100 {
+		fmt.Println("Warning: MachineID too big")
+		return ""
+	}
+
+	return config.MachineID
 }
 
 //IsLoggedIn return true if sessiondata is available
@@ -202,4 +232,31 @@ func (config Config) View(redactSecrets bool) string {
 	}
 
 	return string(ymlB)
+}
+
+// GenMachineID detect the machineID. If not detected return random string
+func GenMachineID() string {
+	username := getPseudoUsername()
+
+	// Protect with username to allow multiple user
+	// on a system using the same manager username
+	id, err := machineid.ProtectedID(username)
+	if err == nil {
+		return id
+	}
+
+	// If not detected reaturn random string
+	return gaw.RandString(60)
+}
+
+func getPseudoUsername() string {
+	var username string
+	user, err := user.Current()
+	if err != nil {
+		username = gaw.RandString(10)
+	} else {
+		username = user.Username
+	}
+
+	return username
 }

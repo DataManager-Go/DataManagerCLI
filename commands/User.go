@@ -36,8 +36,9 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 
 	//Do request
 	resp, err := server.NewRequest(server.EPLogin, server.CredentialsRequest{
-		Password: pass,
-		Username: username,
+		Password:  pass,
+		Username:  username,
+		MachineID: cData.Config.GetMachineID(),
 	}, cData.Config).Do(&response)
 
 	if err != nil {
@@ -86,8 +87,9 @@ func RegisterCommand(cData CommandData) {
 
 	//Do request
 	resp, err := server.NewRequest(server.EPRegister, server.CredentialsRequest{
-		Username: username,
-		Password: pass,
+		Username:  username,
+		Password:  pass,
+		MachineID: cData.Config.GetMachineID(),
 	}, cData.Config).Do(nil)
 
 	if err != nil {

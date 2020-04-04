@@ -8,6 +8,7 @@ require (
 	github.com/JojiiOfficial/gaw v1.1.56
 	github.com/JojiiOfficial/shred v1.0.1
 	github.com/cheggaaa/pb/v3 v3.0.4
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.9.0
 	github.com/kyokomi/emoji v2.1.0+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
