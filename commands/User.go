@@ -87,9 +87,8 @@ func RegisterCommand(cData CommandData) {
 
 	//Do request
 	resp, err := server.NewRequest(server.EPRegister, server.CredentialsRequest{
-		Username:  username,
-		Password:  pass,
-		MachineID: cData.Config.GetMachineID(),
+		Username: username,
+		Password: pass,
 	}, cData.Config).Do(nil)
 
 	if err != nil {

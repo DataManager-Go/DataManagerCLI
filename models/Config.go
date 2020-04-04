@@ -21,7 +21,7 @@ const (
 	DefaultConfigFile = "config.yaml"
 )
 
-//Config Configuration structure
+// Config Configuration structure
 type Config struct {
 	File      string
 	MachineID string
@@ -75,7 +75,7 @@ func getDefaultConfig() Config {
 	}
 }
 
-//InitConfig inits the configfile
+// InitConfig inits the configfile
 func InitConfig(defaultFile, file string) (*Config, error) {
 	var needCreate bool
 	var config Config
@@ -85,12 +85,12 @@ func InitConfig(defaultFile, file string) (*Config, error) {
 		needCreate = true
 	}
 
-	//Check if config already exists
+	// Check if config already exists
 	_, err := os.Stat(file)
 	needCreate = err != nil
 
 	if needCreate {
-		//Autocreate folder
+		// Autocreate folder
 		path, _ := filepath.Split(file)
 		_, err := os.Stat(path)
 		if err != nil {
@@ -100,23 +100,23 @@ func InitConfig(defaultFile, file string) (*Config, error) {
 			}
 		}
 
-		//Set config to default config
+		// Set config to default config
 		config = getDefaultConfig()
 	}
 
-	//Create config file if not exists and fill it with the default values
+	// Create config file if not exists and fill it with the default values
 	isDefault, err := configService.SetupConfig(&config, file, configService.NoChange)
 	if err != nil {
 		return nil, err
 	}
-	//Return if created but further steps are required
+	// Return if created but further steps are required
 	if isDefault {
 		if needCreate {
 			return nil, nil
 		}
 	}
 
-	//Load configuration
+	// Load configuration
 	if err = configService.Load(&config, file); err != nil {
 		return nil, err
 	}
@@ -135,9 +135,9 @@ func (config *Config) SetMachineID() {
 	}
 }
 
-//Validate check the config
+// Validate check the config
 func (config *Config) Validate() error {
-	//Put in your validation logic here
+	// Put in your validation logic here
 	return nil
 }
 
@@ -157,7 +157,7 @@ func (config *Config) GetMachineID() string {
 	return config.MachineID
 }
 
-//IsLoggedIn return true if sessiondata is available
+// IsLoggedIn return true if sessiondata is available
 func (config *Config) IsLoggedIn() bool {
 	return len(config.User.Username) > 0 && len(config.User.SessionToken) == 64
 }
@@ -172,9 +172,9 @@ func (config *Config) GetDefaultOrder() string {
 	return getDefaultConfig().Client.DefaultOrder
 }
 
-//GetPreviewURL gets preview URL
+// GetPreviewURL gets preview URL
 func (config *Config) GetPreviewURL(file string) string {
-	//Use alternative url if available
+	// Use alternative url if available
 	if len(config.Server.AlternativeURL) != 0 {
 		//Parse URL
 		u, err := url.Parse(config.Server.AlternativeURL)
@@ -187,19 +187,19 @@ func (config *Config) GetPreviewURL(file string) string {
 		return u.String()
 	}
 
-	//Parse URL
+	// Parse URL
 	u, err := url.Parse(config.Server.URL)
 	if err != nil {
 		log.Fatalln("Server URL is not valid: ", err)
 		return ""
 	}
 
-	//otherwise use default url and 'preview' folder
+	// otherwise use default url and 'preview' folder
 	u.Path = path.Join(u.Path, "preview", file)
 	return u.String()
 }
 
-//GetDefaultConfigFile return path of default config
+// GetDefaultConfigFile return path of default config
 func GetDefaultConfigFile() string {
 	return filepath.Join(getDataPath(), DefaultConfigFile)
 }
@@ -218,14 +218,14 @@ func getDataPath() string {
 	return path
 }
 
-//View view config
+// View view config
 func (config Config) View(redactSecrets bool) string {
-	//Redact secrets if desired
+	// React secrets if desired
 	if redactSecrets {
 		config.User.SessionToken = "<redacted>"
 	}
 
-	//Create yaml
+	// Create yaml
 	ymlB, err := yaml.Marshal(config)
 	if err != nil {
 		return err.Error()
