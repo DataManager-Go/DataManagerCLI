@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/Yukaru-san/DataManager_Client/server"
 	"github.com/fatih/color"
@@ -69,11 +70,22 @@ func attributeRequest(cData CommandData, attribute models.Attribute, action uint
 }
 
 // UpdateAttribute update an attribute
-func UpdateAttribute(cData CommandData, attribute models.Attribute, name, newName string) {
-	attributeRequest(cData, attribute, 1, name, newName)
+func UpdateAttribute(cData CommandData, attribute libdm.Attribute, name, newName string) {
+	_, err := cData.LibDM.UpdateAttribute(attribute, cData.FileAttributes.Namespace, name, newName)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Printf("The attribute has been %s\n", color.HiGreenString("successfully updated"))
 }
 
 // DeleteAttribute update an attribute
-func DeleteAttribute(cData CommandData, attribute models.Attribute, name string) {
-	attributeRequest(cData, attribute, 0, name)
+func DeleteAttribute(cData CommandData, attribute libdm.Attribute, name string) {
+	_, err := cData.LibDM.DeleteAttribute(attribute, cData.FileAttributes.Namespace, name)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("The attribute has been %s\n", color.HiGreenString("successfully deleted"))
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/commands"
@@ -317,19 +318,19 @@ func main() {
 	// -- Attributes commands
 	// Update tag
 	case tagUpdateCmd.FullCommand():
-		commands.UpdateAttribute(commandData, models.TagAttribute, *tagUpdateName, *tagUpdateNewName)
+		commands.UpdateAttribute(commandData, libdm.TagAttribute, *tagUpdateName, *tagUpdateNewName)
 
 	// Delete Tag
 	case tagDeleteCmd.FullCommand():
-		commands.DeleteAttribute(commandData, models.TagAttribute, *tagDeleteName)
+		commands.DeleteAttribute(commandData, libdm.TagAttribute, *tagDeleteName)
 
 	// Update group
 	case groupUpdateCmd.FullCommand():
-		commands.UpdateAttribute(commandData, models.GroupAttribute, *groupUpdateName, *groupUpdateNewName)
+		commands.UpdateAttribute(commandData, libdm.GroupAttribute, *groupUpdateName, *groupUpdateNewName)
 
 	// Delete Group
 	case groupDeleteCmd.FullCommand():
-		commands.DeleteAttribute(commandData, models.GroupAttribute, *groupDeleteName)
+		commands.DeleteAttribute(commandData, libdm.GroupAttribute, *groupDeleteName)
 
 	// -- Namespace commands
 	// Create namespace
