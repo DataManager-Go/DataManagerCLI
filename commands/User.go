@@ -9,19 +9,18 @@ import (
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/server"
 
 	"github.com/fatih/color"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-//LoginCommand login into the server
+// LoginCommand login into the server
 func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
-	//Print error if user tries to bench
+	// Print error if user tries to bench
 	benchCheck(cData)
 
-	//Print confirmation if user is already logged in
+	// Print confirmation if user is already logged in
 	if cData.Config.IsLoggedIn() && !cData.Yes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
 		if !i {
@@ -29,82 +28,57 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 		}
 	}
 
-	//Enter credentials
+	// Enter credentials
 	username, pass := credentials(usernameArg, false, 0)
 
-	var response server.LoginResponse
-
-	//Do request
-	resp, err := server.NewRequest(server.EPLogin, server.CredentialsRequest{
-		Password:  pass,
-		Username:  username,
-		MachineID: cData.Config.GetMachineID(),
-	}, cData.Config).Do(&response)
-
+	// Do HTTP request
+	loginResponse, err := cData.LibDM.Login(username, pass)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println(err)
 		return
 	}
 
-	if resp.Status == server.ResponseError && resp.HTTPCode == 403 {
-		fmt.Println(color.HiRedString("Failure"))
-	} else if resp.Status == server.ResponseSuccess && len(response.Token) > 0 {
-		//put username and token in config
-		cData.Config.User = struct {
-			Username     string
-			SessionToken string
-		}{
-			Username:     username,
-			SessionToken: response.Token,
-		}
+	// Set userinfo
+	cData.Config.User.SessionToken = loginResponse.Token
+	cData.Config.User.Username = username
 
-		//Set default namespace to users
-		cData.Config.Default.Namespace = response.Namespace
+	// Set default namespace to users
+	cData.Config.Default.Namespace = loginResponse.Namespace
 
-		//Save new config
-		err := configService.Save(cData.Config, cData.Config.File)
-		if err != nil {
-			fmt.Println("Error saving config:", err.Error())
-			return
-		}
-
-		fmt.Println(color.HiGreenString("Success!"), "\nLogged in as", username)
-	} else {
-		printResponseError(resp)
+	// Save new config
+	err = configService.Save(cData.Config, cData.Config.File)
+	if err != nil {
+		fmt.Println("Error saving config:", err.Error())
+		return
 	}
+
+	fmt.Println(color.HiGreenString("Success!"), "\nLogged in as", username)
 }
 
-//RegisterCommand create a new account
+// RegisterCommand create a new account
 func RegisterCommand(cData CommandData) {
-	//Print error if user tries to bench
+	// Print error if user tries to bench
 	benchCheck(cData)
 
-	//Input for credentials
+	// Input for credentials
 	username, pass := credentials("", true, 0)
 	if len(username) == 0 || len(pass) == 0 {
 		return
 	}
 
-	//Do request
-	resp, err := server.NewRequest(server.EPRegister, server.CredentialsRequest{
-		Username: username,
-		Password: pass,
-	}, cData.Config).Do(nil)
-
+	// Do HTTP request
+	registerResponse, err := cData.LibDM.Register(username, pass)
 	if err != nil {
-		fmt.Println("Err", err.Error())
+		fmt.Println(registerResponse)
 		return
 	}
 
-	if resp.Status == server.ResponseSuccess {
-		fmt.Printf("User '%s' created %s!\n", username, color.HiGreenString("successfully"))
+	fmt.Printf("User '%s' created %s!\n", username, color.HiGreenString("successfully"))
 
-		y, _ := gaw.ConfirmInput("Do you want to login to this account? [y/n]> ", bufio.NewReader(os.Stdin))
-		if y {
-			LoginCommand(cData, username, true)
-		}
-	} else {
-		printResponseError(resp)
+	// Ask for login
+	y, _ := gaw.ConfirmInput("Do you want to login to this account? [y/n]> ", bufio.NewReader(os.Stdin))
+	if y {
+		LoginCommand(cData, username, true)
 	}
 }
 

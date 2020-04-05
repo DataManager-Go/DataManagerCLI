@@ -3,6 +3,7 @@ module github.com/Yukaru-san/DataManager_Client
 go 1.14
 
 require (
+	github.com/DataManager-Go/libdatamanager v1.0.0
 	github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.1.56

@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/models"
@@ -17,6 +18,7 @@ import (
 
 // CommandData data for commands
 type CommandData struct {
+	LibDM                     *libdm.LibDM
 	Command                   string
 	Config                    *models.Config
 	FileAttributes            models.FileAttributes
@@ -82,6 +84,9 @@ func (cData *CommandData) Init() bool {
 		fmt.Printf("File %s saved\n", keyFile)
 		cData.EncryptionKey = string(b)
 	}
+
+	// Create and set RequestConfig
+	cData.LibDM = libdm.NewLibDM(cData.Config.ToRequestConfig())
 
 	return true
 }

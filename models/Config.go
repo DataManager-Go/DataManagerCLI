@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/denisbrodbeck/machineid"
@@ -232,6 +233,17 @@ func (config Config) View(redactSecrets bool) string {
 	}
 
 	return string(ymlB)
+}
+
+// ToRequestConfig create a libdm requestconfig from given cli client config
+func (config Config) ToRequestConfig() *libdm.RequestConfig {
+	return &libdm.RequestConfig{
+		MachineID:    config.GetMachineID(),
+		URL:          config.Server.URL,
+		IgnoreCert:   config.Server.IgnoreCert,
+		SessionToken: config.User.SessionToken,
+		Username:     config.User.Username,
+	}
 }
 
 // GenMachineID detect the machineID. If not detected return random string
