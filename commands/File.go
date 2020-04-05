@@ -55,7 +55,6 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	// Start upload
 	go (func(wg *sync.WaitGroup, path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, done chan int8, publicName, encryption, encryptionKey string) {
 		wg.Add(1)
-		fmt.Println(path, name)
 		uploadResponse, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, done, publicName, encryption, encryptionKey)
 		wg.Done()
 	})(&wg, path, fileName, public, replaceFile, cData.FileAttributes, proxy, c, done, publicName, cData.Encryption, cData.EncryptionKey)
