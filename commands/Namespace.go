@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	"github.com/JojiiOfficial/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/constants"
 )
 
 // CreateNamespace creates a namespace

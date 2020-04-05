@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/DataManager-Go/DataManagerServer/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/DataManagerServer/constants"
 )
 
 func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error) {
