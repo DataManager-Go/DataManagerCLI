@@ -475,20 +475,20 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 }
 
 // EditFile edits a file
-func EditFile(cData CommandData, id uint) {
+func EditFile(cData CommandData, name string, id uint) {
 	// Generate temp-filePath
 	filePath := GetTempFile(gaw.RandString(10))
+
+	// Download File
+	success, encryption, serverName := GetFile(cData, name, id, filePath, false, true, false, !cData.Quiet)
+	if !success {
+		return
+	}
 
 	// Delete temp file
 	defer func() {
 		ShredderFile(filePath, -1)
 	}()
-
-	// Download File
-	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, !cData.Quiet)
-	if !success {
-		return
-	}
 
 	// Generate md5 of original file
 	fileOldMd5 := fileMd5(filePath)

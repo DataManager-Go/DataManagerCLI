@@ -90,8 +90,9 @@ var (
 	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
 
 	// -- Edit
-	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
-	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
+	fileEditCmd  = appFileCmd.Command("edit", "Edit a file")
+	fileEditName = fileEditCmd.Arg("filename", "The filename").String()
+	fileEditID   = fileEditCmd.Arg("ID", "The fileID").Uint()
 
 	// -- Delete
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
@@ -312,7 +313,7 @@ func main() {
 
 	// Edit file
 	case fileEditCmd.FullCommand():
-		commands.EditFile(commandData, *fileEditID)
+		commands.EditFile(commandData, *fileEditName, *fileEditID)
 
 	// -- Attributes commands
 	// Update tag
