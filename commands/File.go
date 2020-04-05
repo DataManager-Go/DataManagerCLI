@@ -266,11 +266,6 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	}
 }
 
-//
-//
-// TODO -   - - --- - - - - - - - - - fix me - - - - - - - - - - - - - - - - - -
-//
-//
 // PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	// Convert input
@@ -356,6 +351,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
+	// Do http request
 	resp, serverFileName, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
 	if err != nil {
 		printResponseError(err, "downloading file")
@@ -375,6 +371,8 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 	}
 
+	var bar *pb.ProgressBar
+
 	// Show bar on download
 	if showBar {
 		// Get filesize header
@@ -387,7 +385,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 
 		// Create and hook bar
-		bar := pb.New64(size).SetMaxWidth(100).SetRefreshRate(10 * time.Millisecond).Start()
+		bar = pb.New64(size).SetMaxWidth(100).SetRefreshRate(10 * time.Millisecond).Start()
 		respData = bar.NewProxyReader(respData)
 	}
 
@@ -396,6 +394,10 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		// Only write to tmpfile if preview needed
 		if shouldPreview {
 			file, err := SaveToTempFile(respData, serverFileName)
+			if bar != nil {
+				bar.Finish()
+			}
+
 			if err != nil {
 				fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
 				return
@@ -444,6 +446,10 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			return
 		}
 
+		if bar != nil {
+			bar.Finish()
+		}
+
 		// Close file
 		f.Close()
 
@@ -452,14 +458,10 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			previewFile(savePath)
 		}
 
-		// Print new line cause progressbar
-		// is using current lin
-		if showBar {
-			fmt.Println()
+		if !cData.Quiet {
+			// Print success message
+			fmt.Printf("Saved file into %s\n", outFile)
 		}
-
-		// Print success message
-		fmt.Printf("Saved file into %s\n", outFile)
 	} else if !displayOutput && len(savePath) == 0 {
 		fmt.Println("Can't save file if you don't specify a path.")
 		return
@@ -486,10 +488,6 @@ func EditFile(cData CommandData, id uint) {
 	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, !cData.Quiet)
 	if !success {
 		return
-	}
-
-	if !cData.Quiet {
-		fmt.Println()
 	}
 
 	// Generate md5 of original file
