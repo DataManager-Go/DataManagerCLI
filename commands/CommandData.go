@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/DataManager-Go/DataManagerCLI/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/models"
 	"golang.org/x/crypto/ssh/terminal"
 )
 

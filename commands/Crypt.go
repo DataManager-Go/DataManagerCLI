@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"io"
@@ -12,8 +11,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/DataManager-Go/DataManagerServer/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/JojiiOfficial/DataManagerServer/constants"
 )
 
 func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error) {
@@ -68,53 +67,4 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 	}
 
 	return reader, nil
-}
-
-// returns a reader to the correct source of data
-func getFileEncrypter(filename string, fh *os.File, cData *CommandData) (io.Reader, int64, error) {
-	var reader io.Reader
-	var ln int64
-	switch cData.Encryption {
-	case constants.EncryptionCiphers[0]:
-		{
-			// AES
-			block, err := aes.NewCipher([]byte(cData.EncryptionKey))
-			if err != nil {
-				return nil, 0, err
-			}
-
-			// Get file content
-			b, err := fileToBase64(filename, fh)
-			if err != nil {
-				return nil, 0, err
-			}
-
-			// Set Ciphertext 0->16 to Iv
-			ciphertext := make([]byte, aes.BlockSize+len(b))
-			iv := ciphertext[:aes.BlockSize]
-			if _, err := io.ReadFull(rand.Reader, iv); err != nil {
-				return nil, 0, err
-			}
-
-			// Encrypt file
-			cfb := cipher.NewCFBEncrypter(block, iv)
-			cfb.XORKeyStream(ciphertext[aes.BlockSize:], b)
-
-			// Set reader to reader from bytes
-			reader = bytes.NewReader(ciphertext)
-			ln = int64(len(ciphertext))
-		}
-	case "":
-		{
-			// Set reader to reader of file
-			reader = fh
-		}
-	default:
-		{
-			// Return error if cipher is not implemented
-			return nil, 0, errors.New("cipher not supported")
-		}
-	}
-
-	return reader, ln, nil
 }

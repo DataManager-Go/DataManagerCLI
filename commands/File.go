@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DataManager-Go/DataManagerCLI/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/models"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	humanTime "github.com/sbani/go-humanizer/time"

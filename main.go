@@ -8,9 +8,9 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
-	"github.com/Yukaru-san/DataManager_Client/commands"
-	"github.com/Yukaru-san/DataManager_Client/models"
 
+	"github.com/DataManager-Go/DataManagerCLI/models"
+	"github.com/DataManager-Go/DataManagerCLI/commands"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
