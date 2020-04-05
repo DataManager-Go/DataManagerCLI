@@ -5,7 +5,7 @@ go 1.14
 require (
 	github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
-	github.com/JojiiOfficial/gaw v1.1.56
+	github.com/JojiiOfficial/gaw v1.2.0
 	github.com/JojiiOfficial/shred v1.0.1
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/denisbrodbeck/machineid v1.0.1
