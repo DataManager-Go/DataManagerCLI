@@ -8,6 +8,8 @@ github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYo
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.1.56 h1:wZyPKe3PTbSlPOgQ/4jbwsYCDlaBdc6mhaF0wUkIAf8=
 github.com/JojiiOfficial/gaw v1.1.56/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
+github.com/JojiiOfficial/gaw v1.2.0/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/shred v1.0.1 h1:5WIaDlDzcIuYIj7wk+P2H05+LHxcdctCL5LUnS51frk=
 github.com/JojiiOfficial/shred v1.0.1/go.mod h1:5bGv1PyUFAzdVb/+dvQYrfrIvJFcUsO7hJ1yoBR5A+o=
 github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=
@@ -43,6 +45,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGi
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/kyokomi/emoji v2.1.0+incompatible h1:+DYU2RgpI6OHG4oQkM5KlqD3Wd3UPEsX8jamTo1Mp6o=
 github.com/kyokomi/emoji v2.1.0+incompatible/go.mod h1:mZ6aGCD7yk8j6QY6KICwnZ2pxoszVseX1DNoGtU2tBA=
+github.com/kyokomi/emoji v2.2.0+incompatible h1:/iZiMsOk4qAs1LR3RUmpz0zo+USsLarUTMR7D+1ffBE=
+github.com/kyokomi/emoji v2.2.0+incompatible/go.mod h1:mZ6aGCD7yk8j6QY6KICwnZ2pxoszVseX1DNoGtU2tBA=
 github.com/lib/pq v1.1.1/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/mattn/go-colorable v0.1.2/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=

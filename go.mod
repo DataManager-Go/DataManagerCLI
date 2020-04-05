@@ -6,12 +6,12 @@ require (
 	github.com/DataManager-Go/libdatamanager v1.0.0
 	github.com/JojiiOfficial/DataManagerServer v0.0.0-20200401135832-0bd7c27505ef
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
-	github.com/JojiiOfficial/gaw v1.1.56
+	github.com/JojiiOfficial/gaw v1.2.0
 	github.com/JojiiOfficial/shred v1.0.1
 	github.com/cheggaaa/pb/v3 v3.0.4
 	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/fatih/color v1.9.0
-	github.com/kyokomi/emoji v2.1.0+incompatible
+	github.com/kyokomi/emoji v2.2.0+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/sbani/go-humanizer v0.3.1
