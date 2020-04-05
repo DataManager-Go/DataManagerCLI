@@ -2,22 +2,21 @@ package commands
 
 import (
 	"bufio"
-	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/models"
-	"github.com/Yukaru-san/DataManager_Client/server"
+	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	humanTime "github.com/sbani/go-humanizer/time"
 	"github.com/sbani/go-humanizer/units"
@@ -36,77 +35,61 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		public = true
 	}
 
-	// Bulid request
-	request := server.UploadRequest{
-		Name:       fileName,
-		Attributes: cData.FileAttributes,
-		Public:     public,
-		PublicName: publicName,
-		Encryption: cData.Encryption,
-	}
+	// Declare var
+	var err error
+	var uploadResponse *libdm.UploadResponse
+	var bar *pb.ProgressBar
+	wg := sync.WaitGroup{}
+	done := make(chan int8, 1)
+	c := make(chan int64, 1)
 
-	if replaceFile != 0 {
-		request.ReplaceFile = replaceFile
-	}
-
-	var contentType string
-	var body io.Reader
-
-	// Check for url/file
-	u, err := url.Parse(path)
-	if err == nil && (u.Scheme == "http" || u.Scheme == "https") {
-		request.UploadType = server.URLUploadType
-		request.URL = path
-		contentType = string(server.JSONContentType)
-	} else {
-		// Init upload stuff
-		body, contentType, request.Size = uploadFile(&cData, path, !cData.Quiet)
-	}
-
-	// Make json header content
-	rbody, err := json.Marshal(request)
-	if err != nil {
-		fmt.Println("Invalid Json:", err)
-		return
-	}
-	rBase := base64.StdEncoding.EncodeToString(rbody)
-
-	// Do request
-	var resStruct server.UploadResponse
-	response, err := server.
-		NewRequest(server.EPFileUpload, body, cData.Config).
-		WithMethod(server.PUT).
-		WithAuth(server.Authorization{
-			Type:    server.Bearer,
-			Palyoad: cData.Config.User.SessionToken,
-		}).WithHeader(server.HeaderRequest, rBase).
-		WithRequestType(server.RawRequestType).
-		WithContentType(server.ContentType(contentType)).
-		WithBenchCallback(cData.BenchDone).
-		Do(&resStruct)
-
-	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
-			return
+	// Init progressbar and proxy
+	proxy := libdm.NoProxyWriter
+	if !cData.Quiet {
+		bar = pb.New64(0).SetRefreshRate(10 * time.Millisecond).SetMaxWidth(100)
+		proxy = func(w io.Writer) io.Writer {
+			return bar.NewProxyWriter(w)
 		}
-		log.Fatalln(err)
 	}
 
-	// Verifying response status
-	if response.Status == server.ResponseError {
-		printResponseError(response, "uploading your file")
+	// Start upload
+	go (func(wg *sync.WaitGroup, path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, done chan int8, publicName, encryption, encryptionKey string) {
+		wg.Add(1)
+		fmt.Println(path, name)
+		uploadResponse, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, done, publicName, encryption, encryptionKey)
+		wg.Done()
+	})(&wg, path, fileName, public, replaceFile, cData.FileAttributes, proxy, c, done, publicName, cData.Encryption, cData.EncryptionKey)
+
+	// Read filesize and set bars total to filesize
+	fileSize := <-c
+	if bar != nil {
+		bar.SetTotal(fileSize)
+		bar.Start()
+	}
+
+	// Wait for request and
+	// upload to be finished
+	wg.Wait()
+	<-done
+
+	// Stop bar
+	if bar != nil {
+		bar.Finish()
+	}
+
+	if err != nil || uploadResponse == nil {
+		printResponseError(err, "uploading file")
 		return
 	}
 
 	// Print output
 	if cData.OutputJSON {
-		fmt.Println(toJSON(resStruct))
+		fmt.Println(toJSON(uploadResponse))
 	} else {
-		if len(resStruct.PublicFilename) != 0 {
-			fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(resStruct.PublicFilename), fileName, resStruct.FileID)
+		if len(uploadResponse.PublicFilename) != 0 {
+			fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(uploadResponse.PublicFilename), fileName, uploadResponse.FileID)
 		} else {
-			fmt.Printf("Name: %s\nID: %d\n", fileName, resStruct.FileID)
+			fmt.Printf("Name: %s\nID: %d\n", fileName, uploadResponse.FileID)
 		}
 	}
 }
@@ -123,33 +106,14 @@ func DeleteFile(cData CommandData, name string, id uint) {
 		}
 	}
 
-	var response server.CountResponse
-	resp, err := server.NewRequest(server.EPFileDelete, &server.FileRequest{
-		Name:       name,
-		FileID:     id,
-		All:        cData.All,
-		Attributes: cData.FileAttributes,
-	}, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).WithBenchCallback(cData.BenchDone).Do(&response)
-
+	resp, err := cData.LibDM.DeleteFile(name, id, cData.All, cData.FileAttributes)
 	if err != nil {
-		if resp != nil {
-			fmt.Println("http:", resp.HTTPCode)
-			return
-		}
-
-		log.Fatalln(err)
-	}
-
-	if resp.Status == server.ResponseError {
-		printResponseError(resp, "trying to delete your file")
+		printResponseError(err, "deleting file")
 		return
 	}
 
-	if response.Count > 1 {
-		fmt.Printf("Deleted %d files %s\n", response.Count, color.HiGreenString("successfully"))
+	if resp.Count > 1 {
+		fmt.Printf("Deleted %d files %s\n", resp.Count, color.HiGreenString("successfully"))
 	} else {
 		fmt.Printf("The file has been %s\n", color.HiGreenString("successfully deleted"))
 	}
@@ -160,34 +124,13 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
-	var filesResponse server.FileListResponse
-	response, err := server.NewRequest(server.EPFileList, &server.FileListRequest{
-		FileID:        id,
-		Name:          name,
-		AllNamespaces: cData.AllNamespaces,
-		Attributes:    cData.FileAttributes,
-		OptionalParams: server.OptionalRequetsParameter{
-			Verbose: cData.Details,
-		},
-	}, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).WithBenchCallback(cData.BenchDone).Do(&filesResponse)
-
+	resp, err := cData.LibDM.ListFiles(name, id, cData.AllNamespaces, cData.FileAttributes, cData.Details)
 	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
-			return
-		}
-		log.Fatalln(err)
-	}
-
-	if response.Status == server.ResponseError {
-		printResponseError(response, "listing files")
+		printResponseError(err, "listing files")
 		return
 	}
 
-	if uint16(len(filesResponse.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
+	if uint16(len(resp.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
 		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
 		if !y {
 			return
@@ -196,9 +139,9 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 	// Print as json if desired
 	if cData.OutputJSON {
-		fmt.Println(toJSON(filesResponse.Files))
+		fmt.Println(toJSON(resp.Files))
 	} else {
-		if len(filesResponse.Files) == 0 {
+		if len(resp.Files) == 0 {
 			fmt.Printf("No files in namespace %s\n", cData.Namespace)
 			return
 		}
@@ -212,13 +155,13 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 		var hasPublicFile, hasTag, hasGroup bool
 
-		// scan for availability of attributes
-		for _, file := range filesResponse.Files {
+		// Scan for availability of attributes
+		for _, file := range resp.Files {
 			if !hasPublicFile && file.IsPublic && len(file.PublicName) > 0 {
 				hasPublicFile = true
 			}
 
-			// only need to do if requested more details
+			// Only need to do if requested more details
 			if cData.Details > 1 {
 				// Has tag
 				if !hasTag && len(file.Attributes.Tags) > 0 {
@@ -237,7 +180,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			if order := models.FileOrderFromString(sOrder); order != nil {
 				// Sort
 				models.
-					NewFileSorter(filesResponse.Files).
+					NewFileSorter(resp.Files).
 					Reversed(models.IsOrderReversed(sOrder)).
 					SortBy(*order)
 			} else {
@@ -246,7 +189,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			}
 		} else {
 			// By default sort by creation desc
-			models.NewFileSorter(filesResponse.Files).Reversed(true).SortBy(models.CreatedOrder)
+			models.NewFileSorter(resp.Files).Reversed(true).SortBy(models.CreatedOrder)
 		}
 
 		header := []interface{}{
@@ -279,7 +222,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 		table.AddRow(header...)
 
-		for _, file := range filesResponse.Files {
+		for _, file := range resp.Files {
 			// Colorize private pubNames if not public
 			pubname := file.PublicName
 			if len(pubname) > 0 && !file.IsPublic {
@@ -324,47 +267,19 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 	}
 }
 
+//
+//
+// TODO -   - - --- - - - - - - - - - fix me - - - - - - - - - - - - - - - - - -
+//
+//
 // PublishFile publishes a file
 func PublishFile(cData CommandData, name string, id uint, publicName string) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
-	request := server.NewRequest(server.EPFilePublish, server.FileRequest{
-		Name:       name,
-		FileID:     id,
-		PublicName: publicName,
-		All:        cData.All,
-		Attributes: cData.FileAttributes,
-	}, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).WithBenchCallback(cData.BenchDone)
-
-	var err error
-	var response *server.RestRequestResponse
-	var resp interface{}
-
-	if cData.All {
-		var respData server.BulkPublishResponse
-		response, err = request.Do(&respData)
-		resp = respData
-	} else {
-		var respData server.PublishResponse
-		response, err = request.Do(&respData)
-		resp = respData
-	}
-
-	if err != nil {
-		if response != nil {
-			fmt.Println("http:", response.HTTPCode)
-			return
-		}
-		log.Fatalln(err)
-	}
-
-	// Error handling #2
-	if response.Status == server.ResponseError {
-		printResponseError(response, "publishing")
+	resp, err := cData.LibDM.PublishFile(name, id, publicName, cData.All, cData.FileAttributes)
+	if err != nil || resp == nil {
+		printResponseError(err, "publishing file")
 		return
 	}
 
@@ -373,14 +288,14 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 		fmt.Println(toJSON(resp))
 	} else {
 		if cData.All {
-			rs := (resp).(server.BulkPublishResponse)
+			rs := (resp).(libdm.BulkPublishResponse)
 
 			fmt.Printf("Published %d files\n", len(rs.Files))
 			for _, file := range rs.Files {
 				fmt.Printf("File %s with ID %d Public name: %s\n", file.Filename, file.FileID, file.PublicFilename)
 			}
 		} else {
-			pubName := (resp.(server.PublishResponse)).PublicFilename
+			pubName := (resp.(libdm.PublishResponse)).PublicFilename
 			fmt.Printf(cData.Config.GetPreviewURL(pubName))
 		}
 	}
@@ -394,62 +309,25 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
-	// Set attributes
-	attributes := models.FileAttributes{
-		Namespace: cData.Namespace,
-	}
-
 	// Can't use both
 	if setPrivate && setPublic {
 		fmt.Println("Illegal flag combination")
 		return
 	}
 
-	var isPublic string
-	if setPublic {
-		isPublic = "true"
-	}
-	if setPrivate {
-		isPublic = "false"
-	}
-
-	// Set fileUpdates
-	fileUpdates := models.FileUpdateItem{
-		IsPublic:     isPublic,
+	response, err := cData.LibDM.UpdateFile(name, id, cData.Namespace, cData.All, libdm.FileChanges{
 		NewName:      newName,
 		NewNamespace: newNamespace,
-		RemoveTags:   removeTags,
-		RemoveGroups: removeGroups,
 		AddTags:      addTags,
 		AddGroups:    addGroups,
-	}
+		RemoveTags:   removeTags,
+		RemoveGroups: removeGroups,
+		SetPublic:    setPublic,
+		SetPrivate:   setPrivate,
+	})
 
-	var response server.CountResponse
-
-	// Combine and send it
-	resp, err := server.NewRequest(server.EPFileUpdate, &server.FileRequest{
-		Name:       name,
-		FileID:     id,
-		All:        cData.All,
-		Updates:    fileUpdates,
-		Attributes: attributes,
-	}, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).WithBenchCallback(cData.BenchDone).Do(&response)
-
-	// Error handling #1
 	if err != nil {
-		if resp != nil {
-			fmt.Println("http:", resp.HTTPCode)
-			return
-		}
-		log.Fatalln(err)
-	}
-
-	// Error handling #2
-	if resp.Status == server.ResponseError {
-		printResponseError(resp, "trying to update your file")
+		printResponseError(err, "updating file")
 		return
 	}
 
@@ -461,7 +339,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool) (success bool, encryption, serverFileName string) {
+func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool, args ...bool) (success bool, encryption, serverFileName string) {
 	// Convert input
 	fileName, id = getFileCommandData(fileName, id)
 
@@ -470,42 +348,18 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		shouldPreview = false
 	}
 
+	// magic
+	showBar := ((!(!cData.Quiet || !shouldPreview)) || (len(args) > 0 && args[0]))
+
 	// Errorhandling 100
 	if noPreview && preview {
 		fmt.Print("rlly?")
 		return
 	}
 
-	resp, err := server.NewRequest(server.EPFileGet, &server.FileRequest{
-		Name:   fileName,
-		FileID: id,
-		Attributes: models.FileAttributes{
-			Namespace: cData.Namespace,
-		},
-	}, cData.Config).WithAuth(server.Authorization{
-		Type:    server.Bearer,
-		Palyoad: cData.Config.User.SessionToken,
-	}).DoHTTPRequest()
-
-	// Check for error
+	resp, serverFileName, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
 	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	// Check response headers
-	if resp.Header.Get(server.HeaderStatus) == strconv.Itoa(int(server.ResponseError)) {
-		statusMessage := resp.Header.Get(server.HeaderStatusMessage)
-		fmt.Println(color.HiRedString("Error: ") + statusMessage)
-		return
-	}
-
-	// Get filename from response headers
-	serverFileName = resp.Header.Get(server.HeaderFileName)
-
-	// Check headers
-	if len(serverFileName) == 0 {
-		fmt.Println(color.HiRedString("Error:") + " Received corrupted Data from the server")
+		printResponseError(err, "downloading file")
 		return
 	}
 
@@ -516,10 +370,26 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		respData = resp.Body
 	} else {
 		respData, err = respToDecrypted(&cData, resp)
-		encryption = resp.Header.Get(server.HeaderEncryption)
+		encryption = resp.Header.Get(libdm.HeaderEncryption)
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	// Show bar on download
+	if showBar {
+		// Get filesize header
+		var size int64
+		if len(resp.Header.Get(libdm.HeaderContentLength)) > 0 {
+			s, err := strconv.ParseInt(resp.Header.Get(libdm.HeaderContentLength), 10, 64)
+			if err == nil {
+				size = s
+			}
+		}
+
+		// Create and hook bar
+		bar := pb.New64(size).SetMaxWidth(100).SetRefreshRate(10 * time.Millisecond).Start()
+		respData = bar.NewProxyReader(respData)
 	}
 
 	// Display or save file
@@ -583,6 +453,12 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			previewFile(savePath)
 		}
 
+		// Print new line cause progressbar
+		// is using current lin
+		if !showBar {
+			fmt.Println()
+		}
+
 		// Print success message
 		fmt.Printf("Saved file into %s\n", outFile)
 	} else if !displayOutput && len(savePath) == 0 {
@@ -608,9 +484,13 @@ func EditFile(cData CommandData, id uint) {
 	}()
 
 	// Download File
-	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false)
+	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, !cData.Quiet)
 	if !success {
 		return
+	}
+
+	if !cData.Quiet {
+		fmt.Println()
 	}
 
 	// Generate md5 of original file

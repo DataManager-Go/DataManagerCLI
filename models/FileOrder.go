@@ -4,6 +4,7 @@ import (
 	"sort"
 	"strings"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 )
 
@@ -12,12 +13,12 @@ type FileOrder int16
 
 //FileSorter a sorter
 type FileSorter struct {
-	Files   []FileResponseItem
+	Files   []libdm.FileResponseItem
 	Reverse bool
 }
 
 //NewFileSorter create a new sorter
-func NewFileSorter(files []FileResponseItem) *FileSorter {
+func NewFileSorter(files []libdm.FileResponseItem) *FileSorter {
 	return &FileSorter{
 		Files:   files,
 		Reverse: false,

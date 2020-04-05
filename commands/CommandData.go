@@ -21,7 +21,7 @@ type CommandData struct {
 	LibDM                     *libdm.LibDM
 	Command                   string
 	Config                    *models.Config
-	FileAttributes            models.FileAttributes
+	FileAttributes            libdm.FileAttributes
 	Encryption, EncryptionKey string
 	Namespace                 string
 	Details                   uint8

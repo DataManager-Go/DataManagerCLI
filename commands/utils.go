@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mime/multipart"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,24 +15,14 @@ import (
 	"strconv"
 	"strings"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/shred"
-	"github.com/Yukaru-san/DataManager_Client/models"
-	"github.com/Yukaru-san/DataManager_Client/server"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
 )
 
-func printResponseError(response *server.RestRequestResponse, add ...string) {
-	sadd := ""
-	if len(add) > 0 {
-		sadd = add[0]
-	}
-	printError(sadd + ": " + response.Message)
-}
-
-func printError(message interface{}) {
-	fmt.Printf("%s %s\n", color.HiRedString("Error"), message)
+func printError(message interface{}, err string) {
+	fmt.Printf("%s %s: %s\n", color.HiRedString("Error"), message, err)
 }
 
 // ProcesStrSliceParam divides args by ,
@@ -71,19 +60,19 @@ func GetTempFile(fileName string) string {
 func SaveToTempFile(reader io.Reader, fileName string) (string, error) {
 	filePath := GetTempFile(fileName)
 
-	//Create temp file
+	// Create temp file
 	f, err := os.Create(filePath)
 	if err != nil {
 		return "", err
 	}
 
-	//Write from reader
+	// Write from reader
 	_, err = io.Copy(f, reader)
 	if err != nil {
 		return "", err
 	}
 
-	//Close streams
+	// Close streams
 	f.Close()
 
 	return filePath, nil
@@ -133,7 +122,7 @@ func getFileCommandData(n string, fid uint) (name string, id uint) {
 	return n, fid
 }
 
-func formatFilename(file *models.FileResponseItem, nameLen int, cData *CommandData) string {
+func formatFilename(file *libdm.FileResponseItem, nameLen int, cData *CommandData) string {
 	name := file.Name
 
 	if nameLen > 0 && len(name) > cData.NameLen {
@@ -152,7 +141,7 @@ func formatFilename(file *models.FileResponseItem, nameLen int, cData *CommandDa
 	return name
 }
 
-func filenameAddEmojis(filename string, file *models.FileResponseItem) string {
+func filenameAddEmojis(filename string, file *libdm.FileResponseItem) string {
 	added := false
 
 	// Public globe
@@ -233,73 +222,6 @@ func fileMd5(file string) string {
 	return md5
 }
 
-const boundary = "MachliJalKiRaniHaiJeevanUskaPaaniHai"
-
-func uploadFile(cData *CommandData, path string, showBar bool) (r *io.PipeReader, contentType string, size int64) {
-	// Open file
-	f, err := os.Open(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Retrieve fileSize
-	fi, err := f.Stat()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	reader, ln, err := getFileEncrypter(path, f, cData)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if ln > 0 {
-		size = ln
-	} else {
-		size = fi.Size()
-	}
-
-	// Create progressbar
-	bar := pb.New64(size).SetMaxWidth(100)
-	if showBar {
-		bar.Start()
-	}
-
-	r, w := io.Pipe()
-	mpw := multipart.NewWriter(w)
-	mpw.SetBoundary(boundary)
-
-	contentType = mpw.FormDataContentType()
-
-	go func() {
-		part, err := mpw.CreateFormFile("file", fi.Name())
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if showBar {
-			part = bar.NewProxyWriter(part)
-		}
-
-		buf := make([]byte, 512)
-
-		for {
-			n, err := reader.Read(buf)
-			if err != nil {
-				break
-			}
-			part.Write(buf[:n])
-		}
-
-		bar.Finish()
-		w.Close()
-		f.Close()
-		mpw.Close()
-	}()
-
-	return
-}
-
 // ShredderFile shreddres a file
 func ShredderFile(localFile string, size int64) {
 	shredder := shred.Shredder{}
@@ -334,5 +256,31 @@ func ShredderFile(localFile string, size int64) {
 		if err != nil {
 			fmt.Println(err)
 		}
+	}
+}
+
+// Print an response error for normies
+func printResponseError(err error, msg string) {
+	if err == nil {
+		return
+	}
+
+	switch err.(type) {
+	case *libdm.ResponseErr:
+		lrerr := err.(*libdm.ResponseErr)
+
+		var cause string
+
+		if lrerr.Response != nil {
+			cause = lrerr.Response.Message
+		} else if lrerr.Err != nil {
+			cause = lrerr.Err.Error()
+		} else {
+			cause = lrerr.Error()
+		}
+
+		printError(msg, cause)
+	default:
+		printError(msg, err.Error())
 	}
 }

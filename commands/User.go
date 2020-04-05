@@ -34,7 +34,7 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 	// Do HTTP request
 	loginResponse, err := cData.LibDM.Login(username, pass)
 	if err != nil {
-		fmt.Println(err)
+		printResponseError(err, "logging in")
 		return
 	}
 
@@ -67,9 +67,9 @@ func RegisterCommand(cData CommandData) {
 	}
 
 	// Do HTTP request
-	registerResponse, err := cData.LibDM.Register(username, pass)
+	_, err := cData.LibDM.Register(username, pass)
 	if err != nil {
-		fmt.Println(registerResponse)
+		printResponseError(err, "creating an account")
 		return
 	}
 

@@ -10,7 +10,6 @@ import (
 	"github.com/JojiiOfficial/gaw"
 	"github.com/Yukaru-san/DataManager_Client/commands"
 	"github.com/Yukaru-san/DataManager_Client/models"
-	"github.com/Yukaru-san/DataManager_Client/server"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -236,7 +235,7 @@ func main() {
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
 	// Generate  file attributes
-	fileAttributes := models.FileAttributes{
+	fileAttributes := libdm.FileAttributes{
 		Namespace: *appNamespace,
 		Groups:    *appGroups,
 		Tags:      *appTags,
@@ -283,7 +282,7 @@ func main() {
 		// Download file
 		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
 
-	// iew file
+	// View file
 	case viewCmd.FullCommand():
 		commands.GetFile(commandData, *viewFileName, *viewFileID, "", true, *viewNoPreview, *viewPreview)
 
@@ -391,26 +390,15 @@ func getEnVar(name string) string {
 }
 
 func pingServer(cData commands.CommandData) {
-	var response server.StringResponse
-	authorization := server.Authorization{}
+	var response libdm.StringResponse
 
-	// Use session if available
-	if config.IsLoggedIn() {
-		authorization.Type = server.Bearer
-		authorization.Palyoad = config.User.SessionToken
-	}
-
-	res, err := server.NewRequest(server.EPPing, server.PingRequest{Payload: "ping"}, cData.Config).
-		WithAuth(authorization).
-		WithBenchCallback(cData.BenchDone).
-		Do(&response)
-
+	res, err := cData.LibDM.Request(libdm.EPPing, libdm.PingRequest{Payload: "ping"}, &response, config.IsLoggedIn())
 	if err != nil {
-		log.Error(err.Error())
+		fmt.Println(err)
 		return
 	}
 
-	if res.Status == server.ResponseSuccess {
+	if res.Status == libdm.ResponseSuccess {
 		fmt.Println("Ping success:", response.String)
 	} else {
 		log.Errorf("Error (%d) %s\n", res.HTTPCode, res.Message)
