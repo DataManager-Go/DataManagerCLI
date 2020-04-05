@@ -348,7 +348,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 	}
 
 	// magic
-	showBar := ((!(!cData.Quiet || !shouldPreview)) || (len(args) > 0 && args[0]))
+	showBar := (!cData.Quiet && !displayOutput) || (len(args) > 0 && args[0])
 
 	// Errorhandling 100
 	if noPreview && preview {
@@ -454,7 +454,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// Print new line cause progressbar
 		// is using current lin
-		if !showBar {
+		if showBar {
 			fmt.Println()
 		}
 
