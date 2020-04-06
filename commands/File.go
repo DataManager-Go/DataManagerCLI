@@ -475,12 +475,13 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 }
 
 // EditFile edits a file
-func EditFile(cData CommandData, name string, id uint) {
+func EditFile(cData CommandData, id uint) {
+	fmt.Println(id)
 	// Generate temp-filePath
 	filePath := GetTempFile(gaw.RandString(10))
 
 	// Download File
-	success, encryption, serverName := GetFile(cData, name, id, filePath, false, true, false, !cData.Quiet)
+	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, !cData.Quiet)
 	if !success {
 		return
 	}
