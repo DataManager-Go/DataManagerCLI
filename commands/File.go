@@ -476,7 +476,6 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 // EditFile edits a file
 func EditFile(cData CommandData, id uint) {
-	fmt.Println(id)
 	// Generate temp-filePath
 	filePath := GetTempFile(gaw.RandString(10))
 

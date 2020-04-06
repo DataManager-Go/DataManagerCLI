@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -77,7 +78,7 @@ var (
 
 	// -- Upload
 	appUpload            = app.Command("upload", "Upload the given file")
-	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").Required().String()
+	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Required().String()
 	fileUploadName       = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
@@ -403,4 +404,21 @@ func pingServer(cData commands.CommandData) {
 	} else {
 		log.Errorf("Error (%d) %s\n", res.HTTPCode, res.Message)
 	}
+}
+
+// Returns a slice containing all files in current folder
+func hintListFiles() []string {
+	fileInfos, err := ioutil.ReadDir(".")
+	if err != nil {
+		return []string{err.Error()}
+	}
+
+	var files []string
+	for _, fi := range fileInfos {
+		if !fi.IsDir() {
+			files = append(files, fi.Name())
+		}
+	}
+
+	return files
 }
