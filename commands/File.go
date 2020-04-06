@@ -63,7 +63,16 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	fileSize := <-c
 	if bar != nil {
 		bar.SetTotal(fileSize)
-		bar.Start()
+
+		// Show bar only if uploading takes more than 500ms
+		go (func() {
+			time.Sleep(500 * time.Millisecond)
+			select {
+			case <-done:
+			default:
+				bar.Start()
+			}
+		})()
 	}
 
 	// Wait for request and
@@ -342,8 +351,13 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		shouldPreview = false
 	}
 
-	// magic
-	showBar := (!cData.Quiet && !displayOutput) || (len(args) > 0 && args[0])
+	showBar :=
+		// Not quiet and preview (using default app)
+		(!cData.Quiet && ((displayOutput && shouldPreview) ||
+			// OR not printed to stdout
+			(!displayOutput && len(savePath) > 0))) ||
+			// OR forced to display
+			(len(args) > 0 && args[0])
 
 	// Errorhandling 100
 	if noPreview && preview {
@@ -385,7 +399,11 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 
 		// Create and hook bar
-		bar = pb.New64(size).SetMaxWidth(100).SetRefreshRate(10 * time.Millisecond).Start()
+		bar = pb.New64(size).
+			SetMaxWidth(100).
+			SetRefreshRate(10 * time.Millisecond)
+
+		// Overwrite respData with a proxy
 		respData = bar.NewProxyReader(respData)
 	}
 
@@ -393,7 +411,38 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 	if displayOutput && len(savePath) == 0 {
 		// Only write to tmpfile if preview needed
 		if shouldPreview {
-			file, err := SaveToTempFile(respData, serverFileName)
+			done := make(chan bool)
+			var file string
+			var err error
+
+			c := make(chan error)
+
+			// Save file to temp
+			go (func() {
+				filePath := GetTempFile(serverFileName)
+				saveFileFromStream(filePath, respData, c, bar)
+			})()
+
+			// Show bar only if uploading takes more than 500ms
+			if bar != nil {
+				go (func() {
+					time.Sleep(500 * time.Millisecond)
+					select {
+					case <-done:
+						break
+					default:
+						bar.Start()
+					}
+				})()
+			}
+
+			// Await download
+			if err = <-c; err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			// Close bar if open
 			if bar != nil {
 				bar.Finish()
 			}
@@ -432,16 +481,12 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			}
 		}
 
-		// Create or truncate file
-		f, err := os.Create(outFile)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		// channel if filewriting is done
+		c := make(chan error)
+		saveFileFromStream(outFile, respData, c, bar)
 
-		// Vrite file
-		_, err = io.Copy(f, respData)
-		if err != nil {
+		// Await download
+		if err = <-c; err != nil {
 			fmt.Println(err)
 			return
 		}
@@ -449,9 +494,6 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		if bar != nil {
 			bar.Finish()
 		}
-
-		// Close file
-		f.Close()
 
 		// Preview
 		if displayOutput {
@@ -472,6 +514,45 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 	success = true
 	return
+}
+
+// Saves r to file. Shows progressbar after 500ms if still saving
+func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.ProgressBar) {
+	go (func() {
+		// Create or truncate file
+		f, err := os.Create(outFile)
+		if err != nil {
+			c <- err
+			return
+		}
+
+		buf := make([]byte, 10*1024)
+
+		// Write file
+		_, err = io.CopyBuffer(f, r, buf)
+		if err != nil {
+			c <- err
+			return
+		}
+
+		// Close file
+		f.Close()
+
+		c <- nil
+	})()
+
+	// Show bar if desired
+	// and not already done after 500ms
+	if bar != nil {
+		go (func() {
+			time.Sleep(500 * time.Millisecond)
+			select {
+			case <-c:
+			default:
+				bar.Start()
+			}
+		})()
+	}
 }
 
 // EditFile edits a file

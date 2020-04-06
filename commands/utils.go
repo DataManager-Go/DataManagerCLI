@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
@@ -53,29 +54,7 @@ func toJSON(in interface{}) string {
 
 // GetTempFile returns tempfile from fileName
 func GetTempFile(fileName string) string {
-	return filepath.Join(os.TempDir(), fileName)
-}
-
-// SaveToTempFile saves a stream to a temporary file
-func SaveToTempFile(reader io.Reader, fileName string) (string, error) {
-	filePath := GetTempFile(fileName)
-
-	// Create temp file
-	f, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	// Write from reader
-	_, err = io.Copy(f, reader)
-	if err != nil {
-		return "", err
-	}
-
-	// Close streams
-	f.Close()
-
-	return filePath, nil
+	return filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s", gaw.RandString(10), fileName))
 }
 
 // previewFile opens a locally stored file
