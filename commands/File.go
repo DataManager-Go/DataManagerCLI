@@ -46,7 +46,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	// Init progressbar and proxy
 	proxy := libdm.NoProxyWriter
 	if !cData.Quiet {
-		bar = pb.New64(0).SetRefreshRate(10 * time.Millisecond).SetMaxWidth(100)
+		bar = pb.New64(0).SetMaxWidth(100)
 		proxy = func(w io.Writer) io.Writer {
 			return bar.NewProxyWriter(w)
 		}
@@ -406,8 +406,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// Create and hook bar
 		bar = pb.New64(size).
-			SetMaxWidth(100).
-			SetRefreshRate(10 * time.Millisecond)
+			SetMaxWidth(100)
 
 		// Overwrite respData with a proxy
 		respData = bar.NewProxyReader(respData)
@@ -522,11 +521,11 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 	return
 }
 
-// Saves r to file. Shows progressbar after 500ms if still saving
+// Saves data from r to file. Shows progressbar after 500ms if still saving
 func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.ProgressBar) {
 	go (func() {
 		// Create or truncate file
-		f, err := os.Create(outFile)
+		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		if err != nil {
 			c <- err
 			return

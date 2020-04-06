@@ -65,7 +65,7 @@ func (cData *CommandData) Init() bool {
 		}
 
 		keyFile := genFileName("key")
-		f, err := os.Create(keyFile)
+		f, err := os.OpenFile(keyFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 		defer f.Close()
 
 		if err != nil {

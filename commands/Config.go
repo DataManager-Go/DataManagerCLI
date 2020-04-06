@@ -71,25 +71,25 @@ func ConfigUse(cData CommandData, target string, values []string) {
 	return
 }
 
-//ConfigView view config
+// ConfigView view config
 func ConfigView(cData CommandData) {
 	if !cData.OutputJSON {
-		//Print human output
+		// Print human output
 		fmt.Println(cData.Config.View(!cData.NoRedaction))
 	} else {
-		//Redact secrets
+		// Redact secrets
 		if !cData.NoRedaction {
 			cData.Config.User.SessionToken = "<redacted>"
 		}
 
-		//Make json
+		// Make json
 		b, err := json.Marshal(cData.Config)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		//Print output
+		// Print output
 		fmt.Println(string(b))
 	}
 }
