@@ -260,6 +260,10 @@ func printResponseError(err error, msg string) {
 
 		printError(msg, cause)
 	default:
-		printError(msg, err.Error())
+		if err != nil {
+			printError(msg, err.Error())
+		} else {
+			printError(msg, "no error provided")
+		}
 	}
 }

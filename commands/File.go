@@ -78,7 +78,6 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	// Wait for request and
 	// upload to be finished
 	wg.Wait()
-	<-done
 
 	// Stop bar
 	if bar != nil {
@@ -89,6 +88,8 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		printResponseError(err, "uploading file")
 		return
 	}
+
+	<-done
 
 	// Print output
 	if cData.OutputJSON {
