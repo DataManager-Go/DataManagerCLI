@@ -59,6 +59,14 @@ var (
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
 	// -- Register
 	registerCmd = app.Command("register", "Create an account").FullCommand()
+	// -- Setup
+	setupCmd           = app.Command("setup", "Setup your client to get started")
+	setupCmdHost       = setupCmd.Arg("host", "The host of the server you want to use").String()
+	setupCmdHostFlag   = setupCmd.Flag("host", "The host of the server you want to use").String()
+	setupCmdIgnoreCert = setupCmd.Flag("Ignore-cert", "Ignore server certificate (unsafe)").Bool()
+	setupCmdServerOnly = setupCmd.Flag("server-only", "Setup the server connection only. No login").Bool()
+	setupCmdRegister   = setupCmd.Flag("register", "Register after logging in").Bool()
+	setupCmdNoLogin    = setupCmd.Flag("no-login", "Don't login after setting up").Bool()
 
 	//
 	// ---------> Config commands --------------------------------------
@@ -73,6 +81,7 @@ var (
 
 	//
 	// ---------> Universal commands --------------------------------------
+	//
 
 	// -- Upload
 	appUpload            = app.Command("upload", "Upload the given file")
@@ -82,10 +91,6 @@ var (
 	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
 	fileUploadReplace    = appUpload.Flag("replace-file", "Replace a file").Uint()
 
-	// -- Delete file
-	fileRmCmd  = app.Command("rm", "Delete a file")
-	fileRmName = fileRmCmd.Arg("fileName", "Name of the file that should be removed").String()
-	fileRmID   = fileRmCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	//
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
@@ -96,7 +101,11 @@ var (
 	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
 	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
 
-	// -- Delete
+	// -- Delete file -> rm
+	fileRmCmd  = app.Command("rm", "Delete a file")
+	fileRmName = fileRmCmd.Arg("fileName", "Name of the file that should be removed").String()
+	fileRmID   = fileRmCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
+	// -- Delete -> file delete/rm
 	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
 	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").String()
 	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
@@ -211,26 +220,34 @@ func main() {
 
 	if config == nil {
 		log.Info("New config created")
-		return
+		if parsed != setupCmd.FullCommand() {
+			return
+		}
 	}
 
-	// Use config default values if not set
-	if len(*appNamespace) == 0 || (*appNamespace) == "default" {
-		*appNamespace = config.Default.Namespace
+	var appTrimName int
+
+	// Config is nil if a new configfile
+	// was created and setup command is running
+	if config != nil {
+		// Use config default values if not set
+		if len(*appNamespace) == 0 || (*appNamespace) == "default" {
+			*appNamespace = config.Default.Namespace
+		}
+		if len(*appTags) == 0 {
+			*appTags = config.Default.Tags
+		}
+		if len(*appGroups) == 0 {
+			*appGroups = config.Default.Groups
+		}
+		if *appDetails == 0 {
+			*appDetails = config.Client.DefaultDetails
+		}
+		if len(*appFilesOrder) == 0 {
+			*appFilesOrder = config.GetDefaultOrder()
+		}
+		appTrimName = config.Client.TrimNameAfter
 	}
-	if len(*appTags) == 0 {
-		*appTags = config.Default.Tags
-	}
-	if len(*appGroups) == 0 {
-		*appGroups = config.Default.Groups
-	}
-	if *appDetails == 0 {
-		*appDetails = config.Client.DefaultDetails
-	}
-	if len(*appFilesOrder) == 0 {
-		*appFilesOrder = config.GetDefaultOrder()
-	}
-	appTrimName := config.Client.TrimNameAfter
 
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
@@ -266,8 +283,10 @@ func main() {
 		EncryptionFromStdin: *appFileEncryptionFromStdin,
 	}
 
-	if !commandData.Init() {
-		return
+	if parsed != setupCmd.FullCommand() {
+		if !commandData.Init() {
+			return
+		}
 	}
 
 	// Execute the desired command
@@ -354,12 +373,25 @@ func main() {
 	// -- User commands
 	case loginCmd.FullCommand():
 		commands.LoginCommand(commandData, *loginCmdUser)
+
 	case registerCmd:
 		commands.RegisterCommand(commandData)
+	case setupCmd.FullCommand():
+		host := *setupCmdHostFlag
+		if len(host) == 0 {
+			host = *setupCmdHost
+		}
+		if len(host) == 0 {
+			fmt.Println("You have to specify a host")
+			return
+		}
+
+		commands.SetupClient(commandData, host, *appCfgFile, *setupCmdIgnoreCert, *setupCmdServerOnly, *setupCmdRegister, *setupCmdNoLogin)
 
 	// -- Config commands
 	case configUse.FullCommand():
 		commands.ConfigUse(commandData, *configUseTarget, *configUseTargetValue)
+
 	case configView.FullCommand():
 		commands.ConfigView(commandData)
 	}

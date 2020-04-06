@@ -13,6 +13,7 @@ require (
 	github.com/fatih/color v1.9.0
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/kyokomi/emoji v2.2.0+incompatible
+	github.com/labstack/gommon v0.3.0
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/sirupsen/logrus v1.5.0

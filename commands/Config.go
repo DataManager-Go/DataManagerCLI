@@ -1,13 +1,22 @@
 package commands
 
 import (
+	"bufio"
+	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/url"
+	"os"
 	"strings"
 
+	"github.com/DataManager-Go/DataManagerCLI/models"
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
+	log "github.com/sirupsen/logrus"
 )
 
 // UseTargets targets for config use
@@ -92,4 +101,109 @@ func ConfigView(cData CommandData) {
 		// Print output
 		fmt.Println(string(b))
 	}
+}
+
+// SetupClient sets up client config
+func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool) {
+	// Confirm creating a config anyway
+	if cData.Config != nil && !cData.Yes {
+		y, _ := gaw.ConfirmInput("There is already a config. Do you want to overwrite it? [y/n]> ", bufio.NewReader(os.Stdin))
+		if !y {
+			return
+		}
+	}
+
+	// Load config
+	if cData.Config == nil {
+		var err error
+		cData.Config, err = models.InitConfig(models.GetDefaultConfigFile(), configFile)
+		if err != nil {
+			log.Error(err)
+			return
+		}
+	}
+
+	u := bulidURL(host)
+
+	// Check host and verify response
+	if err := checkHost(u.String(), ignoreCert); err != nil {
+		printError("checking host", err.Error())
+		return
+	}
+
+	fmt.Printf("%s connected to server\n", color.HiGreenString("Succesfully"))
+
+	// Set new config values
+	cData.Config.Server.URL = u.String()
+	cData.Config.Server.IgnoreCert = ignoreCert
+
+	err := configService.Save(cData.Config, cData.Config.File)
+	if err != nil {
+		printError("saving config", err.Error())
+		return
+	}
+
+	// If severonly mode is requested, stop here
+	if serverOnly {
+		return
+	}
+
+	// Initialize server connection library instance
+	cData.LibDM = libdm.NewLibDM(cData.Config.ToRequestConfig())
+
+	// In register mode, don't login
+	if register {
+		noLogin = true
+	}
+
+	// if not noLogin, login
+	if !noLogin {
+		fmt.Println("Login:")
+		LoginCommand(cData, "")
+		return
+	}
+
+	if register {
+		fmt.Println("Create an account:")
+		RegisterCommand(cData)
+	}
+}
+
+func bulidURL(host string) *url.URL {
+	u, err := url.Parse(host)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if u.Scheme == "" {
+		u.Scheme = "https"
+	}
+
+	// Validate scheme
+	if !gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
+		log.Fatalf("Invalid scheme '%s'. Use http or https\n", u.Scheme)
+	}
+
+	return u
+}
+
+func checkHost(host string, ignoreCert bool) error {
+	client := http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: ignoreCert,
+			},
+		},
+	}
+
+	resp, err := client.Get(host)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return errors.New("Invalid responsecode")
+	}
+	return nil
 }
