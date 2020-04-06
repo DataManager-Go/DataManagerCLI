@@ -17,7 +17,7 @@ var UseTargets = []string{"namespace", "tags", "groups"}
 func ConfigUse(cData CommandData, target string, values []string) {
 	// Return if target not found
 	if !gaw.IsInStringArray(target, UseTargets) {
-		fmt.Println("Target not found")
+		fmtError("Target not found")
 		return
 	}
 

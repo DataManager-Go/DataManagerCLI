@@ -108,6 +108,11 @@ func DeleteFile(cData CommandData, name string, id uint) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
+	if len(strings.TrimSpace(name)) == 0 && id <= 0 {
+		fmtError("Missing a valid parameter. Provide fileID or Filename")
+		return
+	}
+
 	// Confirm 'delete everything'
 	if strings.TrimSpace(name) == "%" && !cData.Yes && cData.All {
 		if i, _ := gaw.ConfirmInput("Do you really want to delete all files in "+cData.Namespace+"? (y/n)> ", bufio.NewReader(os.Stdin)); !i {
@@ -193,7 +198,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 					Reversed(models.IsOrderReversed(sOrder)).
 					SortBy(*order)
 			} else {
-				fmt.Printf("Error: Sort by '%s' not supporded", sOrder)
+				fmtError(fmt.Sprintf("sort by '%s' not supporded", sOrder))
 				return
 			}
 		} else {
@@ -315,7 +320,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 
 	// Can't use both
 	if setPrivate && setPublic {
-		fmt.Println("Illegal flag combination")
+		fmtError("Illegal flag combination")
 		return
 	}
 
@@ -488,7 +493,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// Await download
 		if err = <-c; err != nil {
-			fmt.Println(err)
+			fmtError(err)
 			return
 		}
 
@@ -506,7 +511,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			fmt.Printf("Saved file into %s\n", outFile)
 		}
 	} else if !displayOutput && len(savePath) == 0 {
-		fmt.Println("Can't save file if you don't specify a path.")
+		fmtError("Can't save file if you don't specify a path.")
 		return
 	}
 
@@ -606,7 +611,7 @@ func editFile(file string) bool {
 
 	// Check editor
 	if _, err := os.Stat(editor); err != nil {
-		fmt.Println("Error finding editor. Either install nano or set $EDITOR to your desired editor")
+		fmtError("finding editor. Either install nano or set $EDITOR to your desired editor")
 		return false
 	}
 

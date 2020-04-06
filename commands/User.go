@@ -17,9 +17,6 @@ import (
 
 // LoginCommand login into the server
 func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
-	// Print error if user tries to bench
-	benchCheck(cData)
-
 	// Print confirmation if user is already logged in
 	if cData.Config.IsLoggedIn() && !cData.Yes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
@@ -48,7 +45,7 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 	// Save new config
 	err = configService.Save(cData.Config, cData.Config.File)
 	if err != nil {
-		fmt.Println("Error saving config:", err.Error())
+		fmtError("saving config:", err.Error())
 		return
 	}
 
@@ -57,9 +54,6 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 
 // RegisterCommand create a new account
 func RegisterCommand(cData CommandData) {
-	// Print error if user tries to bench
-	benchCheck(cData)
-
 	// Input for credentials
 	username, pass := credentials("", true, 0)
 	if len(username) == 0 || len(pass) == 0 {

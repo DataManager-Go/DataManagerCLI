@@ -22,6 +22,10 @@ import (
 	"github.com/kyokomi/emoji"
 )
 
+func fmtError(message ...interface{}) {
+	fmt.Printf("%s %s\n", color.HiRedString("Error:"), fmt.Sprint(message...))
+}
+
 func printError(message interface{}, err string) {
 	fmt.Printf("%s %s: %s\n", color.HiRedString("Error"), message, err)
 }
@@ -79,13 +83,6 @@ func previewFile(filepath string) {
 		if err != nil {
 			fmt.Println("Error:\n", err)
 		}
-	}
-}
-
-func benchCheck(cData CommandData) {
-	if cData.Bench {
-		fmt.Println("This command doesn't support benchmarks")
-		os.Exit(1)
 	}
 }
 

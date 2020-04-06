@@ -12,7 +12,6 @@ import (
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
 	"github.com/DataManager-Go/DataManagerCLI/models"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -30,7 +29,6 @@ var (
 	appYes     = app.Flag("yes", "Skip confirmations").Short('y').Bool()
 	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
-	appBench   = app.Flag("bench", "Benchmark web calls").Bool()
 	appQuiet   = app.Flag("quiet", "Less verbose output").Short('q').Bool()
 
 	appNamespace             = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
@@ -84,6 +82,10 @@ var (
 	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
 	fileUploadReplace    = appUpload.Flag("replace-file", "Replace a file").Uint()
 
+	// -- Delete file
+	fileRmCmd  = app.Command("rm", "Delete a file")
+	fileRmName = fileRmCmd.Arg("fileName", "Name of the file that should be removed").String()
+	fileRmID   = fileRmCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	//
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
@@ -255,7 +257,6 @@ func main() {
 		OutputJSON:        *appOutputJSON,
 		Yes:               *appYes,
 		Force:             *appForce,
-		Bench:             *appBench,
 		NameLen:           *appTrimName,
 		Encryption:        *appFileEncryption,
 		EncryptionKey:     *appFileEncryptionKey,
@@ -268,12 +269,6 @@ func main() {
 
 	if !commandData.Init() {
 		return
-	}
-
-	startTime := time.Now()
-	if *appBench {
-		// Create channel
-		commandData.BenchDone = make(chan time.Time, 1)
 	}
 
 	// Execute the desired command
@@ -294,6 +289,10 @@ func main() {
 	// Delete file
 	case fileDeleteCmd.FullCommand():
 		commands.DeleteFile(commandData, *fileDeleteName, *fileDeleteID)
+
+	// Delete file (rm)
+	case fileRmCmd.FullCommand():
+		commands.DeleteFile(commandData, *fileRmName, *fileRmID)
 
 	// List files
 	case fileListCmd.FullCommand():
@@ -364,12 +363,6 @@ func main() {
 		commands.ConfigUse(commandData, *configUseTarget, *configUseTargetValue)
 	case configView.FullCommand():
 		commands.ConfigView(commandData)
-	}
-
-	if *appBench {
-		endTime := <-commandData.BenchDone
-		fmt.Println()
-		logrus.Infof("Bench took %s", endTime.Sub(startTime).String())
 	}
 }
 

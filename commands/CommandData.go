@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/DataManager-Go/DataManagerCLI/models"
 	"github.com/DataManager-Go/DataManagerServer/constants"
@@ -28,10 +27,9 @@ type CommandData struct {
 	NameLen, RandKey          int
 	All, AllNamespaces        bool
 	NoRedaction, OutputJSON   bool
-	Yes, Force, Bench, Quiet  bool
+	Yes, Force, Quiet         bool
 	EncryptionPassKey         bool
 	NoDecrypt, NoEmojis       bool
-	BenchDone                 chan time.Time
 }
 
 // Init init CommandData
