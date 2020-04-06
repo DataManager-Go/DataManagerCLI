@@ -12,7 +12,7 @@ import (
 	"os"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/JojiiOfficial/DataManagerServer/constants"
+	"github.com/DataManager-Go/DataManagerServer/constants"
 )
 
 func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error) {

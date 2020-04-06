@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/JojiiOfficial/DataManagerServer/constants"
 	"github.com/JojiiOfficial/gaw"
 
-	"github.com/DataManager-Go/DataManagerCLI/models"
 	"github.com/DataManager-Go/DataManagerCLI/commands"
+	"github.com/DataManager-Go/DataManagerCLI/models"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
