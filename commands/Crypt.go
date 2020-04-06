@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"os"
 
-	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/DataManager-Go/DataManagerServer/constants"
+	libdm "github.com/DataManager-Go/libdatamanager"
 )
 
 func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error) {
@@ -34,7 +34,7 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 			if err != nil {
 				return nil, err
 			}
-
+			fmt.Println(key)
 			// Create Cipher
 			block, err := aes.NewCipher(key)
 			if err != nil {
@@ -51,10 +51,10 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 			text = text[aes.BlockSize:]
 
 			// Decrypt
-			cfb := cipher.NewCFBDecrypter(block, iv)
+			cfb := cipher.NewCTR(block, iv)
 			cfb.XORKeyStream(text, text)
 
-			reader = bytes.NewReader(decodeBase64(text))
+			reader = bytes.NewReader(text)
 		}
 	case "":
 		{
