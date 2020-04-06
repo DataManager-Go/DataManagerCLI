@@ -31,22 +31,22 @@ var (
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 	appQuiet   = app.Flag("quiet", "Less verbose output").Short('q').Bool()
 
-	appNamespace             = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
-	appTags                  = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups                = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appOutputJSON            = app.Flag("json", "Print output as json").Bool()
-	appNoRedaction           = app.Flag("no-redact", "Don't redact secrets").Bool()
-	appDetails               = app.Flag("details", "Print more details of something").Short('d').Counter()
-	appTrimName              = app.Flag("trim-name", "Trim name after n chars").Int()
-	appAll                   = app.Flag("all", "Do action for all found files").Short('a').Bool()
-	appAllNamespaces         = app.Flag("all-namespaces", "Do action for all found files").Bool()
-	appForce                 = app.Flag("force", "Forces an action").Short('f').Bool()
-	appNoDecrypt             = app.Flag("no-decrypt", "Don't decrypt files").Bool()
-	appNoEmojis              = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
-	appFileEncryption        = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
-	appFileEncryptionKey     = app.Flag("key", "Encryption/Decryption key").Short('k').String()
-	appFileEncryptionRandKey = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
-	appFileEncryptionPassKey = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
+	appNamespace               = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appTags                    = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups                  = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appOutputJSON              = app.Flag("json", "Print output as json").Bool()
+	appNoRedaction             = app.Flag("no-redact", "Don't redact secrets").Bool()
+	appDetails                 = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appAll                     = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appAllNamespaces           = app.Flag("all-namespaces", "Do action for all found files").Bool()
+	appForce                   = app.Flag("force", "Forces an action").Short('f').Bool()
+	appNoDecrypt               = app.Flag("no-decrypt", "Don't decrypt files").Bool()
+	appNoEmojis                = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
+	appFileEncryption          = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
+	appFileEncryptionKey       = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+	appFileEncryptionRandKey   = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
+	appFileEncryptionPassKey   = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
+	appFileEncryptionFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
 
 	//
 	// ---------> Ping --------------------------------------
@@ -230,9 +230,7 @@ func main() {
 	if len(*appFilesOrder) == 0 {
 		*appFilesOrder = config.GetDefaultOrder()
 	}
-	if *appTrimName == 0 {
-		*appTrimName = config.Client.TrimNameAfter
-	}
+	appTrimName := config.Client.TrimNameAfter
 
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
@@ -246,25 +244,26 @@ func main() {
 
 	// Command data
 	commandData := commands.CommandData{
-		Command:           parsed,
-		Config:            config,
-		Details:           uint8(*appDetails),
-		FileAttributes:    fileAttributes,
-		Namespace:         *appNamespace,
-		All:               *appAll,
-		AllNamespaces:     *appAllNamespaces,
-		NoRedaction:       *appNoRedaction,
-		OutputJSON:        *appOutputJSON,
-		Yes:               *appYes,
-		Force:             *appForce,
-		NameLen:           *appTrimName,
-		Encryption:        *appFileEncryption,
-		EncryptionKey:     *appFileEncryptionKey,
-		EncryptionPassKey: *appFileEncryptionPassKey,
-		NoDecrypt:         *appNoDecrypt,
-		NoEmojis:          *appNoEmojis,
-		RandKey:           *appFileEncryptionRandKey,
-		Quiet:             *appQuiet,
+		Command:             parsed,
+		Config:              config,
+		Details:             uint8(*appDetails),
+		FileAttributes:      fileAttributes,
+		Namespace:           *appNamespace,
+		All:                 *appAll,
+		AllNamespaces:       *appAllNamespaces,
+		NoRedaction:         *appNoRedaction,
+		OutputJSON:          *appOutputJSON,
+		Yes:                 *appYes,
+		Force:               *appForce,
+		NameLen:             appTrimName,
+		Encryption:          *appFileEncryption,
+		EncryptionKey:       *appFileEncryptionKey,
+		EncryptionPassKey:   *appFileEncryptionPassKey,
+		NoDecrypt:           *appNoDecrypt,
+		NoEmojis:            *appNoEmojis,
+		RandKey:             *appFileEncryptionRandKey,
+		Quiet:               *appQuiet,
+		EncryptionFromStdin: *appFileEncryptionFromStdin,
 	}
 
 	if !commandData.Init() {

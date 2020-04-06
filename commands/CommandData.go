@@ -1,12 +1,15 @@
 package commands
 
 import (
+	"bufio"
 	"crypto/rand"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/DataManager-Go/DataManagerCLI/models"
 	"github.com/DataManager-Go/DataManagerServer/constants"
@@ -30,6 +33,7 @@ type CommandData struct {
 	Yes, Force, Quiet         bool
 	EncryptionPassKey         bool
 	NoDecrypt, NoEmojis       bool
+	EncryptionFromStdin       bool
 }
 
 // Init init CommandData
@@ -50,9 +54,7 @@ func (cData *CommandData) Init() bool {
 
 	// Generate random key
 	if cData.RandKey > 0 && !cData.EncryptionPassKey && cData.supportRandKey() {
-		switch cData.RandKey {
-		case 16, 24, 32:
-		default:
+		if !isValidAESLen(cData.RandKey) {
 			fmt.Println("Invalid Keysize", cData.RandKey)
 			return false
 		}
@@ -83,10 +85,56 @@ func (cData *CommandData) Init() bool {
 		cData.EncryptionKey = string(b)
 	}
 
+	// Read and set encryptionkey from stdin
+	if cData.EncryptionFromStdin {
+		cData.EncryptionKey = readFullStdin(48)
+		if !isValidAESLen(len(cData.EncryptionKey)) {
+			fmtError("Invaild key length")
+			os.Exit(1)
+		}
+	}
+
 	// Create and set RequestConfig
 	cData.LibDM = libdm.NewLibDM(cData.Config.ToRequestConfig())
 
 	return true
+}
+
+func isValidAESLen(l int) bool {
+	switch l {
+	case 16, 24, 32:
+		return true
+	default:
+		return false
+	}
+}
+
+// Read from stdin with a timeout of 2s
+func readFullStdin(bufferSize int) string {
+	c := make(chan []byte, 1)
+
+	// Read in background to allow using a select for a timeout
+	go (func() {
+		r := bufio.NewReader(os.Stdin)
+		buf := make([]byte, bufferSize)
+
+		n, err := r.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Fatal(err)
+		}
+
+		c <- buf[:n]
+	})()
+
+	select {
+	case b := <-c:
+		return string(b)
+	// Timeout
+	case <-time.After(2 * time.Second):
+		fmtError("No input received")
+		os.Exit(1)
+		return ""
+	}
 }
 
 // Return true if current command needs a key input
