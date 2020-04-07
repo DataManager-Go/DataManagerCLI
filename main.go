@@ -241,7 +241,7 @@ func main() {
 			*appGroups = config.Default.Groups
 		}
 		if *appDetails == 0 {
-			*appDetails = config.Client.DefaultDetails
+			*appDetails = config.Client.Defaults.DefaultDetails
 		}
 		if len(*appFilesOrder) == 0 {
 			*appFilesOrder = config.GetDefaultOrder()

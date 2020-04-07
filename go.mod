@@ -14,6 +14,7 @@ require (
 	github.com/kyokomi/emoji v2.2.0+incompatible
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/sirupsen/logrus v1.5.0
+	github.com/zalando/go-keyring v0.0.0-20200121091418-667557018717
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374

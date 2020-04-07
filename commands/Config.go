@@ -106,7 +106,7 @@ func ConfigView(cData CommandData) {
 // SetupClient sets up client config
 func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool) {
 	// Confirm creating a config anyway
-	if cData.Config != nil && !cData.Yes {
+	if cData.Config != nil && !cData.Config.IsDefault() && !cData.Yes {
 		y, _ := gaw.ConfirmInput("There is already a config. Do you want to overwrite it? [y/n]> ", bufio.NewReader(os.Stdin))
 		if !y {
 			return

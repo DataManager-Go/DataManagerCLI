@@ -35,9 +35,7 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 		return
 	}
 
-	// Set userinfo
-	cData.Config.User.SessionToken = loginResponse.Token
-	cData.Config.User.Username = username
+	cData.Config.InsertUser(username, loginResponse.Token)
 
 	// Set default namespace to users
 	cData.Config.Default.Namespace = loginResponse.Namespace
