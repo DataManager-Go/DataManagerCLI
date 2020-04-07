@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -19,6 +20,21 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 	var reader io.Reader
 
 	key := []byte(cData.EncryptionKey)
+
+	// If keystore is enabled and no key was passed, try
+	// search in keystore for matching key and use it
+	if cData.Config.KeystoreEnabled() && len(key) == 0 {
+		// Get fileID from header
+		fileid, err := strconv.ParseUint(resp.Header.Get(libdm.HeaderFileID), 10, 32)
+		if err == nil {
+			// Search Key in keystore
+			k, err := cData.Keystore.GetKey(uint(fileid))
+			if err == nil {
+				key = k
+			}
+		}
+	}
+
 	if len(key) == 0 && len(resp.Header.Get(libdm.HeaderEncryption)) > 0 {
 		fmtError("file is encrypted but no key was given. To ignore this use --no-decrypt")
 		os.Exit(1)

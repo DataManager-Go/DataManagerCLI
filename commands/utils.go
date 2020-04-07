@@ -1,7 +1,9 @@
 package commands
 
 import (
+	"bufio"
 	"crypto/md5"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -14,12 +16,15 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func fmtError(message ...interface{}) {
@@ -263,4 +268,106 @@ func printResponseError(err error, msg string) {
 			printError(msg, "no error provided")
 		}
 	}
+}
+
+func isValidAESLen(l int) bool {
+	switch l {
+	case 16, 24, 32:
+		return true
+	}
+	return false
+}
+
+// Read from stdin with a timeout of 2s
+func readFullStdin(bufferSize int) string {
+	c := make(chan []byte, 1)
+
+	// Read in background to allow using a select for a timeout
+	go (func() {
+		r := bufio.NewReader(os.Stdin)
+		buf := make([]byte, bufferSize)
+
+		n, err := r.Read(buf)
+		if err != nil && err != io.EOF {
+			log.Fatal(err)
+		}
+
+		c <- buf[:n]
+	})()
+
+	select {
+	case b := <-c:
+		return string(b)
+	// Timeout
+	case <-time.After(2 * time.Second):
+		fmtError("No input received")
+		os.Exit(1)
+		return ""
+	}
+}
+
+// Generates a secure random key
+func randKey(l int) []byte {
+	b := make([]byte, l)
+	_, err := rand.Read(b)
+	if err != nil {
+		fmt.Println("error:", err)
+		return nil
+	}
+
+	return b
+}
+
+func saveFile(key []byte, file string) error {
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	defer f.Close()
+
+	if err != nil {
+		return err
+	}
+
+	_, err = f.Write(key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Gen filename for args
+func genFileName(path, prefix string) string {
+	var name string
+	for {
+		name = prefix + gaw.RandString(4)
+
+		if len(path) > 0 {
+			name = filepath.Join(path, name)
+		}
+
+		_, err := os.Stat(name)
+		if err != nil {
+			break
+		}
+	}
+	return name
+}
+
+// Read password/key from stdin
+func readPassword(message string) string {
+	fmt.Print(message + "> ")
+
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		log.Fatalln("Error:", err.Error())
+		return ""
+	}
+
+	var pass string
+
+	for _, a := range bytePassword {
+		if int(a) != 0 && int(a) != 32 {
+			pass += string(a)
+		}
+	}
+
+	return strings.TrimSpace(pass)
 }

@@ -11,6 +11,7 @@ import (
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 
+	_ "github.com/CovenantSQL/go-sqlite3-encrypt"
 	"github.com/DataManager-Go/DataManagerCLI/commands"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -286,6 +287,11 @@ func main() {
 	if parsed != setupCmd.FullCommand() {
 		if !commandData.Init() {
 			return
+		}
+
+		// Close keystore at the end
+		if commandData.Keystore != nil {
+			defer commandData.Keystore.Close()
 		}
 	}
 

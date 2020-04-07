@@ -90,6 +90,11 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 
 	<-done
 
+	// Update keystore
+	if cData.Keystore != nil && len(cData.Keyfile) > 0 {
+		cData.Keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
+	}
+
 	// Print output
 	if cData.OutputJSON {
 		fmt.Println(toJSON(uploadResponse))
