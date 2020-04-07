@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -31,6 +32,10 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 			k, err := cData.Keystore.GetKey(uint(fileid))
 			if err == nil {
 				key = k
+			} else {
+				if strings.HasSuffix(err.Error(), "no such file or directory") {
+					fmt.Println("-> Key is in keystore but file was not found!")
+				}
 			}
 		}
 	}

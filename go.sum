@@ -11,6 +11,8 @@ github.com/DataManager-Go/libdatamanager v1.1.2 h1:BcKEaC4Hz8O9GOf5Jw2sY2sv7FPc0
 github.com/DataManager-Go/libdatamanager v1.1.2/go.mod h1:oI4KQYuXd6w/z6ziRP949Hfj0hCrPYUEic03lqsotuE=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200407220021-1f9c55af78cc h1:cGG5RlN+IhDoNezD+eLdT/04gsd27wTqa/9dnCLN/PI=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200407220021-1f9c55af78cc/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200407223156-c5775d29be1f h1:SXf+Bz2wm73koT0W9OGZtz9ifsHd4iUMRJjcyJRr+SM=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200407223156-c5775d29be1f/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
@@ -60,6 +62,8 @@ github.com/konsorten/go-windows-terminal-sequences v1.0.1 h1:mweAR1A6xJ3oS2pRaGi
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2 h1:DB17ag19krx9CFsz4o3enTrPXyIXCl+2iCXH/aMAp9s=
 github.com/konsorten/go-windows-terminal-sequences v1.0.2/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
+github.com/kyokomi/emoji v2.1.0+incompatible h1:+DYU2RgpI6OHG4oQkM5KlqD3Wd3UPEsX8jamTo1Mp6o=
+github.com/kyokomi/emoji v2.1.0+incompatible/go.mod h1:mZ6aGCD7yk8j6QY6KICwnZ2pxoszVseX1DNoGtU2tBA=
 github.com/kyokomi/emoji v2.2.0+incompatible h1:/iZiMsOk4qAs1LR3RUmpz0zo+USsLarUTMR7D+1ffBE=
 github.com/kyokomi/emoji v2.2.0+incompatible/go.mod h1:mZ6aGCD7yk8j6QY6KICwnZ2pxoszVseX1DNoGtU2tBA=
 github.com/lib/pq v1.1.1 h1:sJZmqHoEaY7f+NPP8pgLB/WxulyR3fewgCM2qaSlBb4=
