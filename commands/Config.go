@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/DataManager-Go/DataManagerCLI/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
+	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
@@ -116,7 +116,7 @@ func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverO
 	// Load config
 	if cData.Config == nil {
 		var err error
-		cData.Config, err = models.InitConfig(models.GetDefaultConfigFile(), configFile)
+		cData.Config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), configFile)
 		if err != nil {
 			log.Error(err)
 			return

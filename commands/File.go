@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerCLI/models"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/cheggaaa/pb/v3"
@@ -191,11 +190,10 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 
 		// Order output
 		if len(sOrder) > 0 {
-			if order := models.FileOrderFromString(sOrder); order != nil {
+			if order := FileOrderFromString(sOrder); order != nil {
 				// Sort
-				models.
-					NewFileSorter(resp.Files).
-					Reversed(models.IsOrderReversed(sOrder)).
+				NewFileSorter(resp.Files).
+					Reversed(IsOrderReversed(sOrder)).
 					SortBy(*order)
 			} else {
 				fmtError(fmt.Sprintf("sort by '%s' not supporded", sOrder))
@@ -203,7 +201,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			}
 		} else {
 			// By default sort by creation desc
-			models.NewFileSorter(resp.Files).Reversed(true).SortBy(models.CreatedOrder)
+			NewFileSorter(resp.Files).Reversed(true).SortBy(CreatedOrder)
 		}
 
 		header := []interface{}{

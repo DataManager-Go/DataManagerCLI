@@ -8,10 +8,10 @@ import (
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
+	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
-	"github.com/DataManager-Go/DataManagerCLI/models"
 	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -95,7 +95,7 @@ var (
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
 	appFilesCmd   = app.Command("files", "List files").Alias("fs")
-	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
+	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Edit
 	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
@@ -113,7 +113,7 @@ var (
 	fileListCmd   = appFileCmd.Command("list", "List files")
 	fileListName  = fileListCmd.Arg("fileName", "Show files with this name").String()
 	fileListID    = fileListCmd.Arg("fileID", "The fileID").Uint()
-	fileListOrder = fileListCmd.Flag("order", "Order the output").Short('o').HintOptions(models.AvailableOrders...).String()
+	fileListOrder = fileListCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 	// -- Update
 	fileUpdateCmd          = appFileCmd.Command("update", "Update a file")
 	fileUpdateName         = fileUpdateCmd.Arg("fileName", "Name of the file that should be updated").Required().String()
@@ -189,7 +189,7 @@ var (
 )
 
 var (
-	config *models.Config
+	config *dmConfig.Config
 )
 
 func main() {
@@ -212,7 +212,7 @@ func main() {
 
 	// Init config
 	var err error
-	config, err = models.InitConfig(models.GetDefaultConfigFile(), *appCfgFile)
+	config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), *appCfgFile)
 	if err != nil {
 		log.Error(err)
 		return

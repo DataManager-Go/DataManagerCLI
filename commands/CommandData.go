@@ -11,9 +11,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/DataManager-Go/DataManagerCLI/models"
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
+	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -22,7 +22,7 @@ import (
 type CommandData struct {
 	LibDM                     *libdm.LibDM
 	Command                   string
-	Config                    *models.Config
+	Config                    *dmConfig.Config
 	FileAttributes            libdm.FileAttributes
 	Encryption, EncryptionKey string
 	Namespace                 string
