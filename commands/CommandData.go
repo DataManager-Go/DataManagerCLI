@@ -95,7 +95,7 @@ func (cData *CommandData) Init() bool {
 	}
 
 	// Create and set RequestConfig
-	cData.LibDM = libdm.NewLibDM(cData.Config.ToRequestConfig())
+	cData.LibDM = libdm.NewLibDM(cData.Config.MustGetRequestConfig())
 
 	return true
 }

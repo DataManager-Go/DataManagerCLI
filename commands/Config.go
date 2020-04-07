@@ -149,7 +149,7 @@ func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverO
 	}
 
 	// Initialize server connection library instance
-	cData.LibDM = libdm.NewLibDM(cData.Config.ToRequestConfig())
+	cData.LibDM = libdm.NewLibDM(cData.Config.MustGetRequestConfig())
 
 	// In register mode, don't login
 	if register {
