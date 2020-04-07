@@ -2,10 +2,11 @@ module github.com/DataManager-Go/DataManagerCLI
 
 go 1.14
 
+
 require (
 	github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0
 	github.com/DataManager-Go/DataManagerServer v1.0.0
-	github.com/DataManager-Go/libdatamanager v1.1.1
+	github.com/DataManager-Go/libdatamanager v1.1.2
 	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200407220021-1f9c55af78cc
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.0

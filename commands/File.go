@@ -130,10 +130,15 @@ func DeleteFile(cData CommandData, name string, id uint) {
 		return
 	}
 
-	if resp.Count > 1 {
-		fmt.Printf("Deleted %d files %s\n", resp.Count, color.HiGreenString("successfully"))
+	if len(resp.IDs) > 1 {
+		fmt.Printf("Deleted %d files %s\n", len(resp.IDs), color.HiGreenString("successfully"))
 	} else {
 		fmt.Printf("The file has been %s\n", color.HiGreenString("successfully deleted"))
+	}
+
+	// rm keys from keystore
+	if cData.Keystore != nil {
+		rmFilesFromkeystore(cData.Keystore, resp.IDs)
 	}
 }
 

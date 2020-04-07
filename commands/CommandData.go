@@ -38,7 +38,7 @@ func (cData *CommandData) Init() bool {
 	}
 
 	// Setup keystore if required
-	if cData.supportInputKey() && cData.Config.KeystoreEnabled() {
+	if cData.Config.KeystoreEnabled() && cData.needKeystore() {
 		err := cData.Config.KeystoreDirValid()
 		if err != nil {
 			printError("opening keystore", err.Error())
@@ -143,4 +143,12 @@ func (cData *CommandData) supportInputKey() bool {
 	}
 
 	return gaw.IsInStringArray(cData.Command, []string{"file view", "file download", "file edit"})
+}
+
+// Return true if current command needs a key input
+func (cData *CommandData) needKeystore() bool {
+	if cData.supportInputKey() {
+		return true
+	}
+	return gaw.IsInStringArray(cData.Command, []string{"file rm", "file delete", "rm"})
 }

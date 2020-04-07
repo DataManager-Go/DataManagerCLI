@@ -50,7 +50,7 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println(key)
+
 			// Create Cipher
 			block, err := aes.NewCipher(key)
 			if err != nil {

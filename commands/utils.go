@@ -223,9 +223,12 @@ func ShredderFile(localFile string, size int64) {
 	} else if size >= 1000000000 {
 		// Size >= 1GB
 		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 2, true)
-	} else {
-		// Size < 10MB
+	} else if size >= 5000 {
+		// Size > 5kb
 		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 3, true)
+	} else {
+		// Size < 5kb
+		shredConfig = shred.NewShredderConf(&shredder, shred.WriteZeros|shred.WriteRandSecure, 6, true)
 	}
 
 	// Shredder & Delete local file
@@ -236,6 +239,18 @@ func ShredderFile(localFile string, size int64) {
 		err = os.Remove(localFile)
 		if err != nil {
 			fmt.Println(err)
+		}
+	}
+}
+
+func rmFilesFromkeystore(keystore *libdm.Keystore, files []uint) {
+	for _, id := range files {
+		// Delete file from keystore
+		file, err := keystore.DeleteKey(id)
+		if err == nil {
+			// Shredder file
+			path := keystore.GetKeystoreFile(file.Key)
+			ShredderFile(path, -1)
 		}
 	}
 }
@@ -337,7 +352,7 @@ func saveFile(key []byte, file string) error {
 func genFileName(path, prefix string) string {
 	var name string
 	for {
-		name = prefix + gaw.RandString(4)
+		name = prefix + gaw.RandString(7)
 
 		if len(path) > 0 {
 			name = filepath.Join(path, name)
