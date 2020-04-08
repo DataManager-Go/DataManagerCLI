@@ -83,12 +83,16 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		bar.Finish()
 	}
 
-	if err != nil || uploadResponse == nil {
+	if err != nil {
 		printResponseError(err, "uploading file")
 		return
 	}
 
 	<-done
+
+	if uploadResponse == nil {
+		fmtError("unexpected error")
+	}
 
 	// Update keystore
 	if cData.Keystore != nil && len(cData.Keyfile) > 0 {
