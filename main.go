@@ -95,7 +95,7 @@ var (
 	//
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd   = app.Command("files", "List files").Alias("fs")
+	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls")
 	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Edit
