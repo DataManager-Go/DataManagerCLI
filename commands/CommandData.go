@@ -79,11 +79,20 @@ func (cData *CommandData) Init() bool {
 	}
 
 	// Create and set RequestConfig
-	cData.LibDM = libdm.NewLibDM(cData.Config.MustGetRequestConfig())
+	config, err := cData.Config.ToRequestConfig()
+	cData.LibDM = libdm.NewLibDM(config)
+
+	// Allow setup, register and login command to continue without
+	// noticing the error
+	if err != nil && !gaw.IsInStringArray(cData.Command, []string{"setup", "register", "login"}) {
+		fmt.Println(err)
+		return false
+	}
 
 	return true
 }
 
+// GenerateKey generates a random key
 func (cData *CommandData) GenerateKey() bool {
 	if !isValidAESLen(cData.RandKey) {
 		fmt.Println("Invalid Keysize", cData.RandKey)

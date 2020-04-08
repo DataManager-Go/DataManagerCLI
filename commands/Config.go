@@ -70,7 +70,7 @@ func ConfigUse(cData CommandData, target string, values []string) {
 		}
 	}
 
-	//Save config
+	// Save config
 	err := configService.Save(cData.Config, cData.Config.File)
 	if err != nil {
 		fmt.Println("Error saving config:", err.Error())
@@ -149,7 +149,10 @@ func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverO
 	}
 
 	// Initialize server connection library instance
-	cData.LibDM = libdm.NewLibDM(cData.Config.MustGetRequestConfig())
+	// ignore token error since user might not
+	// be logged in after setup process
+	config, _ := cData.Config.ToRequestConfig()
+	cData.LibDM = libdm.NewLibDM(config)
 
 	// In register mode, don't login
 	if register {
