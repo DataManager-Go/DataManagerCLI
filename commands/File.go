@@ -39,7 +39,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	var uploadResponse *libdm.UploadResponse
 	var bar *pb.ProgressBar
 	wg := sync.WaitGroup{}
-	done := make(chan int8, 1)
+	done := make(chan string, 1)
 	c := make(chan int64, 1)
 
 	// Init progressbar and proxy
@@ -52,7 +52,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	}
 
 	// Start upload
-	go (func(wg *sync.WaitGroup, path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, done chan int8, publicName, encryption, encryptionKey string) {
+	go (func(wg *sync.WaitGroup, path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, done chan string, publicName, encryption, encryptionKey string) {
 		wg.Add(1)
 		uploadResponse, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, done, publicName, encryption, encryptionKey)
 		wg.Done()
@@ -88,7 +88,15 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		return
 	}
 
-	<-done
+	checksum := <-done
+	if len(checksum) > 0 {
+		if !cData.Quiet {
+			fmt.Printf("Lokal checksum:\t\t%s\n", checksum)
+		}
+	} else {
+		fmt.Println("Unexpected error while uploading")
+		return
+	}
 
 	if uploadResponse == nil {
 		fmtError("unexpected error")
@@ -103,6 +111,15 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	if cData.OutputJSON {
 		fmt.Println(toJSON(uploadResponse))
 	} else {
+		if !cData.Quiet {
+			fmt.Printf("Servers checksum:\t%s\n", uploadResponse.Checksum)
+		}
+
+		// verify checksums
+		if checksum != uploadResponse.Checksum {
+			fmt.Printf("%s checksums don't match!", color.HiRedString("Error"))
+		}
+
 		if len(uploadResponse.PublicFilename) != 0 {
 			fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(uploadResponse.PublicFilename), fileName, uploadResponse.FileID)
 		} else {
@@ -542,6 +559,7 @@ func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.Progr
 			c <- err
 			return
 		}
+		defer f.Close()
 
 		buf := make([]byte, 10*1024)
 
@@ -551,9 +569,6 @@ func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.Progr
 			c <- err
 			return
 		}
-
-		// Close file
-		f.Close()
 
 		c <- nil
 	})()
