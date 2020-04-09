@@ -161,13 +161,13 @@ func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverO
 
 	// if not noLogin, login
 	if !noLogin {
-		fmt.Println("Login:")
+		fmt.Println("Login")
 		LoginCommand(cData, "")
 		return
 	}
 
 	if register {
-		fmt.Println("Create an account:")
+		fmt.Println("Create an account")
 		RegisterCommand(cData)
 	}
 }

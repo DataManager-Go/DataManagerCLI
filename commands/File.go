@@ -100,7 +100,6 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	}
 
 	checksumMatch := uploadResponse.Checksum == checksum
-	checksumMatch = false
 
 	// If requested, do json output
 	if cData.OutputJSON {

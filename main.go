@@ -189,6 +189,23 @@ var (
 	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
 	// -- List
 	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces")
+
+	//
+	// ---------> Keystore commands --------------------------------------
+	keystoreCmd = app.Command("keystore", "Save keys to assigned to files and store them in a specific directory")
+
+	// -- Create
+	keystoreCreateCmd          = keystoreCmd.Command("create", "Create a keystore")
+	keystoreCreateCmdPath      = keystoreCreateCmd.Arg("path", "The path to store the keys in").Required().String()
+	keystoreCreateCmdOverwrite = keystoreCreateCmd.Flag("overwrite", "Overwrite an existing keystore setting").Short('o').Bool()
+	// -- Info
+	keystoreInfoCmd = keystoreCmd.Command("info", "Show information to your keystore")
+	// -- Delete
+	keystoreDeleteCmd           = keystoreCmd.Command("delete", "Delete a keystore")
+	keystoreDeleteCmdShredCount = keystoreDeleteCmd.Flag("shredder", "Overwrite your keys").Default("6").Uint()
+	// -- CleanUp
+	keystoreCleanupCmd           = keystoreCmd.Command("cleanup", "Cleans up unassigned keys")
+	keystoreCleanupCmdShredCount = keystoreCleanupCmd.Flag("shredder", "Overwrite your keys").Default("6").Uint()
 )
 
 var (
@@ -391,6 +408,7 @@ func main() {
 
 	case registerCmd:
 		commands.RegisterCommand(commandData)
+
 	case setupCmd.FullCommand():
 		host := *setupCmdHostFlag
 		if len(host) == 0 {
@@ -404,12 +422,32 @@ func main() {
 		commands.SetupClient(commandData, host, *appCfgFile, *setupCmdIgnoreCert, *setupCmdServerOnly, *setupCmdRegister, *setupCmdNoLogin)
 
 	// -- Config commands
+	// Config use
 	case configUse.FullCommand():
 		commands.ConfigUse(commandData, *configUseTarget, *configUseTargetValue)
 
+		// Config view
 	case configView.FullCommand():
 		commands.ConfigView(commandData)
+
+	// -- KeystoreCommands
+	// Keystore create
+	case keystoreCreateCmd.FullCommand():
+		commands.CreateKeystore(commandData, *keystoreCreateCmdPath, *keystoreCreateCmdOverwrite)
+
+	// Keystore Info
+	case keystoreInfoCmd.FullCommand():
+		commands.KeystoreInfo(commandData)
+
+	// Keystore delete
+	case keystoreDeleteCmd.FullCommand():
+		commands.KeystoreDelete(commandData, *keystoreDeleteCmdShredCount)
+
+	// Keystore cleanup
+	case keystoreCleanupCmd.FullCommand():
+		commands.KeystoreCleanup(commandData, *keystoreCleanupCmdShredCount)
 	}
+
 }
 
 // Env vars
