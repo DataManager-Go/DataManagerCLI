@@ -48,6 +48,7 @@ var (
 	appFileEncryptionRandKey   = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
 	appFileEncryptionPassKey   = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
 	appFileEncryptionFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
+	appVerify                  = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
 
 	//
 	// ---------> Ping --------------------------------------
@@ -85,12 +86,13 @@ var (
 	//
 
 	// -- Upload
-	appUpload            = app.Command("upload", "Upload the given file")
-	fileUploadPath       = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Required().String()
-	fileUploadName       = appUpload.Flag("name", "Specify the name of the file").String()
-	fileUploadPublic     = appUpload.Flag("public", "Make uploaded file publci").Bool()
-	fileUploadPublicName = appUpload.Flag("public-name", "Specify the public filename").String()
-	fileUploadReplace    = appUpload.Flag("replace-file", "Replace a file").Uint()
+	appUpload             = app.Command("upload", "Upload the given file")
+	fileUploadPath        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Required().String()
+	fileUploadName        = appUpload.Flag("name", "Specify the name of the file").String()
+	fileUploadPublic      = appUpload.Flag("public", "Make uploaded file publci").Bool()
+	fileUploadPublicName  = appUpload.Flag("public-name", "Specify the public filename").String()
+	fileUploadReplace     = appUpload.Flag("replace-file", "Replace a file").Uint()
+	fileUploadDeletInvaid = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 
 	//
 	// ---------> File commands --------------------------------------
@@ -247,6 +249,12 @@ func main() {
 		if len(*appFilesOrder) == 0 {
 			*appFilesOrder = config.GetDefaultOrder()
 		}
+		if !*appVerify && config.User.ForceVerify {
+			*appVerify = true
+		}
+		if !*fileUploadDeletInvaid && config.User.DeleteInvaildFiles {
+			*fileUploadDeletInvaid = true
+		}
 		appTrimName = config.Client.TrimNameAfter
 	}
 
@@ -282,6 +290,7 @@ func main() {
 		RandKey:             *appFileEncryptionRandKey,
 		Quiet:               *appQuiet,
 		EncryptionFromStdin: *appFileEncryptionFromStdin,
+		VerifyFile:          *appVerify,
 	}
 
 	if parsed != setupCmd.FullCommand() {
@@ -308,7 +317,7 @@ func main() {
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadReplace)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadReplace, *fileUploadDeletInvaid)
 
 	// Delete file
 	case fileDeleteCmd.FullCommand():

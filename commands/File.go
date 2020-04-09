@@ -23,7 +23,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData CommandData, path, name, publicName string, public bool, replaceFile uint) {
+func UploadFile(cData CommandData, path, name, publicName string, public bool, replaceFile uint, deletInvalid bool) {
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
@@ -89,17 +89,9 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	}
 
 	checksum := <-done
-	if len(checksum) > 0 {
-		if !cData.Quiet {
-			fmt.Printf("Lokal checksum:\t\t%s\n", checksum)
-		}
-	} else {
-		fmt.Println("Unexpected error while uploading")
+	if len(checksum) == 0 || uploadResponse == nil {
+		fmtError("Unexpected error while uploading")
 		return
-	}
-
-	if uploadResponse == nil {
-		fmtError("unexpected error")
 	}
 
 	// Update keystore
@@ -107,25 +99,41 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		cData.Keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
 	}
 
-	// Print output
+	checksumMatch := uploadResponse.Checksum == checksum
+	checksumMatch = false
+
+	// If requested, do json output
 	if cData.OutputJSON {
-		fmt.Println(toJSON(uploadResponse))
-	} else {
-		if !cData.Quiet {
-			fmt.Printf("Servers checksum:\t%s\n", uploadResponse.Checksum)
-		}
-
-		// verify checksums
-		if checksum != uploadResponse.Checksum {
-			fmt.Printf("%s checksums don't match!", color.HiRedString("Error"))
-		}
-
-		if len(uploadResponse.PublicFilename) != 0 {
-			fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(uploadResponse.PublicFilename), fileName, uploadResponse.FileID)
+		if !checksumMatch {
+			printJSONError("invalid checksum")
+			os.Exit(1)
 		} else {
-			fmt.Printf("Name: %s\nID: %d\n", fileName, uploadResponse.FileID)
+			fmt.Println(toJSON(uploadResponse))
 		}
+		return
 	}
+
+	// Handle checksum stuff
+	if !checksumMatch {
+		if cData.VerifyFile || deletInvalid {
+			fmtError("checksums don't match!")
+			if deletInvalid {
+				DeleteFile(cData, "", uploadResponse.FileID)
+			}
+
+			return
+		}
+
+		fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+	}
+
+	// Print nice human output
+	if len(uploadResponse.PublicFilename) != 0 {
+		fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(uploadResponse.PublicFilename), fileName, uploadResponse.FileID)
+	} else {
+		fmt.Printf("Name: %s\nID: %d\n", fileName, uploadResponse.FileID)
+	}
+
 }
 
 // DeleteFile deletes the desired file(s)
@@ -626,7 +634,7 @@ func EditFile(cData CommandData, id uint) {
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, filePath, serverName, "", false, id)
+	UploadFile(cData, filePath, serverName, "", false, id, false)
 }
 
 func editFile(file string) bool {

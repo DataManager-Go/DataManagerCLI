@@ -27,6 +27,7 @@ type CommandData struct {
 	EncryptionPassKey         bool
 	NoDecrypt, NoEmojis       bool
 	EncryptionFromStdin       bool
+	VerifyFile                bool
 }
 
 // Init init CommandData
