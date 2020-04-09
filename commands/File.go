@@ -2,7 +2,9 @@ package commands
 
 import (
 	"bufio"
+	"encoding/hex"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"log"
 	"os"
@@ -393,6 +395,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		shouldPreview = false
 	}
 
+	// a very complicated 'showBar' AI algorythm DON'T TOUCH
 	showBar :=
 		// Not quiet and preview (using default app)
 		(!cData.Quiet && ((displayOutput && shouldPreview) ||
@@ -407,8 +410,8 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
-	// Do http request
-	resp, serverFileName, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
+	// Do the file request
+	resp, serverFileName, checksum, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
 	if err != nil {
 		printResponseError(err, "downloading file")
 		return
@@ -455,13 +458,14 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			done := make(chan bool)
 			var file string
 			var err error
+			var chsum string
 
-			c := make(chan error)
+			errCh := make(chan error)
+			var doneCh chan string
 
 			// Save file to temp
 			go (func() {
-				filePath := GetTempFile(serverFileName)
-				saveFileFromStream(filePath, respData, c, bar)
+				doneCh = saveFileFromStream(GetTempFile(serverFileName), respData, errCh, bar)
 			})()
 
 			// Show bar only if uploading takes more than 500ms
@@ -477,10 +481,25 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 				})()
 			}
 
-			// Await download
-			if err = <-c; err != nil {
-				fmt.Println(err)
-				return
+			// Wait for download to be finished
+			// or an error to occur
+			select {
+			case err := <-errCh:
+				if err = <-errCh; err != nil {
+					fmt.Println(err)
+					return
+				}
+			case chsum = <-doneCh:
+			}
+
+			// Verify checksum
+			if chsum != checksum {
+				if cData.VerifyFile {
+					fmtError("checksums don't match!")
+					return
+				}
+
+				fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
 			}
 
 			// Close bar if open
@@ -499,6 +518,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			// Shredder/Delete file
 			ShredderFile(file, -1)
 		} else {
+			// TODO verify checksum
 			// Printf like a boss
 			io.Copy(os.Stdout, respData)
 		}
@@ -523,13 +543,29 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 
 		// channel if filewriting is done
-		c := make(chan error)
-		saveFileFromStream(outFile, respData, c, bar)
+		errChan := make(chan error)
+		doneChan := saveFileFromStream(outFile, respData, errChan, bar)
+		var chsum string
 
-		// Await download
-		if err = <-c; err != nil {
-			fmtError(err)
-			return
+		// Wait for download to be finished
+		// or an error to occur
+		select {
+		case err := <-errChan:
+			if err = <-errChan; err != nil {
+				fmt.Println(err)
+				return
+			}
+		case chsum = <-doneChan:
+		}
+
+		// Verify checksum
+		if chsum != checksum {
+			if cData.VerifyFile {
+				fmtError("checksums don't match!")
+				return
+			}
+
+			fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
 		}
 
 		if bar != nil {
@@ -558,26 +594,30 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 }
 
 // Saves data from r to file. Shows progressbar after 500ms if still saving
-func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.ProgressBar) {
+func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
+	doneChan := make(chan string, 1)
+
 	go (func() {
 		// Create or truncate file
 		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+		defer f.Close()
 		if err != nil {
 			c <- err
 			return
 		}
-		defer f.Close()
 
 		buf := make([]byte, 10*1024)
+		hash := crc32.NewIEEE()
+		w := io.MultiWriter(f, hash)
 
 		// Write file
-		_, err = io.CopyBuffer(f, r, buf)
+		_, err = io.CopyBuffer(w, r, buf)
 		if err != nil {
 			c <- err
 			return
 		}
 
-		c <- nil
+		doneChan <- hex.EncodeToString(hash.Sum(nil))
 	})()
 
 	// Show bar if desired
@@ -592,6 +632,8 @@ func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.Progr
 			}
 		})()
 	}
+
+	return doneChan
 }
 
 // EditFile edits a file

@@ -86,7 +86,7 @@ var (
 	//
 
 	// -- Upload
-	appUpload             = app.Command("upload", "Upload the given file")
+	appUpload             = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
 	fileUploadPath        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Required().String()
 	fileUploadName        = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic      = appUpload.Flag("public", "Make uploaded file publci").Bool()
@@ -109,7 +109,7 @@ var (
 	fileRmName = fileRmCmd.Arg("fileName", "Name of the file that should be removed").String()
 	fileRmID   = fileRmCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- Delete -> file delete/rm
-	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm")
+	fileDeleteCmd  = appFileCmd.Command("delete", "Delete a file").Alias("rm").Alias("del")
 	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").String()
 	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- List
@@ -149,7 +149,7 @@ var (
 
 	//
 	// ---------> Tag commands --------------------------------------
-	tagCmd = app.Command("tag", "Do something with tags")
+	tagCmd = app.Command("tag", "Do something with tags").Alias("t")
 
 	// -- Delete
 	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag").Alias("rm").Alias("del")
@@ -161,7 +161,7 @@ var (
 
 	//
 	// ---------> Group commands --------------------------------------
-	groupCmd = app.Command("group", "Do something with groups")
+	groupCmd = app.Command("group", "Do something with groups").Alias("g").Alias("gr")
 
 	// -- Delete
 	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group").Alias("rm").Alias("del")
@@ -173,7 +173,7 @@ var (
 
 	//
 	// ---------> Namespace commands --------------------------------------
-	namespaceCmd  = app.Command("namespace", "Do something with namespaces").Alias("ns")
+	namespaceCmd  = app.Command("namespace", "Do something with namespaces").Alias("ns").Alias("n")
 	namespacesCmd = app.Command("namespaces", "List your namespaces")
 
 	// -- Create
@@ -192,7 +192,7 @@ var (
 
 	//
 	// ---------> Keystore commands --------------------------------------
-	keystoreCmd = app.Command("keystore", "Save keys to assigned to files and store them in a specific directory")
+	keystoreCmd = app.Command("keystore", "Save keys to assigned to files and store them into a specific directory").Alias("ks")
 
 	// -- Create
 	keystoreCreateCmd          = keystoreCmd.Command("create", "Create a keystore")
