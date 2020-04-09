@@ -35,6 +35,10 @@ func printError(message interface{}, err string) {
 	fmt.Printf("%s %s: %s\n", color.HiRedString("Error"), message, err)
 }
 
+func printWarning(message interface{}, err string) {
+	fmt.Printf("%s %s: %s\n", color.YellowString("Warn"), message, err)
+}
+
 func printJSONError(message interface{}) {
 	m := make(map[string]interface{}, 1)
 	m["error"] = message

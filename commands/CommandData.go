@@ -42,16 +42,21 @@ func (cData *CommandData) Init() bool {
 	if cData.Config.KeystoreEnabled() && cData.needKeystore() {
 		err := cData.Config.KeystoreDirValid()
 		if err != nil {
-			printError("opening keystore", err.Error())
-			fmt.Println(`To fix: Be sure the folder is correct or remove "keystoredir" from the config`)
-			return false
-		}
-
-		// Open keystore
-		err = cData.setupKeystore()
-		if err != nil {
-			printError("opening keystore", err.Error())
-			return false
+			if !cData.Config.Client.SkipKeystoreCheck {
+				printError("opening keystore", err.Error())
+				fmt.Println(`To fix: Be sure the folder is correct or remove "keystoredir" from the config`)
+				return false
+			}
+			if !cData.Quiet && !cData.Config.Client.HideKeystoreWarnings {
+				printWarning("opening keystore", err.Error())
+			}
+		} else {
+			// Open keystore
+			err = cData.setupKeystore()
+			if err != nil {
+				printError("opening keystore", err.Error())
+				return false
+			}
 		}
 	}
 
@@ -141,9 +146,9 @@ func (cData *CommandData) setupKeystore() error {
 	return nil
 }
 
-// Return true if current command needs a key input
+// Return true if current command needs a key input`
 func (cData *CommandData) supportRandKey() bool {
-	return gaw.IsInStringArray(cData.Command, []string{"upload"})
+	return gaw.IsInStringArray(cData.Command, []string{"upload"}) && len(cData.Encryption) > 0
 }
 
 // Return true if current command needs a key input

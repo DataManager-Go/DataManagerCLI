@@ -24,7 +24,7 @@ func respToDecrypted(cData *CommandData, resp *http.Response) (io.Reader, error)
 
 	// If keystore is enabled and no key was passed, try
 	// search in keystore for matching key and use it
-	if cData.Config.KeystoreEnabled() && len(key) == 0 {
+	if cData.Config.KeystoreEnabled() && len(key) == 0 && cData.Keystore != nil {
 		// Get fileID from header
 		fileid, err := strconv.ParseUint(resp.Header.Get(libdm.HeaderFileID), 10, 32)
 		if err == nil {

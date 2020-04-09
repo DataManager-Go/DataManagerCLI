@@ -5,10 +5,10 @@ github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0/go.mod h1:EH9sjhhyDGHNIj/Wx59f7
 github.com/DataManager-Go/DataManagerServer v1.0.0 h1:KcxPwDA3B4cNdjKYQc4/GYOq62eKNOI+IqhFHPVijIQ=
 github.com/DataManager-Go/DataManagerServer v1.0.0/go.mod h1:oJCEcZUpFwrLfXQAcYnDkNrh1la4gw3931RnComDsn8=
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
-github.com/DataManager-Go/libdatamanager v1.1.8 h1:wPhCjpGxImozGiO7wZ3QfNkLT3F2+PVu27tnhBNR9B8=
-github.com/DataManager-Go/libdatamanager v1.1.8/go.mod h1:O0VgS1fIRyDMuYAv3L6YtyFmBJ1RCv7hcfwFNIjjT1w=
-github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409192027-5f239ea30300 h1:QCtr2XcPsygCwt6ft2HOFSG/AgZhyHmReh5qSKXiMuc=
-github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409192027-5f239ea30300/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager v1.1.9 h1:aurFwWBw2v8weWzDmhAuZ42basHXFTfvFc16z4I4gEU=
+github.com/DataManager-Go/libdatamanager v1.1.9/go.mod h1:O0VgS1fIRyDMuYAv3L6YtyFmBJ1RCv7hcfwFNIjjT1w=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409202437-042b44514225 h1:4OPrgPFyHgy/8Qd90j7bV1qhXjJI10vNbxrJ9f1iJ8k=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409202437-042b44514225/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
