@@ -7,9 +7,10 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync"
+	"syscall"
 	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -37,9 +38,10 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	var err error
 	var uploadResponse *libdm.UploadResponse
 	var bar *pb.ProgressBar
-	wg := sync.WaitGroup{}
-	done := make(chan string, 1)
+	done := make(chan bool, 1)
+	kill := make(chan os.Signal, 1)
 	c := make(chan int64, 1)
+	var checksum string
 
 	// Init progressbar and proxy
 	proxy := libdm.NoProxyWriter
@@ -51,11 +53,10 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	}
 
 	// Start upload
-	go (func(wg *sync.WaitGroup, path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, done chan string, publicName, encryption, encryptionKey string) {
-		wg.Add(1)
-		uploadResponse, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, done, publicName, encryption, encryptionKey)
-		wg.Done()
-	})(&wg, path, fileName, public, replaceFile, cData.FileAttributes, proxy, c, done, publicName, cData.Encryption, cData.EncryptionKey)
+	go (func(path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, publicName, encryption, encryptionKey string) {
+		uploadResponse, checksum, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, publicName, encryption, encryptionKey)
+		done <- true
+	})(path, fileName, public, replaceFile, cData.FileAttributes, proxy, c, publicName, cData.Encryption, cData.EncryptionKey)
 
 	// Read filesize and set bars total to filesize
 	fileSize := <-c
@@ -73,9 +74,23 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		})()
 	}
 
-	// Wait for request and
-	// upload to be finished
-	wg.Wait()
+	// Set notify for signal to do something on cancel
+	signal.Notify(kill, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	// Wait for upload to be finished or upload to
+	// be canceled
+	select {
+	case killsig := <-kill:
+		// Stop bar
+		if bar != nil {
+			bar.Finish()
+		}
+		fmt.Println(killsig)
+		cData.deleteKeyfile()
+		os.Exit(0)
+		return
+	case <-done:
+	}
 
 	// Stop bar
 	if bar != nil {
@@ -87,7 +102,6 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		return
 	}
 
-	checksum := <-done
 	if len(checksum) == 0 || uploadResponse == nil {
 		fmtError("Unexpected error while uploading")
 		return
@@ -115,7 +129,7 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 	if deletInvalid {
 		cData.VerifyFile = true
 	}
-	if verifyChecksum(&cData, checksum, uploadResponse.Checksum) {
+	if !verifyChecksum(&cData, checksum, uploadResponse.Checksum) {
 		if deletInvalid {
 			DeleteFile(cData, "", uploadResponse.FileID)
 		}

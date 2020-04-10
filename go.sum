@@ -7,6 +7,8 @@ github.com/DataManager-Go/DataManagerServer v1.0.0/go.mod h1:oJCEcZUpFwrLfXQAcYn
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
 github.com/DataManager-Go/libdatamanager v1.1.10 h1:Zru9aPjeNkmvIQ0n3jTYCYl3/SwcrkU1/X7Gz0R6Cds=
 github.com/DataManager-Go/libdatamanager v1.1.10/go.mod h1:O0VgS1fIRyDMuYAv3L6YtyFmBJ1RCv7hcfwFNIjjT1w=
+github.com/DataManager-Go/libdatamanager v1.1.11 h1:eRuCFQOnYJ1+YebywAeRFXGqoIDIi7Qgj448AIhkRqw=
+github.com/DataManager-Go/libdatamanager v1.1.11/go.mod h1:O0VgS1fIRyDMuYAv3L6YtyFmBJ1RCv7hcfwFNIjjT1w=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409215108-fcc7e965bf1f h1:0BJBY3rn7eIXpnHn5sdovwO3W9RtDn7ln0NfVxJIzwo=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200409215108-fcc7e965bf1f/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200410000112-545485e71feb h1:raqVjOSnnszqB8CwM+ygS3lEuGEgWmIdvFC1mEU+W3w=

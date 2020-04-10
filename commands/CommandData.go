@@ -167,3 +167,10 @@ func (cData *CommandData) needKeystore() bool {
 	}
 	return gaw.IsInStringArray(cData.Command, []string{"file rm", "file delete", "rm"})
 }
+
+func (cData *CommandData) deleteKeyfile() {
+	if len(cData.Keyfile) > 0 {
+		ShredderFile(cData.Keyfile, -1)
+		fmt.Println("Deleting unused key", cData.Keyfile)
+	}
+}
