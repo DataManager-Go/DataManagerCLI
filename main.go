@@ -45,6 +45,7 @@ var (
 	appNoEmojis                = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
 	appFileEncryption          = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
 	appFileEncryptionKey       = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+	appFileEncryptionKeyFile   = app.Flag("keyfile", "File containing a Encryption/Decryption key").String()
 	appFileEncryptionRandKey   = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
 	appFileEncryptionPassKey   = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
 	appFileEncryptionFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
@@ -86,14 +87,15 @@ var (
 	//
 
 	// -- Upload
-	appUpload             = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
-	fileUploadPath        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).String()
-	fileUploadFromStdin   = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
-	fileUploadName        = appUpload.Flag("name", "Specify the name of the file").String()
-	fileUploadPublic      = appUpload.Flag("public", "Make uploaded file publci").Bool()
-	fileUploadPublicName  = appUpload.Flag("public-name", "Specify the public filename").String()
-	fileUploadReplace     = appUpload.Flag("replace-file", "Replace a file").Uint()
-	fileUploadDeletInvaid = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
+	appUpload              = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
+	fileUploadPath         = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).String()
+	fileUploadFromStdin    = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
+	fileUploadName         = appUpload.Flag("name", "Specify the name of the file").String()
+	fileUploadPublic       = appUpload.Flag("public", "Make uploaded file publci").Bool()
+	fileUploadPublicName   = appUpload.Flag("public-name", "Specify the public filename").String()
+	fileUploadReplace      = appUpload.Flag("replace-file", "Replace a file").Uint()
+	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
+	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
 
 	//
 	// ---------> File commands --------------------------------------
@@ -279,48 +281,7 @@ func main() {
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
-	// Generate  file attributes
-	fileAttributes := libdm.FileAttributes{
-		Namespace: *appNamespace,
-		Groups:    *appGroups,
-		Tags:      *appTags,
-	}
-
-	// Command data
-	commandData := commands.CommandData{
-		Command:             parsed,
-		Config:              config,
-		Details:             uint8(*appDetails),
-		FileAttributes:      fileAttributes,
-		Namespace:           *appNamespace,
-		All:                 *appAll,
-		AllNamespaces:       *appAllNamespaces,
-		NoRedaction:         *appNoRedaction,
-		OutputJSON:          *appOutputJSON,
-		Yes:                 *appYes,
-		Force:               *appForce,
-		NameLen:             appTrimName,
-		Encryption:          *appFileEncryption,
-		EncryptionKey:       *appFileEncryptionKey,
-		EncryptionPassKey:   *appFileEncryptionPassKey,
-		NoDecrypt:           *appNoDecrypt,
-		NoEmojis:            *appNoEmojis,
-		RandKey:             *appFileEncryptionRandKey,
-		Quiet:               *appQuiet,
-		EncryptionFromStdin: *appFileEncryptionFromStdin,
-		VerifyFile:          *appVerify,
-	}
-
-	if parsed != setupCmd.FullCommand() {
-		if !commandData.Init() {
-			return
-		}
-
-		// Close keystore at the end
-		if commandData.Keystore != nil {
-			defer commandData.Keystore.Close()
-		}
-	}
+	commandData := *generateCommandData(parsed, appTrimName)
 
 	// Execute the desired command
 	switch parsed {
@@ -335,7 +296,7 @@ func main() {
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadReplace, *fileUploadDeletInvaid)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadSetClipboard, *fileUploadReplace, *fileUploadDeletInvaid)
 
 	// Delete file
 	case fileDeleteCmd.FullCommand():
@@ -449,6 +410,64 @@ func main() {
 		commands.KeystoreCleanup(commandData, *keystoreCleanupCmdShredCount)
 	}
 
+}
+
+func generateCommandData(parsed string, appTrimName int) *commands.CommandData {
+	// Generate  file attributes
+	fileAttributes := libdm.FileAttributes{
+		Namespace: *appNamespace,
+		Groups:    *appGroups,
+		Tags:      *appTags,
+	}
+
+	// Command data
+	commandData := commands.CommandData{
+		Command:             parsed,
+		Config:              config,
+		Details:             uint8(*appDetails),
+		FileAttributes:      fileAttributes,
+		Namespace:           *appNamespace,
+		All:                 *appAll,
+		AllNamespaces:       *appAllNamespaces,
+		NoRedaction:         *appNoRedaction,
+		OutputJSON:          *appOutputJSON,
+		Yes:                 *appYes,
+		Force:               *appForce,
+		NameLen:             appTrimName,
+		Encryption:          *appFileEncryption,
+		EncryptionPassKey:   *appFileEncryptionPassKey,
+		NoDecrypt:           *appNoDecrypt,
+		NoEmojis:            *appNoEmojis,
+		RandKey:             *appFileEncryptionRandKey,
+		Quiet:               *appQuiet,
+		EncryptionFromStdin: *appFileEncryptionFromStdin,
+		VerifyFile:          *appVerify,
+	}
+
+	// Set encryptionKey
+	if len(*appFileEncryptionKeyFile) > 0 {
+		var err error
+		commandData.EncryptionKey, err = ioutil.ReadFile(*appFileEncryptionKeyFile)
+		if err != nil {
+			fmt.Println(err)
+			return nil
+		}
+	} else if len(*appFileEncryptionKey) > 0 {
+		commandData.EncryptionKey = []byte(*appFileEncryptionKey)
+	}
+
+	if parsed != setupCmd.FullCommand() {
+		if !commandData.Init() {
+			return nil
+		}
+
+		// Close keystore at the end
+		if commandData.Keystore != nil {
+			defer commandData.Keystore.Close()
+		}
+	}
+
+	return &commandData
 }
 
 // Env vars

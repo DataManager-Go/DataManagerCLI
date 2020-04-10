@@ -7,8 +7,10 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
@@ -62,7 +64,6 @@ func writeFileToWriter(wr io.Writer, encryption string, key []byte, r io.Reader,
 		buf := make([]byte, 10*1024)
 		hash := crc32.NewIEEE()
 		var err error
-
 		// Write file
 		switch encryption {
 		case constants.EncryptionCiphers[0]:
@@ -166,4 +167,101 @@ func verifyChecksum(cData *CommandData, localCs, remoteCs string) bool {
 	}
 
 	return true
+}
+
+func uploadFileCommand(cData *CommandData, uploadRequest *libdm.UploadRequest, uri string, fromStdin bool) (uploadResponse *libdm.UploadResponse) {
+	var r io.Reader
+	var size int64
+	var bar *pb.ProgressBar
+	var chsum string
+	fsDer := make(chan int64, 1)
+	done := make(chan string, 1)
+	proxy := libdm.NoProxyWriter
+	var err error
+
+	if !fromStdin {
+		// Open file
+		f, err := os.Open(uri)
+		if err != nil {
+			printError("opening file", err.Error())
+			return
+		}
+
+		stat, err := f.Stat()
+		if err != nil {
+			printError("reading file", err.Error())
+		}
+
+		size = stat.Size()
+		r = f
+	} else {
+		r = os.Stdin
+	}
+
+	if !cData.Quiet && !fromStdin {
+		bar = pb.New64(0).SetMaxWidth(100)
+		proxy = func(w io.Writer) io.Writer {
+			return bar.NewProxyWriter(w)
+		}
+	}
+
+	// Start uploading
+	go func() {
+		c := make(chan string, 1)
+		uploadResponse, err = uploadRequest.UploadFromReader(r, size, fsDer, proxy, c)
+		done <- <-c
+	}()
+
+	if bar != nil {
+		bar.SetTotal(<-fsDer)
+
+		// Show bar after 500ms if uploa
+		// wasn't canceled until then
+		go (func() {
+			time.Sleep(500 * time.Millisecond)
+			select {
+			case <-done:
+			default:
+				bar.Start()
+			}
+		})()
+	}
+
+	// make channel to listen for kill signals
+	kill := make(chan os.Signal, 1)
+	signal.Notify(kill, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	select {
+	case killsig := <-kill:
+		// Delete keyfile if upload was canceled
+		if bar != nil {
+			bar.Finish()
+		}
+		if !cData.Quiet {
+			fmt.Println(killsig)
+		}
+		cData.deleteKeyfile()
+		return
+	case chsum = <-done:
+	}
+
+	if bar != nil {
+		bar.Finish()
+	}
+
+	if len(chsum) == 0 {
+		fmt.Println("Unexpected error occured")
+		return
+	}
+
+	if err != nil {
+		printError("uploading file", err.Error())
+		return
+	}
+
+	if !verifyChecksum(cData, chsum, uploadResponse.Checksum) {
+		return
+	}
+
+	return uploadResponse
 }

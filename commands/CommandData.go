@@ -8,26 +8,30 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/fatih/color"
+	"github.com/sbani/go-humanizer/units"
+	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
 // CommandData data for commands
 type CommandData struct {
-	LibDM                     *libdm.LibDM
-	Keystore                  *libdm.Keystore
-	Command                   string
-	Config                    *dmConfig.Config
-	FileAttributes            libdm.FileAttributes
-	Encryption, EncryptionKey string
-	Namespace, Keyfile        string
-	Details                   uint8
-	NameLen, RandKey          int
-	All, AllNamespaces        bool
-	NoRedaction, OutputJSON   bool
-	Yes, Force, Quiet         bool
-	EncryptionPassKey         bool
-	NoDecrypt, NoEmojis       bool
-	EncryptionFromStdin       bool
-	VerifyFile                bool
+	LibDM                   *libdm.LibDM
+	Keystore                *libdm.Keystore
+	Command                 string
+	Config                  *dmConfig.Config
+	FileAttributes          libdm.FileAttributes
+	EncryptionKey           []byte
+	Encryption              string
+	Namespace, Keyfile      string
+	Details                 uint8
+	NameLen, RandKey        int
+	All, AllNamespaces      bool
+	NoRedaction, OutputJSON bool
+	Yes, Force, Quiet       bool
+	EncryptionPassKey       bool
+	NoDecrypt, NoEmojis     bool
+	EncryptionFromStdin     bool
+	VerifyFile              bool
 }
 
 // Init init CommandData
@@ -77,7 +81,7 @@ func (cData *CommandData) Init() bool {
 
 	// Read and set encryptionkey from stdin
 	if cData.EncryptionFromStdin {
-		cData.EncryptionKey = readFullStdin(48)
+		cData.EncryptionKey = []byte(readFullStdin(48))
 		if !isValidAESLen(len(cData.EncryptionKey)) {
 			fmtError("Invaild key length")
 			os.Exit(1)
@@ -125,9 +129,9 @@ func (cData *CommandData) GenerateKey() bool {
 		return false
 	}
 
-	fmt.Printf("File %s saved\n", keyFile)
+	fmt.Printf("KeyFile %s saved\n", keyFile)
 
-	cData.EncryptionKey = string(b)
+	cData.EncryptionKey = b
 	cData.Keyfile = keyFile
 
 	return true
@@ -171,6 +175,27 @@ func (cData *CommandData) needKeystore() bool {
 func (cData *CommandData) deleteKeyfile() {
 	if len(cData.Keyfile) > 0 {
 		ShredderFile(cData.Keyfile, -1)
-		fmt.Println("Deleting unused key", cData.Keyfile)
+		if !cData.Quiet {
+			fmt.Println("Deleting unused key", cData.Keyfile)
+		}
 	}
+}
+
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
+	table := clitable.New()
+	table.ColSeparator = " "
+	table.Padding = 4
+
+	table.AddRow([]interface{}{color.HiGreenString("FileID:"), ur.FileID}...)
+	if len(ur.PublicFilename) > 0 {
+		table.AddRow([]interface{}{color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename)}...)
+	}
+	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
+	if !cData.Quiet {
+		table.AddRow([]interface{}{color.HiGreenString("Namespace"), ur.Namespace}...)
+		table.AddRow([]interface{}{color.HiGreenString("Size"), units.BinarySuffix(float64(ur.FileSize))}...)
+		table.AddRow([]interface{}{color.HiGreenString("Checksum"), ur.Checksum}...)
+	}
+
+	fmt.Println(table)
 }

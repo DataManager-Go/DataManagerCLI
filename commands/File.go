@@ -3,18 +3,16 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"log"
+	"net/url"
 	"os"
 	"os/exec"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/atotto/clipboard"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	humanTime "github.com/sbani/go-humanizer/time"
@@ -23,13 +21,13 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData CommandData, path, name, publicName string, public, fromStdin bool, replaceFile uint, deletInvalid bool) {
-	if len(path) == 0 && !fromStdin {
+func UploadFile(cData CommandData, uri, name, publicName string, public, fromStdin, setClip bool, replaceFile uint, deletInvalid bool) {
+	if len(uri) == 0 && !fromStdin {
 		fmt.Println("Either specify a path or use --from-stdin to upload from stdin")
 		return
 	}
 
-	_, fileName := filepath.Split(path)
+	_, fileName := filepath.Split(uri)
 	if len(name) != 0 {
 		fileName = name
 	}
@@ -39,114 +37,55 @@ func UploadFile(cData CommandData, path, name, publicName string, public, fromSt
 		public = true
 	}
 
-	// Declare var
-	var err error
+	// create upload request
+	uploadRequest := cData.LibDM.NewUploadRequest(fileName, cData.FileAttributes)
+	if len(cData.Encryption) > 0 {
+		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
+	}
+	if public {
+		uploadRequest.MakePublic(publicName)
+	}
+	uploadRequest.ReplaceFileID = replaceFile
 	var uploadResponse *libdm.UploadResponse
-	var bar *pb.ProgressBar
-	done := make(chan bool, 1)
-	kill := make(chan os.Signal, 1)
-	c := make(chan int64, 1)
-	var checksum string
 
-	// Init progressbar and proxy
-	proxy := libdm.NoProxyWriter
-	if !cData.Quiet {
-		bar = pb.New64(0).SetMaxWidth(100)
-		proxy = func(w io.Writer) io.Writer {
-			return bar.NewProxyWriter(w)
+	// Check if uri is a filepath or url
+	if u, err := url.Parse(uri); err == nil && u.Scheme != "" {
+		// Upload URL
+		uploadResponse, err = uploadRequest.UploadURL(u)
+		if err != nil {
+			printError("uploading url", err.Error())
+			return
 		}
-	}
 
-	// Start upload
-	go (func(path, fileName string, public bool, replaceFile uint, fileattributes libdm.FileAttributes, proxy func(io.Writer) io.Writer, c chan int64, publicName, encryption, encryptionKey string) {
-		uploadResponse, checksum, err = cData.LibDM.UploadFile(path, fileName, public, replaceFile, fileattributes, proxy, c, publicName, encryption, encryptionKey)
-		done <- true
-	})(path, fileName, public, replaceFile, cData.FileAttributes, proxy, c, publicName, cData.Encryption, cData.EncryptionKey)
-
-	// Read filesize and set bars total to filesize
-	fileSize := <-c
-	if bar != nil {
-		bar.SetTotal(fileSize)
-
-		// Show bar only if uploading takes more than 500ms
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-done:
-			default:
-				bar.Start()
-			}
-		})()
-	}
-
-	// Set notify for signal to do something on cancel
-	signal.Notify(kill, os.Interrupt, os.Kill, syscall.SIGTERM)
-
-	// Wait for upload to be finished or upload to
-	// be canceled
-	select {
-	case killsig := <-kill:
-		// Stop bar
-		if bar != nil {
-			bar.Finish()
-		}
-		fmt.Println(killsig)
-		cData.deleteKeyfile()
-		os.Exit(0)
-		return
-	case <-done:
-	}
-
-	// Stop bar
-	if bar != nil {
-		bar.Finish()
-	}
-
-	if err != nil {
-		printResponseError(err, "uploading file")
-		return
-	}
-
-	if len(checksum) == 0 || uploadResponse == nil {
-		fmtError("Unexpected error while uploading")
-		return
-	}
-
-	// Update keystore
-	if cData.Keystore != nil && len(cData.Keyfile) > 0 {
-		cData.Keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
-	}
-
-	checksumMatch := uploadResponse.Checksum == checksum
-
-	// If requested, do json output
-	if cData.OutputJSON {
-		if !checksumMatch {
-			printJSONError("invalid checksum")
-			os.Exit(1)
-		} else {
-			fmt.Println(toJSON(uploadResponse))
-		}
-		return
-	}
-
-	// Verify checksums
-	if deletInvalid {
-		cData.VerifyFile = true
-	}
-	if !verifyChecksum(&cData, checksum, uploadResponse.Checksum) {
-		if deletInvalid {
-			DeleteFile(cData, "", uploadResponse.FileID)
-		}
-	}
-
-	// Print nice human output
-	if len(uploadResponse.PublicFilename) != 0 {
-		fmt.Printf("Public name: %s\nName: %s\nID %d\n", cData.Config.GetPreviewURL(uploadResponse.PublicFilename), fileName, uploadResponse.FileID)
+		printSuccess("uploaded URL: %s", uri)
 	} else {
-		fmt.Printf("Name: %s\nID: %d\n", fileName, uploadResponse.FileID)
+		// Upload file/stdin
+		uploadResponse = uploadFileCommand(&cData, uploadRequest, uri, fromStdin)
+		if uploadResponse == nil {
+			return
+		}
 	}
 
+	// Set clipboard to public file
+	if setClip && len(uploadResponse.PublicFilename) > 0 {
+		if clipboard.Unsupported {
+			fmt.Println("Clipboard not supported on this OS")
+		} else {
+			err := clipboard.WriteAll(cData.Config.GetPreviewURL(uploadResponse.PublicFilename))
+			if err != nil {
+				printError("setting clipboard", err.Error())
+			}
+		}
+	}
+
+	// Print response as json
+	if cData.OutputJSON {
+		fmt.Println(toJSON(uploadResponse))
+		return
+	}
+
+	// Render table with informations
+	cData.printUploadResponse(uploadResponse)
 }
 
 // DeleteFile deletes the desired file(s)
@@ -327,7 +266,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			table.AddRow(rowItems...)
 		}
 
-		fmt.Println(table.String())
+		fmt.Println(table)
 	}
 }
 
@@ -429,12 +368,14 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
-	respData := resp.Body
+	key := determineDecryptionKey(&cData, resp)
 
+	respData := resp.Body
 	if !cData.NoDecrypt {
 		encryption = resp.Header.Get(libdm.HeaderEncryption)
-		if err != nil {
-			log.Fatal(err)
+		if len(key) == 0 && len(encryption) > 0 {
+			fmtError("Error: file is encrypted but no key was given. To ignore this use --no-decrypt")
+			os.Exit(1)
 		}
 	}
 
@@ -577,7 +518,7 @@ func EditFile(cData CommandData, id uint) {
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, filePath, serverName, "", false, false, id, false)
+	UploadFile(cData, filePath, serverName, "", false, false, false, id, false)
 }
 
 func editFile(file string) bool {

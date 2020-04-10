@@ -45,6 +45,10 @@ func printJSONError(message interface{}) {
 	json.NewEncoder(os.Stdout).Encode(m)
 }
 
+func printSuccess(format string, message ...interface{}) {
+	fmt.Printf("%s %s\n", color.HiGreenString("Successfully"), fmt.Sprintf(format, message...))
+}
+
 // ProcesStrSliceParam divides args by ,
 func ProcesStrSliceParam(slice *[]string) {
 	var newSlice []string
@@ -377,13 +381,13 @@ func genFileName(path, prefix string) string {
 }
 
 // Read password/key from stdin
-func readPassword(message string) string {
+func readPassword(message string) []byte {
 	fmt.Print(message + "> ")
 
 	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		log.Fatalln("Error:", err.Error())
-		return ""
+		return nil
 	}
 
 	var pass string
@@ -394,7 +398,7 @@ func readPassword(message string) string {
 		}
 	}
 
-	return strings.TrimSpace(pass)
+	return []byte(strings.TrimSpace(pass))
 }
 
 func isEmpty(name string) (bool, error) {
