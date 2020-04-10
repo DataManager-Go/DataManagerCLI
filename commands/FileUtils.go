@@ -75,7 +75,6 @@ func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c c
 			return
 		}
 
-		fmt.Println("write chsum")
 		doneChan <- hex.EncodeToString(hash.Sum(nil))
 	})()
 
