@@ -111,18 +111,14 @@ func UploadFile(cData CommandData, path, name, publicName string, public bool, r
 		return
 	}
 
-	// Handle checksum stuff
-	if !checksumMatch {
-		if cData.VerifyFile || deletInvalid {
-			fmtError("checksums don't match!")
-			if deletInvalid {
-				DeleteFile(cData, "", uploadResponse.FileID)
-			}
-
-			return
+	// Verify checksums
+	if deletInvalid {
+		cData.VerifyFile = true
+	}
+	if verifyChecksum(&cData, checksum, uploadResponse.Checksum) {
+		if deletInvalid {
+			DeleteFile(cData, "", uploadResponse.FileID)
 		}
-
-		fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
 	}
 
 	// Print nice human output
@@ -436,9 +432,10 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		if shouldPreview {
 			// Save, decrypt and preview file
 			file := guiPreview(&cData, serverFileName, encryption, checksum, resp, respData, bar)
-
-			// Shredder/Delete file
-			ShredderFile(file, -1)
+			if file != "" {
+				// Shredder/Delete file
+				ShredderFile(file, -1)
+			}
 		} else {
 			// TODO verify checksum
 
@@ -481,14 +478,8 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		case chsum = <-doneChan:
 		}
 
-		// Verify checksum
-		if chsum != checksum {
-			if cData.VerifyFile {
-				fmtError("checksums don't match!")
-				return
-			}
-
-			fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+		if !verifyChecksum(&cData, chsum, checksum) {
+			return
 		}
 
 		if bar != nil {

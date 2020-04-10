@@ -58,11 +58,6 @@ func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c c
 		buf := make([]byte, 10*1024)
 		hash := crc32.NewIEEE()
 
-		// If key is empty --no-decrypt was set
-		if len(key) == 0 {
-			encryption = ""
-		}
-
 		// Write file
 		switch encryption {
 		case constants.EncryptionCiphers[0]:
@@ -80,6 +75,7 @@ func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c c
 			return
 		}
 
+		fmt.Println("write chsum")
 		doneChan <- hex.EncodeToString(hash.Sum(nil))
 	})()
 
@@ -101,17 +97,13 @@ func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c c
 
 func guiPreview(cData *CommandData, serverFileName, encryption, checksum string, resp *http.Response, respData io.Reader, bar *pb.ProgressBar) string {
 	done := make(chan bool)
-	var file string
-	var err error
-	var chsum string
-
 	errCh := make(chan error)
-	var doneCh chan string
 
-	// Save file to temp
-	go (func() {
-		doneCh = saveFileFromStream(GetTempFile(serverFileName), encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
-	})()
+	// Generate tempfile
+	file := GetTempFile(serverFileName)
+
+	// Save stream and decrypt if necessary
+	doneCh := saveFileFromStream(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
 
 	// Show bar only if uploading takes more than 500ms
 	if bar != nil {
@@ -126,25 +118,22 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 		})()
 	}
 
+	var chsum string
+
 	// Wait for download to be finished
 	// or an error to occur
 	select {
 	case err := <-errCh:
 		if err = <-errCh; err != nil {
+			printError("while downloading", err.Error())
 			fmt.Println(err)
 			return ""
 		}
 	case chsum = <-doneCh:
 	}
 
-	// Verify checksum
-	if chsum != checksum {
-		if cData.VerifyFile {
-			fmtError("checksums don't match!")
-			return ""
-		}
-
-		fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+	if !verifyChecksum(cData, chsum, checksum) {
+		return ""
 	}
 
 	// Close bar if open
@@ -152,12 +141,26 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 		bar.Finish()
 	}
 
-	if err != nil {
-		fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
-		return ""
-	}
-
 	// Preview file
 	previewFile(file)
 	return file
+}
+
+// verifyChecksum return true on success
+func verifyChecksum(cData *CommandData, localCs, remoteCs string) bool {
+	// Verify checksum
+	if localCs != remoteCs {
+		if cData.VerifyFile {
+			fmtError("checksums don't match!")
+			return false
+		}
+
+		fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+		if !cData.Quiet {
+			fmt.Printf("Local CS:\t%s\n", localCs)
+			fmt.Printf("Rem. CS:\t%s\n", remoteCs)
+		}
+	}
+
+	return true
 }
