@@ -45,7 +45,7 @@ var (
 	appNoEmojis                = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
 	appFileEncryption          = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
 	appFileEncryptionKey       = app.Flag("key", "Encryption/Decryption key").Short('k').String()
-	appFileEncryptionKeyFile   = app.Flag("keyfile", "File containing a Encryption/Decryption key").String()
+	appFileEncryptionKeyFile   = app.Flag("keyfile", "File containing a Encryption/Decryption key").HintAction(hintListKeyFiles).String()
 	appFileEncryptionRandKey   = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
 	appFileEncryptionPassKey   = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
 	appFileEncryptionFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
@@ -209,6 +209,10 @@ var (
 	// -- CleanUp
 	keystoreCleanupCmd           = keystoreCmd.Command("cleanup", "Cleans up unassigned keys")
 	keystoreCleanupCmdShredCount = keystoreCleanupCmd.Flag("shredder", "Overwrite your keys").Default("6").Uint()
+	// -- AddKey
+	keystoreAddKeyCmd       = keystoreCmd.Command("add", "Adds a Key to a file to the keystore")
+	keystoreAddKeyCmdFileID = keystoreAddKeyCmd.Arg("fileID", "The file id where the key should be assigned to").Required().Uint()
+	keystoreAddKeyCmdKey    = keystoreAddKeyCmd.Arg("keyfile", "The filename of the keyfile. Must be located in the keystore path").HintAction(hintListKeyFiles).Required().String()
 )
 
 var (
@@ -281,7 +285,12 @@ func main() {
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
-	commandData := *generateCommandData(parsed, appTrimName)
+	cData := generateCommandData(parsed, appTrimName)
+	if cData == nil {
+		return
+	}
+	commandData := *cData
+	defer commandData.Keystore.Close()
 
 	// Execute the desired command
 	switch parsed {
@@ -408,6 +417,9 @@ func main() {
 	// Keystore cleanup
 	case keystoreCleanupCmd.FullCommand():
 		commands.KeystoreCleanup(commandData, *keystoreCleanupCmdShredCount)
+
+	case keystoreAddKeyCmd.FullCommand():
+		commands.KeystoreAddKey(commandData, *keystoreAddKeyCmdKey, *keystoreAddKeyCmdFileID)
 	}
 
 }
@@ -452,6 +464,7 @@ func generateCommandData(parsed string, appTrimName int) *commands.CommandData {
 			fmt.Println(err)
 			return nil
 		}
+		commandData.Keyfile = *appFileEncryptionKeyFile
 	} else if len(*appFileEncryptionKey) > 0 {
 		commandData.EncryptionKey = []byte(*appFileEncryptionKey)
 	}
@@ -461,10 +474,6 @@ func generateCommandData(parsed string, appTrimName int) *commands.CommandData {
 			return nil
 		}
 
-		// Close keystore at the end
-		if commandData.Keystore != nil {
-			defer commandData.Keystore.Close()
-		}
 	}
 
 	return &commandData
@@ -518,4 +527,16 @@ func hintListFiles() []string {
 	}
 
 	return files
+}
+
+func hintListKeyFiles() []string {
+	files := hintListFiles()
+	retFiles := []string{}
+	for i := range files {
+		if files[i] != libdm.KeystoreDBFile {
+			retFiles = append(retFiles, files[i])
+		}
+	}
+
+	return retFiles
 }

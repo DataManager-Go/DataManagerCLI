@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/atotto/clipboard"
 	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
-	humanTime "github.com/sbani/go-humanizer/time"
 	"github.com/sbani/go-humanizer/units"
+
+	libdm "github.com/DataManager-Go/libdatamanager"
+	humanTime "github.com/sbani/go-humanizer/time"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
@@ -75,6 +76,14 @@ func UploadFile(cData CommandData, uri, name, publicName string, public, fromStd
 			if err != nil {
 				printError("setting clipboard", err.Error())
 			}
+		}
+	}
+
+	// Add key to keystore
+	if cData.Keystore != nil && len(cData.Keyfile) > 0 {
+		err := cData.Keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
+		if err != nil {
+			printError("writing keystore", err.Error())
 		}
 	}
 

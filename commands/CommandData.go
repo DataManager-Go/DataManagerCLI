@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -60,6 +61,23 @@ func (cData *CommandData) Init() bool {
 			if err != nil {
 				printError("opening keystore", err.Error())
 				return false
+			}
+		}
+	}
+
+	if cData.supportInputKey() {
+		if cData.EncryptionPassKey {
+			cData.EncryptionKey = readPassword("Key password")
+			if len(cData.EncryptionKey) == 0 {
+				return false
+			}
+		} else if len(cData.EncryptionKey) > 0 {
+			switch cData.Encryption {
+			case constants.EncryptionCiphers[0]:
+				if !isValidAESLen(len(cData.EncryptionKey)) {
+					printError("parsing key", "invalid key length "+strconv.Itoa(len(cData.Encryption)))
+					return false
+				}
 			}
 		}
 	}

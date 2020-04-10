@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -191,6 +192,38 @@ func KeystoreCleanup(cData CommandData, shredderCount uint) {
 	} else {
 		fmt.Printf("%s cleaned %s", color.HiGreenString("Successfully"), english.Plural(cleanedFiles, "entry", "entries"))
 	}
+}
+
+// KeystoreAddKey adds key to keystore
+func KeystoreAddKey(cData CommandData, keyFile string, fileID uint) {
+	if !checkKeystoreAvailable(&cData) {
+		return
+	}
+
+	// Validate keyfile
+	_, err := os.Stat(keyFile)
+	if err != nil {
+		printError("reading keyfile", err.Error())
+		return
+	}
+
+	// Open keystore
+	keystore, err := cData.Config.GetKeystore()
+	defer keystore.Close()
+	if err != nil {
+		printError("opening keystore", err.Error())
+		return
+	}
+
+	// Get keyfilename and add it to the keystore
+	_, keyFileName := filepath.Split(keyFile)
+	err = keystore.AddKey(fileID, keyFileName)
+	if err != nil {
+		printError("adding key", err.Error())
+		return
+	}
+
+	printSuccess("added 1 key to the keystore")
 }
 
 func printNoKeystoreFound() {
