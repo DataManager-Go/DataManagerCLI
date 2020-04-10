@@ -43,30 +43,35 @@ func determineDecryptionKey(cData *CommandData, resp *http.Response) []byte {
 }
 
 // Saves data from r to file. Shows progressbar after 500ms if still saving
-func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
+func saveFileToFile(outFile, encryption string, key []byte, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
+	f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	defer f.Close()
+	if err != nil {
+		c <- err
+		return nil
+	}
+
+	return writeFileToWriter(f, encryption, key, r, c, bar)
+}
+
+// Saves data from r to file. Shows progressbar after 500ms if still saving
+func writeFileToWriter(wr io.Writer, encryption string, key []byte, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
 	doneChan := make(chan string, 1)
 
 	go (func() {
-		// Create or truncate file
-		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-		defer f.Close()
-		if err != nil {
-			c <- err
-			return
-		}
-
 		buf := make([]byte, 10*1024)
 		hash := crc32.NewIEEE()
+		var err error
 
 		// Write file
 		switch encryption {
 		case constants.EncryptionCiphers[0]:
 			{
-				err = libdm.Decrypt(r, f, hash, key, buf)
+				err = libdm.Decrypt(r, wr, hash, key, buf)
 			}
 		case "":
 			{
-				w := io.MultiWriter(f, hash)
+				w := io.MultiWriter(wr, hash)
 				_, err = io.CopyBuffer(w, r, buf)
 			}
 		}
@@ -79,7 +84,6 @@ func saveFileFromStream(outFile, encryption string, key []byte, r io.Reader, c c
 	})()
 
 	// Show bar if desired
-	// and not already done after 500ms
 	if bar != nil {
 		go (func() {
 			time.Sleep(500 * time.Millisecond)
@@ -102,7 +106,7 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 	file := GetTempFile(serverFileName)
 
 	// Save stream and decrypt if necessary
-	doneCh := saveFileFromStream(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
+	doneCh := saveFileToFile(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
 
 	// Show bar only if uploading takes more than 500ms
 	if bar != nil {

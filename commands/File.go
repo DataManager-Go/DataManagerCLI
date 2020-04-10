@@ -23,7 +23,12 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData CommandData, path, name, publicName string, public bool, replaceFile uint, deletInvalid bool) {
+func UploadFile(cData CommandData, path, name, publicName string, public, fromStdin bool, replaceFile uint, deletInvalid bool) {
+	if len(path) == 0 && !fromStdin {
+		fmt.Println("Either specify a path or use --from-stdin to upload from stdin")
+		return
+	}
+
 	_, fileName := filepath.Split(path)
 	if len(name) != 0 {
 		fileName = name
@@ -451,10 +456,22 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 				ShredderFile(file, -1)
 			}
 		} else {
-			// TODO verify checksum
+			// Write file to os.Stdout
+			// Decrypts stream if necessary
+			errCh := make(chan error, 1)
+			chSum := writeFileToWriter(os.Stdout, encryption, determineDecryptionKey(&cData, resp), respData, errCh, nil)
 
-			// Printf like a boss
-			io.Copy(os.Stdout, respData)
+			select {
+			case err := <-errCh:
+				if err != nil {
+					printError("downloading", err.Error())
+				} else {
+					fmt.Println("An unexpected error occured")
+				}
+			case chsum := <-chSum:
+				verifyChecksum(&cData, chsum, checksum)
+			}
+
 		}
 	} else if len(savePath) > 0 {
 		// Use server filename if a wildcard was used
@@ -478,7 +495,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// channel if filewriting is done
 		errChan := make(chan error)
-		doneChan := saveFileFromStream(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
+		doneChan := saveFileToFile(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
 		var chsum string
 
 		// Wait for download to be finished
@@ -560,7 +577,7 @@ func EditFile(cData CommandData, id uint) {
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, filePath, serverName, "", false, id, false)
+	UploadFile(cData, filePath, serverName, "", false, false, id, false)
 }
 
 func editFile(file string) bool {

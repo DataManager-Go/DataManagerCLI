@@ -87,7 +87,8 @@ var (
 
 	// -- Upload
 	appUpload             = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
-	fileUploadPath        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Required().String()
+	fileUploadPath        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).String()
+	fileUploadFromStdin   = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
 	fileUploadName        = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic      = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName  = appUpload.Flag("public-name", "Specify the public filename").String()
@@ -334,7 +335,7 @@ func main() {
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadReplace, *fileUploadDeletInvaid)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadReplace, *fileUploadDeletInvaid)
 
 	// Delete file
 	case fileDeleteCmd.FullCommand():
