@@ -2,15 +2,12 @@ package commands
 
 import (
 	"bufio"
-	"encoding/hex"
 	"fmt"
-	"hash/crc32"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -410,115 +407,41 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
-	// Do the file request
+	// Get the file
 	resp, serverFileName, checksum, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
 	if err != nil {
 		printResponseError(err, "downloading file")
 		return
 	}
 
-	var respData io.Reader
+	respData := resp.Body
 
-	// Set respData to designed source
-	if cData.NoDecrypt {
-		respData = resp.Body
-	} else {
-		respData, err = respToDecrypted(&cData, resp)
+	if !cData.NoDecrypt {
 		encryption = resp.Header.Get(libdm.HeaderEncryption)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
+	// Create and setup bar
 	var bar *pb.ProgressBar
-
-	// Show bar on download
 	if showBar {
-		// Get filesize header
-		var size int64
-		if len(resp.Header.Get(libdm.HeaderContentLength)) > 0 {
-			s, err := strconv.ParseInt(resp.Header.Get(libdm.HeaderContentLength), 10, 64)
-			if err == nil {
-				size = s
-			}
-		}
-
-		// Create and hook bar
-		bar = pb.New64(size).
-			SetMaxWidth(100)
-
-		// Overwrite respData with a proxy
+		bar = pb.New64(libdm.GetFilesizeFromDownloadRequest(resp)).SetMaxWidth(100)
 		respData = bar.NewProxyReader(respData)
 	}
 
 	// Display or save file
 	if displayOutput && len(savePath) == 0 {
-		// Only write to tmpfile if preview needed
+		// Only write to tmpfile if a gui-like preview needed
 		if shouldPreview {
-			done := make(chan bool)
-			var file string
-			var err error
-			var chsum string
-
-			errCh := make(chan error)
-			var doneCh chan string
-
-			// Save file to temp
-			go (func() {
-				doneCh = saveFileFromStream(GetTempFile(serverFileName), respData, errCh, bar)
-			})()
-
-			// Show bar only if uploading takes more than 500ms
-			if bar != nil {
-				go (func() {
-					time.Sleep(500 * time.Millisecond)
-					select {
-					case <-done:
-						break
-					default:
-						bar.Start()
-					}
-				})()
-			}
-
-			// Wait for download to be finished
-			// or an error to occur
-			select {
-			case err := <-errCh:
-				if err = <-errCh; err != nil {
-					fmt.Println(err)
-					return
-				}
-			case chsum = <-doneCh:
-			}
-
-			// Verify checksum
-			if chsum != checksum {
-				if cData.VerifyFile {
-					fmtError("checksums don't match!")
-					return
-				}
-
-				fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
-			}
-
-			// Close bar if open
-			if bar != nil {
-				bar.Finish()
-			}
-
-			if err != nil {
-				fmt.Printf("%s writing temporary file: %s\n", color.HiRedString("Error:"), err)
-				return
-			}
-
-			// Preview file
-			previewFile(file)
+			// Save, decrypt and preview file
+			file := guiPreview(&cData, serverFileName, encryption, checksum, resp, respData, bar)
 
 			// Shredder/Delete file
 			ShredderFile(file, -1)
 		} else {
 			// TODO verify checksum
+
 			// Printf like a boss
 			io.Copy(os.Stdout, respData)
 		}
@@ -544,7 +467,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// channel if filewriting is done
 		errChan := make(chan error)
-		doneChan := saveFileFromStream(outFile, respData, errChan, bar)
+		doneChan := saveFileFromStream(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
 		var chsum string
 
 		// Wait for download to be finished
@@ -591,49 +514,6 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 	success = true
 	return
-}
-
-// Saves data from r to file. Shows progressbar after 500ms if still saving
-func saveFileFromStream(outFile string, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
-	doneChan := make(chan string, 1)
-
-	go (func() {
-		// Create or truncate file
-		f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-		defer f.Close()
-		if err != nil {
-			c <- err
-			return
-		}
-
-		buf := make([]byte, 10*1024)
-		hash := crc32.NewIEEE()
-		w := io.MultiWriter(f, hash)
-
-		// Write file
-		_, err = io.CopyBuffer(w, r, buf)
-		if err != nil {
-			c <- err
-			return
-		}
-
-		doneChan <- hex.EncodeToString(hash.Sum(nil))
-	})()
-
-	// Show bar if desired
-	// and not already done after 500ms
-	if bar != nil {
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-c:
-			default:
-				bar.Start()
-			}
-		})()
-	}
-
-	return doneChan
 }
 
 // EditFile edits a file
