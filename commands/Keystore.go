@@ -74,15 +74,15 @@ func KeystoreInfo(cData *CommandData) {
 	}
 
 	// Open keystore
-	keystore, err := cData.Config.GetKeystore()
+	keystore, err := cData.GetKeystore()
 	defer keystore.Close()
 	if err != nil {
 		printError("opening keystore", err.Error())
 		return
 	}
 
-	// Retrieve data
-	items, err := keystore.GetValidKeyCount()
+	// Retrieve keycount data
+	items, err := keystore.GetKeyCount(true)
 	if err != nil {
 		printError("getting info", err.Error())
 		return
@@ -111,7 +111,7 @@ func KeystoreDelete(cData *CommandData, shredderCount uint) {
 	time.Sleep(4 * time.Second)
 
 	// Open keystore
-	keystore, err := cData.Config.GetKeystore()
+	keystore, err := cData.GetKeystore()
 	defer keystore.Close()
 
 	// If keystore directory was not found, remove it from the config
@@ -159,8 +159,8 @@ func KeystoreCleanup(cData *CommandData, shredderCount uint) {
 		return
 	}
 
-	// Opening keystore
-	keystore, err := cData.Config.GetKeystore()
+	// Open keystore
+	keystore, err := cData.GetKeystore()
 	defer keystore.Close()
 	if err != nil {
 		printError("opening keystore", err.Error())
@@ -208,7 +208,7 @@ func KeystoreAddKey(cData *CommandData, keyFile string, fileID uint) {
 	}
 
 	// Open keystore
-	keystore, err := cData.Config.GetKeystore()
+	keystore, err := cData.GetKeystore()
 	defer keystore.Close()
 	if err != nil {
 		printError("opening keystore", err.Error())
@@ -224,6 +224,36 @@ func KeystoreAddKey(cData *CommandData, keyFile string, fileID uint) {
 	}
 
 	printSuccess("added 1 key to the keystore")
+}
+
+// KeystoreRemoveKey removes key from keystore
+func KeystoreRemoveKey(cData *CommandData, fileID uint) {
+	if !checkKeystoreAvailable(cData) {
+		return
+	}
+
+	// Open keystore
+	keystore, err := cData.GetKeystore()
+	defer keystore.Close()
+	if err != nil {
+		printError("opening keystore", err.Error())
+		return
+	}
+
+	// Get and delete key from DB
+	key, err := keystore.DeleteKey(fileID)
+	if err != nil {
+		printError("deleting key", err.Error())
+		return
+	}
+
+	// Shredder keyfile if exists
+	path := keystore.GetKeystoreFile(key.Key)
+	if _, err = os.Stat(path); err == nil {
+		ShredderFile(path, -1)
+	}
+
+	printSuccess("deletet 1 key from keystore")
 }
 
 func printNoKeystoreFound() {

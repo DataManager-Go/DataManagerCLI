@@ -234,6 +234,9 @@ var (
 	keystoreAddKeyCmd       = keystoreCmd.Command("add", "Adds a Key to a file to the keystore")
 	keystoreAddKeyCmdFileID = keystoreAddKeyCmd.Arg("fileID", "The file id where the key should be assigned to").Required().Uint()
 	keystoreAddKeyCmdKey    = keystoreAddKeyCmd.Arg("keyfile", "The filename of the keyfile. Must be located in the keystore path").HintAction(hintListKeyFiles).Required().String()
+	// -- RemoveKey
+	keystoreRemoveKeyCmd   = keystoreCmd.Command("remove", "Removes a key from keystore by it's assigned fileid")
+	keystoreRemoveKeyCmdID = keystoreRemoveKeyCmd.Arg("fileID", "The fileID to delete the key from ").Required().Uint()
 )
 
 var (

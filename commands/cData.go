@@ -116,7 +116,9 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
 	if len(ur.PublicFilename) > 0 {
 		table.AddRow([]interface{}{color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename)}...)
 	}
+
 	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
+
 	if !cData.Quiet {
 		table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
 		table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)

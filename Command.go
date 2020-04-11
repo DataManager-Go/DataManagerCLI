@@ -144,5 +144,8 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case keystoreAddKeyCmd.FullCommand():
 		commands.KeystoreAddKey(commandData, *keystoreAddKeyCmdKey, *keystoreAddKeyCmdFileID)
 
+	case keystoreRemoveKeyCmd.FullCommand():
+		commands.KeystoreRemoveKey(commandData, *keystoreRemoveKeyCmdID)
+
 	}
 }

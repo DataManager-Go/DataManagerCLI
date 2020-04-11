@@ -4,6 +4,9 @@ github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0 h1:GPtIZW4KZhul21SrmmpgUCx+wEPh
 github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0/go.mod h1:EH9sjhhyDGHNIj/Wx59f7CURbVp1C1x/eRVi07WPsvg=
 github.com/DataManager-Go/DataManagerServer v1.0.0 h1:KcxPwDA3B4cNdjKYQc4/GYOq62eKNOI+IqhFHPVijIQ=
 github.com/DataManager-Go/DataManagerServer v1.0.0/go.mod h1:oJCEcZUpFwrLfXQAcYnDkNrh1la4gw3931RnComDsn8=
+github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
+github.com/DataManager-Go/libdatamanager v1.1.13 h1:fTs4gNygY44X1s2y5rkQBfuihqx8PSRw3GH3CQBwsB0=
+github.com/DataManager-Go/libdatamanager v1.1.13/go.mod h1:O0VgS1fIRyDMuYAv3L6YtyFmBJ1RCv7hcfwFNIjjT1w=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200410191710-0d0a0f352014 h1:qOc+dTfOomQPIlL4J3zHdyOn9+nEiy5MYD0mswGN0DY=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200410191710-0d0a0f352014/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
@@ -105,6 +108,7 @@ golang.org/x/sys v0.0.0-20191008105621-543471e840be/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 h1:ZBzSG/7F4eNKz2L3GE9o300RX0Az1Bw5HF7PDraD+qU=
 golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa h1:mQTN3ECqfsViCNBgq+A40vdwhkGykrrQlYe3mPj6BoU=
 golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
