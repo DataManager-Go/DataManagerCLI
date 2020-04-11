@@ -32,7 +32,7 @@ var (
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 	appQuiet   = app.Flag("quiet", "Less verbose output").Short('q').Bool()
 
-	appNamespace               = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').String()
+	appNamespace               = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
 	appTags                    = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups                  = app.Flag("group", "Specify groups to use").Short('g').Strings()
 	appOutputJSON              = app.Flag("json", "Print output as json").Bool()
@@ -237,19 +237,8 @@ func main() {
 		DisableColors:    *appNoColor,
 	})
 
-	// Init config
-	var err error
-	config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), *appCfgFile)
-	if err != nil {
-		log.Error(err)
+	if !setupConfig(parsed) {
 		return
-	}
-
-	if config == nil {
-		log.Info("New config created")
-		if parsed != setupCmd.FullCommand() {
-			return
-		}
 	}
 
 	var appTrimName int
@@ -539,4 +528,41 @@ func hintListKeyFiles() []string {
 	}
 
 	return retFiles
+}
+
+func hintListNamespaces() []string {
+	if !setupConfig("") {
+		return []string{}
+	}
+
+	config, err := config.ToRequestConfig()
+	if err != nil {
+		return []string{}
+	}
+
+	libDM := libdm.NewLibDM(config)
+	namespaces, err := libDM.GetNamespaces()
+	if err != nil {
+		return []string{}
+	}
+
+	return namespaces.Slice
+}
+
+func setupConfig(parsed string) bool {
+	// Init config
+	var err error
+	config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), *appCfgFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if config == nil {
+		log.Info("New config created")
+		if parsed != setupCmd.FullCommand() {
+			return false
+		}
+	}
+
+	return true
 }

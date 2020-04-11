@@ -210,9 +210,9 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
 	}
 	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
 	if !cData.Quiet {
-		table.AddRow([]interface{}{color.HiGreenString("Namespace"), ur.Namespace}...)
-		table.AddRow([]interface{}{color.HiGreenString("Size"), units.BinarySuffix(float64(ur.FileSize))}...)
-		table.AddRow([]interface{}{color.HiGreenString("Checksum"), ur.Checksum}...)
+		table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
+		table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
+		table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 	}
 
 	fmt.Println(table)
