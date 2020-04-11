@@ -22,7 +22,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadSetClipboard, *fileUploadReplace, *fileUploadDeletInvaid)
+		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadSetClipboard, *fileUploadReplace, *fileUploadThreads, *fileUploadDeletInvaid)
 
 	// Delete file
 	case fileDeleteCmd.FullCommand():

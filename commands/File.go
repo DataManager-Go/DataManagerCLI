@@ -3,98 +3,75 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"net/url"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/JojiiOfficial/gaw"
-	"github.com/atotto/clipboard"
-	"github.com/cheggaaa/pb/v3"
 	"github.com/fatih/color"
 	"github.com/sbani/go-humanizer/units"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/gosuri/uiprogress"
 	humanTime "github.com/sbani/go-humanizer/time"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData *CommandData, uri, name, publicName string, public, fromStdin, setClip bool, replaceFile uint, deletInvalid bool) {
-	if len(uri) == 0 && !fromStdin {
-		fmt.Println("Either specify a path or use --from-stdin to upload from stdin")
+func UploadFile(cData *CommandData, uris []string, name, publicName string, public, fromStdin, setClip bool, replaceFile, threads uint, deletInvalid bool) {
+	totalFiles := len(uris)
+	progress := uiprogress.New()
+	progress.Start()
+
+	if threads == 0 {
+		fmt.Println("You need to specify at least one thread!")
 		return
 	}
 
-	_, fileName := filepath.Split(uri)
-	if len(name) != 0 {
-		fileName = name
-	}
-
-	// Make public if public name was specified
-	if len(publicName) > 0 {
-		public = true
-	}
-
-	// create upload request
-	uploadRequest := cData.LibDM.NewUploadRequest(fileName, cData.FileAttributes)
-	if len(cData.Encryption) > 0 {
-		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
-	}
-	if public {
-		uploadRequest.MakePublic(publicName)
-	}
-	uploadRequest.ReplaceFileID = replaceFile
-	var uploadResponse *libdm.UploadResponse
-
-	// Check if uri is a filepath or url
-	if u, err := url.Parse(uri); err == nil && u.Scheme != "" {
-		// Upload URL
-		uploadResponse, err = uploadRequest.UploadURL(u)
-		if err != nil {
-			printError("uploading url", err.Error())
+	if totalFiles > 0 {
+		if fromStdin {
+			fmt.Println("Can't upload from stdin and files at the same time")
 			return
 		}
-
-		printSuccess("uploaded URL: %s", uri)
-	} else {
-		// Upload file/stdin
-		uploadResponse = uploadFileCommand(cData, uploadRequest, uri, fromStdin)
-		if uploadResponse == nil {
+		if setClip && totalFiles > 1 {
+			fmt.Println("You can't set clipboard while uploading multiple files")
 			return
 		}
 	}
 
-	// Set clipboard to public file
-	if setClip && len(uploadResponse.PublicFilename) > 0 {
-		if clipboard.Unsupported {
-			fmt.Println("Clipboard not supported on this OS")
-		} else {
-			err := clipboard.WriteAll(cData.Config.GetPreviewURL(uploadResponse.PublicFilename))
-			if err != nil {
-				printError("setting clipboard", err.Error())
-			}
-		}
-	}
-
-	keystore, _ := cData.GetKeystore()
-	// Add key to keystore
-	if keystore != nil && len(cData.Keyfile) > 0 {
-		err := keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
-		if err != nil {
-			printError("writing keystore", err.Error())
-		}
-	}
-
-	// Print response as json
-	if cData.OutputJSON {
-		fmt.Println(toJSON(uploadResponse))
+	if totalFiles == 0 && !fromStdin {
+		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
 		return
 	}
 
-	// Render table with informations
-	cData.printUploadResponse(uploadResponse)
+	wg := sync.WaitGroup{}
+	c := make(chan uint, 1)
+
+	if threads > uint(totalFiles) {
+		threads = uint(totalFiles)
+	}
+
+	c <- threads
+	var pos int
+
+	// Start Uploader pool
+	for pos < totalFiles {
+		read := <-c
+		for i := 0; i < int(read) && pos < totalFiles; i++ {
+			wg.Add(1)
+			go func(uri string) {
+				upload(cData, uri, name, publicName, public, fromStdin, setClip, replaceFile, deletInvalid, totalFiles, progress)
+				wg.Done()
+				c <- 1
+			}(uris[pos])
+			pos++
+		}
+	}
+
+	wg.Wait()
 }
 
 // DeleteFile deletes the desired file(s)
@@ -385,7 +362,8 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 
 	key := determineDecryptionKey(cData, resp)
 
-	respData := resp.Body
+	var respData io.Reader
+	respData = resp.Body
 	if !cData.NoDecrypt {
 		encryption = resp.Header.Get(libdm.HeaderEncryption)
 		if len(key) == 0 && len(encryption) > 0 {
@@ -395,10 +373,11 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 	}
 
 	// Create and setup bar
-	var bar *pb.ProgressBar
+	var bar *uiprogress.Bar
 	if showBar {
-		bar = pb.New64(libdm.GetFilesizeFromDownloadRequest(resp)).SetMaxWidth(100)
-		respData = bar.NewProxyReader(respData)
+		prefix := "Downloading " + serverFileName
+		bar, _ = buildProgressbar(prefix, uint(len(prefix)))
+		bar.Total = int(libdm.GetFilesizeFromDownloadRequest(resp))
 	}
 
 	// Display or save file
@@ -470,10 +449,6 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 			return
 		}
 
-		if bar != nil {
-			bar.Finish()
-		}
-
 		// Preview
 		if displayOutput {
 			previewFile(savePath)
@@ -534,5 +509,5 @@ func EditFile(cData *CommandData, id uint) {
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, filePath, serverName, "", false, false, false, id, false)
+	UploadFile(cData, []string{filePath}, serverName, "", false, false, false, id, 1, false)
 }

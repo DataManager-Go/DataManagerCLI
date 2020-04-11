@@ -109,12 +109,13 @@ var (
 
 	// -- Upload
 	appUpload              = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
-	fileUploadPath         = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).String()
+	fileUploadPath         = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Strings()
 	fileUploadFromStdin    = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
 	fileUploadName         = appUpload.Flag("name", "Specify the name of the file").String()
 	fileUploadPublic       = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName   = appUpload.Flag("public-name", "Specify the public filename").String()
 	fileUploadReplace      = appUpload.Flag("replace-file", "Replace a file").Uint()
+	fileUploadThreads      = appUpload.Flag("threads", "Replace a file").Default("1").Uint()
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
 

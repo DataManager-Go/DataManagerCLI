@@ -107,6 +107,7 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 }
 
 // Print nice output for a file upload
+// If total files is > 1 only a summary is shown
 func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
 	table := clitable.New()
 	table.ColSeparator = " "
