@@ -364,6 +364,11 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			// OR forced to display
 			(len(args) > 0 && args[0])
 
+	// Don't show bar if first arg is set to false
+	if len(args) > 0 && !args[0] {
+		showBar = false
+	}
+
 	// Errorhandling 100
 	if noPreview && preview {
 		fmt.Print("rlly?")
@@ -495,7 +500,7 @@ func EditFile(cData CommandData, id uint) {
 	filePath := GetTempFile(gaw.RandString(10))
 
 	// Download File
-	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, !cData.Quiet)
+	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, false)
 	if !success {
 		return
 	}
