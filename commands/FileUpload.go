@@ -11,6 +11,7 @@ import (
 	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/atotto/clipboard"
 	"github.com/gosuri/uiprogress"
 	"github.com/gosuri/uiprogress/util/strutil"
@@ -207,7 +208,7 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 
 	var uploadResponse *libdm.UploadResponse
 
-	if u, err := url.Parse(uri); err == nil && u.Scheme != "" {
+	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
 		// Upload URL
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
