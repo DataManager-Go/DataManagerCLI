@@ -22,7 +22,7 @@ import (
 )
 
 // UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData CommandData, uri, name, publicName string, public, fromStdin, setClip bool, replaceFile uint, deletInvalid bool) {
+func UploadFile(cData *CommandData, uri, name, publicName string, public, fromStdin, setClip bool, replaceFile uint, deletInvalid bool) {
 	if len(uri) == 0 && !fromStdin {
 		fmt.Println("Either specify a path or use --from-stdin to upload from stdin")
 		return
@@ -61,7 +61,7 @@ func UploadFile(cData CommandData, uri, name, publicName string, public, fromStd
 		printSuccess("uploaded URL: %s", uri)
 	} else {
 		// Upload file/stdin
-		uploadResponse = uploadFileCommand(&cData, uploadRequest, uri, fromStdin)
+		uploadResponse = uploadFileCommand(cData, uploadRequest, uri, fromStdin)
 		if uploadResponse == nil {
 			return
 		}
@@ -98,7 +98,7 @@ func UploadFile(cData CommandData, uri, name, publicName string, public, fromStd
 }
 
 // DeleteFile deletes the desired file(s)
-func DeleteFile(cData CommandData, name string, id uint) {
+func DeleteFile(cData *CommandData, name string, id uint) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
@@ -133,7 +133,7 @@ func DeleteFile(cData CommandData, name string, id uint) {
 }
 
 // ListFiles lists the files corresponding to the args
-func ListFiles(cData CommandData, name string, id uint, sOrder string) {
+func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
@@ -244,7 +244,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 			// Add items
 			rowItems := []interface{}{
 				file.ID,
-				formatFilename(&file, cData.NameLen, &cData),
+				formatFilename(&file, cData.NameLen, cData),
 				units.BinarySuffix(float64(file.Size)),
 			}
 
@@ -280,7 +280,7 @@ func ListFiles(cData CommandData, name string, id uint, sOrder string) {
 }
 
 // PublishFile publishes a file
-func PublishFile(cData CommandData, name string, id uint, publicName string) {
+func PublishFile(cData *CommandData, name string, id uint, publicName string) {
 	// Convert input
 	name, id = getFileCommandData(name, id)
 
@@ -309,7 +309,7 @@ func PublishFile(cData CommandData, name string, id uint, publicName string) {
 }
 
 // UpdateFile updates a file on the server
-func UpdateFile(cData CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
+func UpdateFile(cData *CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	// Process params: make t1,t2 -> [t1 t2]
 	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
@@ -346,7 +346,7 @@ func UpdateFile(cData CommandData, name string, id uint, newName string, newName
 }
 
 // GetFile requests the file from the server and displays or saves it
-func GetFile(cData CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool, args ...bool) (success bool, encryption, serverFileName string) {
+func GetFile(cData *CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool, args ...bool) (success bool, encryption, serverFileName string) {
 	// Convert input
 	fileName, id = getFileCommandData(fileName, id)
 
@@ -382,7 +382,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		return
 	}
 
-	key := determineDecryptionKey(&cData, resp)
+	key := determineDecryptionKey(cData, resp)
 
 	respData := resp.Body
 	if !cData.NoDecrypt {
@@ -405,7 +405,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		// Only write to tmpfile if a gui-like preview needed
 		if shouldPreview {
 			// Save, decrypt and preview file
-			file := guiPreview(&cData, serverFileName, encryption, checksum, resp, respData, bar)
+			file := guiPreview(cData, serverFileName, encryption, checksum, resp, respData, bar)
 			if file != "" {
 				// Shredder/Delete file
 				ShredderFile(file, -1)
@@ -414,7 +414,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 			// Write file to os.Stdout
 			// Decrypts stream if necessary
 			errCh := make(chan error, 1)
-			chSum := writeFileToWriter(os.Stdout, encryption, determineDecryptionKey(&cData, resp), respData, errCh, nil)
+			chSum := writeFileToWriter(os.Stdout, encryption, determineDecryptionKey(cData, resp), respData, errCh, nil)
 
 			select {
 			case err := <-errCh:
@@ -424,7 +424,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 					fmt.Println("An unexpected error occured")
 				}
 			case chsum := <-chSum:
-				verifyChecksum(&cData, chsum, checksum)
+				verifyChecksum(cData, chsum, checksum)
 			}
 
 		}
@@ -450,7 +450,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 
 		// channel if filewriting is done
 		errChan := make(chan error, 1)
-		doneChan, f := saveFileToFile(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
+		doneChan, f := saveFileToFile(outFile, encryption, determineDecryptionKey(cData, resp), respData, errChan, bar)
 		defer f.Close()
 		var chsum string
 
@@ -465,7 +465,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		case chsum = <-doneChan:
 		}
 
-		if !verifyChecksum(&cData, chsum, checksum) {
+		if !verifyChecksum(cData, chsum, checksum) {
 			return
 		}
 
@@ -495,7 +495,7 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 }
 
 // EditFile edits a file
-func EditFile(cData CommandData, id uint) {
+func EditFile(cData *CommandData, id uint) {
 	// Generate temp-filePath
 	filePath := GetTempFile(gaw.RandString(10))
 

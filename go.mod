@@ -2,10 +2,11 @@ module github.com/DataManager-Go/DataManagerCLI
 
 go 1.14
 
+
 require (
 	github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0
 	github.com/DataManager-Go/DataManagerServer v1.0.0
-	github.com/DataManager-Go/libdatamanager v1.1.12
+	github.com/DataManager-Go/libdatamanager v1.1.13
 	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200410191710-0d0a0f352014
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
@@ -17,7 +18,6 @@ require (
 	github.com/kyokomi/emoji v2.2.1+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
-	github.com/sirupsen/logrus v1.5.0
 	golang.org/x/crypto v0.0.0-20200406173513-056763e48d71
 	golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6

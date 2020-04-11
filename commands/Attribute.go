@@ -8,7 +8,7 @@ import (
 )
 
 // UpdateAttribute update an attribute
-func UpdateAttribute(cData CommandData, attribute libdm.Attribute, name, newName string) {
+func UpdateAttribute(cData *CommandData, attribute libdm.Attribute, name, newName string) {
 	_, err := cData.LibDM.UpdateAttribute(attribute, cData.FileAttributes.Namespace, name, newName)
 	if err != nil {
 		printResponseError(err, "updating attribute")
@@ -19,7 +19,7 @@ func UpdateAttribute(cData CommandData, attribute libdm.Attribute, name, newName
 }
 
 // DeleteAttribute update an attribute
-func DeleteAttribute(cData CommandData, attribute libdm.Attribute, name string) {
+func DeleteAttribute(cData *CommandData, attribute libdm.Attribute, name string) {
 	_, err := cData.LibDM.DeleteAttribute(attribute, cData.FileAttributes.Namespace, name)
 	if err != nil {
 		printResponseError(err, "deleting attribute")

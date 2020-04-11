@@ -22,7 +22,7 @@ var (
 )
 
 // CreateKeystore create a keystore
-func CreateKeystore(cData CommandData, path string, overwrite bool) {
+func CreateKeystore(cData *CommandData, path string, overwrite bool) {
 	// Check if valid keystore is available
 	if err := cData.Config.KeystoreDirValid(); err == nil && cData.Config.KeystoreEnabled() {
 		fmt.Println("You have already create a keystore. You have to delete it before you can cerate a new keystore!")
@@ -68,8 +68,8 @@ func CreateKeystore(cData CommandData, path string, overwrite bool) {
 }
 
 // KeystoreInfo shows info for keystore
-func KeystoreInfo(cData CommandData) {
-	if !checkKeystoreAvailable(&cData) {
+func KeystoreInfo(cData *CommandData) {
+	if !checkKeystoreAvailable(cData) {
 		return
 	}
 
@@ -94,8 +94,8 @@ func KeystoreInfo(cData CommandData) {
 }
 
 // KeystoreDelete delete a keystore
-func KeystoreDelete(cData CommandData, shredderCount uint) {
-	if !checkKeystoreAvailable(&cData) {
+func KeystoreDelete(cData *CommandData, shredderCount uint) {
+	if !checkKeystoreAvailable(cData) {
 		return
 	}
 
@@ -154,8 +154,8 @@ func KeystoreDelete(cData CommandData, shredderCount uint) {
 }
 
 // KeystoreCleanup cleansup a keystore
-func KeystoreCleanup(cData CommandData, shredderCount uint) {
-	if !checkKeystoreAvailable(&cData) {
+func KeystoreCleanup(cData *CommandData, shredderCount uint) {
+	if !checkKeystoreAvailable(cData) {
 		return
 	}
 
@@ -195,8 +195,8 @@ func KeystoreCleanup(cData CommandData, shredderCount uint) {
 }
 
 // KeystoreAddKey adds key to keystore
-func KeystoreAddKey(cData CommandData, keyFile string, fileID uint) {
-	if !checkKeystoreAvailable(&cData) {
+func KeystoreAddKey(cData *CommandData, keyFile string, fileID uint) {
+	if !checkKeystoreAvailable(cData) {
 		return
 	}
 

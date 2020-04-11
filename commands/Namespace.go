@@ -7,7 +7,7 @@ import (
 )
 
 // CreateNamespace creates a namespace
-func CreateNamespace(cData CommandData, name string, customNS bool) {
+func CreateNamespace(cData *CommandData, name string, customNS bool) {
 	createResponse, err := cData.LibDM.CreateNamespace(name, customNS)
 	if err != nil {
 		printResponseError(err, "creating namespace")
@@ -18,7 +18,7 @@ func CreateNamespace(cData CommandData, name string, customNS bool) {
 }
 
 // UpdateNamespace update a namespace
-func UpdateNamespace(cData CommandData, name, newName string, customNS bool) {
+func UpdateNamespace(cData *CommandData, name, newName string, customNS bool) {
 	updateResponse, err := cData.LibDM.UpdateNamespace(name, newName, customNS)
 	if err != nil {
 		printResponseError(err, "updating namespace")
@@ -29,7 +29,7 @@ func UpdateNamespace(cData CommandData, name, newName string, customNS bool) {
 }
 
 // DeleteNamespace update a namespace
-func DeleteNamespace(cData CommandData, name string) {
+func DeleteNamespace(cData *CommandData, name string) {
 	deleteResponse, err := cData.LibDM.DeleteNamespace(name)
 	if err != nil {
 		printResponseError(err, "deleting namespace")
@@ -40,7 +40,7 @@ func DeleteNamespace(cData CommandData, name string) {
 }
 
 // ListNamespace lists your namespace
-func ListNamespace(cData CommandData) {
+func ListNamespace(cData *CommandData) {
 	getNamespaceResponse, err := cData.LibDM.GetNamespaces()
 	if err != nil {
 		printResponseError(err, "listing namespaces")

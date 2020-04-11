@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -16,14 +17,13 @@ import (
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
-	log "github.com/sirupsen/logrus"
 )
 
 // UseTargets targets for config use
 var UseTargets = []string{"namespace", "tags", "groups"}
 
 // ConfigUse command for config use
-func ConfigUse(cData CommandData, target string, values []string) {
+func ConfigUse(cData *CommandData, target string, values []string) {
 	// Return if target not found
 	if !gaw.IsInStringArray(target, UseTargets) {
 		fmtError("Target not found")
@@ -81,7 +81,7 @@ func ConfigUse(cData CommandData, target string, values []string) {
 }
 
 // ConfigView view config
-func ConfigView(cData CommandData) {
+func ConfigView(cData *CommandData) {
 	if !cData.OutputJSON {
 		// Print human output
 		fmt.Println(cData.Config.View(!cData.NoRedaction))
@@ -104,7 +104,7 @@ func ConfigView(cData CommandData) {
 }
 
 // SetupClient sets up client config
-func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool) {
+func SetupClient(cData *CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool) {
 	// Confirm creating a config anyway
 	if cData.Config != nil && !cData.Config.IsDefault() && !cData.Yes {
 		y, _ := gaw.ConfirmInput("There is already a config. Do you want to overwrite it? [y/n]> ", bufio.NewReader(os.Stdin))
@@ -118,7 +118,7 @@ func SetupClient(cData CommandData, host, configFile string, ignoreCert, serverO
 		var err error
 		cData.Config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), configFile)
 		if err != nil {
-			log.Error(err)
+			printError("loading config", err.Error())
 			return
 		}
 	}

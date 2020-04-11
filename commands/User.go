@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"syscall"
@@ -11,12 +12,11 @@ import (
 	"github.com/JojiiOfficial/gaw"
 
 	"github.com/fatih/color"
-	log "github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 // LoginCommand login into the server
-func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
+func LoginCommand(cData *CommandData, usernameArg string, args ...bool) {
 	// Print confirmation if user is already logged in
 	if cData.Config.IsLoggedIn() && !cData.Yes && len(args) == 0 {
 		i, _ := gaw.ConfirmInput("You are already logged in. Overwrite session? [y/n]> ", bufio.NewReader(os.Stdin))
@@ -51,7 +51,7 @@ func LoginCommand(cData CommandData, usernameArg string, args ...bool) {
 }
 
 // RegisterCommand create a new account
-func RegisterCommand(cData CommandData) {
+func RegisterCommand(cData *CommandData) {
 	// Input for credentials
 	username, pass := credentials("", true, 0)
 	if len(username) == 0 || len(pass) == 0 {
@@ -130,4 +130,14 @@ func credentials(bUser string, repeat bool, index uint8) (string, string) {
 	}
 
 	return strings.TrimSpace(username), pass
+}
+
+// Ping pings the server
+func Ping(cData *CommandData) {
+	pingResp, err := cData.LibDM.Ping()
+	if err != nil {
+		printError("while pinging", err.Error())
+		return
+	}
+	fmt.Println(pingResp.String)
 }

@@ -120,6 +120,11 @@ func (cData *CommandData) Init() bool {
 	return true
 }
 
+// InitEncryption initializes encryption for cData
+func (cData *CommandData) InitEncryption() {
+
+}
+
 // GenerateKey generates a random key
 func (cData *CommandData) GenerateKey() bool {
 	if !isValidAESLen(cData.RandKey) {

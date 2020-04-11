@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
-	"time"
 
 	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -13,7 +13,6 @@ import (
 
 	_ "github.com/CovenantSQL/go-sqlite3-encrypt"
 	"github.com/DataManager-Go/DataManagerCLI/commands"
-	log "github.com/sirupsen/logrus"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -21,6 +20,23 @@ const (
 	appName = "manager"
 	version = "1.0.0"
 )
+
+// ...
+const (
+	// EnVarPrefix prefix for env vars
+	EnVarPrefix = "MANAGER"
+
+	// EnVarPrefix prefix of all used env vars
+	EnVarLogLevel   = "LOG_LEVEL"
+	EnVarNoColor    = "NO_COLOR"
+	EnVarNoEmojis   = "NO_EMOJIS"
+	EnVarConfigFile = "CONFIG"
+)
+
+// Return the variable using the server prefix
+func getEnVar(name string) string {
+	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
+}
 
 //App commands
 var (
@@ -216,33 +232,60 @@ var (
 )
 
 var (
-	config *dmConfig.Config
+	config      *dmConfig.Config
+	appTrimName int
 )
 
 func main() {
 	app.HelpFlag.Short('h')
 	app.Version(version)
 
+	// Init random seed from gaw
 	gaw.Init()
 
 	// Parsing the args
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
 
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(&log.TextFormatter{
-		DisableTimestamp: false,
-		TimestampFormat:  time.Stamp,
-		FullTimestamp:    true,
-		ForceColors:      !*appNoColor,
-		DisableColors:    *appNoColor,
-	})
-
-	if !setupConfig(parsed) {
+	// Init config
+	if !initConfig(parsed) {
 		return
 	}
 
-	var appTrimName int
+	// Process params: make t1,t2 -> [t1 t2]
+	commands.ProcesStrSliceParams(appTags, appGroups)
 
+	// Bulid commandData
+	commandData := buildCData(parsed, appTrimName)
+	if commandData == nil {
+		return
+	}
+	defer commandData.Keystore.Close()
+
+	// Run desired command
+	runCommand(parsed, commandData)
+}
+
+// Load and init config. Return false on error
+func initConfig(parsed string) bool {
+	// Init config
+	var err error
+	config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), *appCfgFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if config == nil {
+		fmt.Println("New config created")
+		if parsed != setupCmd.FullCommand() {
+			return false
+		}
+	}
+
+	return true
+}
+
+// Init default values from config
+func initDefaults() {
 	// Config is nil if a new configfile
 	// was created and setup command is running
 	if config != nil {
@@ -270,236 +313,9 @@ func main() {
 		}
 		appTrimName = config.Client.TrimNameAfter
 	}
-
-	// Process params: make t1,t2 -> [t1 t2]
-	commands.ProcesStrSliceParams(appTags, appGroups)
-
-	cData := generateCommandData(parsed, appTrimName)
-	if cData == nil {
-		return
-	}
-	commandData := *cData
-	defer commandData.Keystore.Close()
-
-	// Execute the desired command
-	switch parsed {
-	// -- File commands
-	case fileDownloadCmd.FullCommand():
-		// Download file
-		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
-
-	// View file
-	case viewCmd.FullCommand():
-		commands.GetFile(commandData, *viewFileName, *viewFileID, "", true, *viewNoPreview, *viewPreview)
-
-	// Upload
-	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadSetClipboard, *fileUploadReplace, *fileUploadDeletInvaid)
-
-	// Delete file
-	case fileDeleteCmd.FullCommand():
-		commands.DeleteFile(commandData, *fileDeleteName, *fileDeleteID)
-
-	// Delete file (rm)
-	case fileRmCmd.FullCommand():
-		commands.DeleteFile(commandData, *fileRmName, *fileRmID)
-
-	// List files
-	case fileListCmd.FullCommand():
-		commands.ListFiles(commandData, *fileListName, *fileDownloadID, *fileListOrder)
-
-	// List file(s)
-	case appFilesCmd.FullCommand():
-		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
-
-	// Update File
-	case fileUpdateCmd.FullCommand():
-		commands.UpdateFile(commandData, *fileUpdateName, *fileUpdateID, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)
-
-	// Publish file
-	case filePublishCmd.FullCommand():
-		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
-
-	// Edit file
-	case fileEditCmd.FullCommand():
-		commands.EditFile(commandData, *fileEditID)
-
-	// -- Attributes commands
-	// Update tag
-	case tagUpdateCmd.FullCommand():
-		commands.UpdateAttribute(commandData, libdm.TagAttribute, *tagUpdateName, *tagUpdateNewName)
-
-	// Delete Tag
-	case tagDeleteCmd.FullCommand():
-		commands.DeleteAttribute(commandData, libdm.TagAttribute, *tagDeleteName)
-
-	// Update group
-	case groupUpdateCmd.FullCommand():
-		commands.UpdateAttribute(commandData, libdm.GroupAttribute, *groupUpdateName, *groupUpdateNewName)
-
-	// Delete Group
-	case groupDeleteCmd.FullCommand():
-		commands.DeleteAttribute(commandData, libdm.GroupAttribute, *groupDeleteName)
-
-	// -- Namespace commands
-	// Create namespace
-	case namespaceCreateCmd.FullCommand():
-		commands.CreateNamespace(commandData, *namespaceCreateName, *namespaceCreateCustom)
-
-	// Update namespace
-	case namespaceUpdateCmd.FullCommand():
-		commands.UpdateNamespace(commandData, *namespaceUpdateName, *namespaceUpdateNewName, *namespaceCreateCustom)
-
-	// Delete namespace
-	case namespaceDeleteCmd.FullCommand():
-		commands.DeleteNamespace(commandData, *namespaceDeleteName)
-
-	// List namespaces
-	case namespaceListCmd.FullCommand(), namespacesCmd.FullCommand():
-		commands.ListNamespace(commandData)
-
-	// -- Ping command
-	case appPing.FullCommand():
-		pingServer(commandData)
-
-	// -- User commands
-	case loginCmd.FullCommand():
-		commands.LoginCommand(commandData, *loginCmdUser)
-
-	case registerCmd:
-		commands.RegisterCommand(commandData)
-
-	case setupCmd.FullCommand():
-		host := *setupCmdHostFlag
-		if len(host) == 0 {
-			host = *setupCmdHost
-		}
-		if len(host) == 0 {
-			fmt.Println("You have to specify a host")
-			return
-		}
-
-		commands.SetupClient(commandData, host, *appCfgFile, *setupCmdIgnoreCert, *setupCmdServerOnly, *setupCmdRegister, *setupCmdNoLogin)
-
-	// -- Config commands
-	// Config use
-	case configUse.FullCommand():
-		commands.ConfigUse(commandData, *configUseTarget, *configUseTargetValue)
-
-		// Config view
-	case configView.FullCommand():
-		commands.ConfigView(commandData)
-
-	// -- KeystoreCommands
-	// Keystore create
-	case keystoreCreateCmd.FullCommand():
-		commands.CreateKeystore(commandData, *keystoreCreateCmdPath, *keystoreCreateCmdOverwrite)
-
-	// Keystore Info
-	case keystoreInfoCmd.FullCommand():
-		commands.KeystoreInfo(commandData)
-
-	// Keystore delete
-	case keystoreDeleteCmd.FullCommand():
-		commands.KeystoreDelete(commandData, *keystoreDeleteCmdShredCount)
-
-	// Keystore cleanup
-	case keystoreCleanupCmd.FullCommand():
-		commands.KeystoreCleanup(commandData, *keystoreCleanupCmdShredCount)
-
-	case keystoreAddKeyCmd.FullCommand():
-		commands.KeystoreAddKey(commandData, *keystoreAddKeyCmdKey, *keystoreAddKeyCmdFileID)
-	}
-
 }
 
-func generateCommandData(parsed string, appTrimName int) *commands.CommandData {
-	// Generate  file attributes
-	fileAttributes := libdm.FileAttributes{
-		Namespace: *appNamespace,
-		Groups:    *appGroups,
-		Tags:      *appTags,
-	}
-
-	// Command data
-	commandData := commands.CommandData{
-		Command:             parsed,
-		Config:              config,
-		Details:             uint8(*appDetails),
-		FileAttributes:      fileAttributes,
-		Namespace:           *appNamespace,
-		All:                 *appAll,
-		AllNamespaces:       *appAllNamespaces,
-		NoRedaction:         *appNoRedaction,
-		OutputJSON:          *appOutputJSON,
-		Yes:                 *appYes,
-		Force:               *appForce,
-		NameLen:             appTrimName,
-		Encryption:          *appFileEncryption,
-		EncryptionPassKey:   *appFileEncryptionPassKey,
-		NoDecrypt:           *appNoDecrypt,
-		NoEmojis:            *appNoEmojis,
-		RandKey:             *appFileEncryptionRandKey,
-		Quiet:               *appQuiet,
-		EncryptionFromStdin: *appFileEncryptionFromStdin,
-		VerifyFile:          *appVerify,
-	}
-
-	// Set encryptionKey
-	if len(*appFileEncryptionKeyFile) > 0 {
-		var err error
-		commandData.EncryptionKey, err = ioutil.ReadFile(*appFileEncryptionKeyFile)
-		if err != nil {
-			fmt.Println(err)
-			return nil
-		}
-		commandData.Keyfile = *appFileEncryptionKeyFile
-	} else if len(*appFileEncryptionKey) > 0 {
-		commandData.EncryptionKey = []byte(*appFileEncryptionKey)
-	}
-
-	if parsed != setupCmd.FullCommand() {
-		if !commandData.Init() {
-			return nil
-		}
-
-	}
-
-	return &commandData
-}
-
-// Env vars
-const (
-	// EnVarPrefix prefix for env vars
-	EnVarPrefix = "MANAGER"
-
-	// EnVarPrefix prefix of all used env vars
-	EnVarLogLevel   = "LOG_LEVEL"
-	EnVarNoColor    = "NO_COLOR"
-	EnVarNoEmojis   = "NO_EMOJIS"
-	EnVarConfigFile = "CONFIG"
-)
-
-// Return the variable using the server prefix
-func getEnVar(name string) string {
-	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
-}
-
-func pingServer(cData commands.CommandData) {
-	var response libdm.StringResponse
-
-	res, err := cData.LibDM.Request(libdm.EPPing, libdm.PingRequest{Payload: "ping"}, &response, config.IsLoggedIn())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	if res.Status == libdm.ResponseSuccess {
-		fmt.Println("Ping success:", response.String)
-	} else {
-		log.Errorf("Error (%d) %s\n", res.HTTPCode, res.Message)
-	}
-}
+// ---- CLI Hints ------
 
 // Returns a slice containing all files in current folder
 func hintListFiles() []string {
@@ -518,6 +334,8 @@ func hintListFiles() []string {
 	return files
 }
 
+// Returns a slice containing all files in current folder
+// except the keystore DB file
 func hintListKeyFiles() []string {
 	files := hintListFiles()
 	retFiles := []string{}
@@ -530,8 +348,9 @@ func hintListKeyFiles() []string {
 	return retFiles
 }
 
+// Return a slice containing all available namespaces
 func hintListNamespaces() []string {
-	if !setupConfig("") {
+	if !initConfig("") {
 		return []string{}
 	}
 
@@ -547,22 +366,4 @@ func hintListNamespaces() []string {
 	}
 
 	return namespaces.Slice
-}
-
-func setupConfig(parsed string) bool {
-	// Init config
-	var err error
-	config, err = dmConfig.InitConfig(dmConfig.GetDefaultConfigFile(), *appCfgFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if config == nil {
-		log.Info("New config created")
-		if parsed != setupCmd.FullCommand() {
-			return false
-		}
-	}
-
-	return true
 }
