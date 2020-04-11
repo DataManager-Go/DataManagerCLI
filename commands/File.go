@@ -399,7 +399,7 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 			// Write file to os.Stdout
 			// Decrypts stream if necessary
 			errCh := make(chan error, 1)
-			chSum := writeFileToWriter(os.Stdout, encryption, determineDecryptionKey(cData, resp), respData, errCh, nil)
+			chSum := writeFileToWriter(os.Stdout, encryption, key, respData, errCh, nil)
 
 			select {
 			case err := <-errCh:
@@ -411,7 +411,6 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 			case chsum := <-chSum:
 				cData.verifyChecksum(chsum, checksum)
 			}
-
 		}
 	} else if len(savePath) > 0 {
 		// Use server filename if a wildcard was used
@@ -435,7 +434,7 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 
 		// channel if filewriting is done
 		errChan := make(chan error, 1)
-		doneChan, f := saveFileToFile(outFile, encryption, determineDecryptionKey(cData, resp), respData, errChan, bar)
+		doneChan, f := saveFileToFile(outFile, encryption, key, respData, errChan, bar)
 		defer f.Close()
 		var chsum string
 
@@ -486,7 +485,7 @@ func EditFile(cData *CommandData, id uint) {
 		return
 	}
 
-	// Delete temp file
+	// Shredder temp file at the end
 	defer func() {
 		ShredderFile(filePath, -1)
 	}()

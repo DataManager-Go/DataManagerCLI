@@ -47,9 +47,21 @@ eval "$(manager --completion-script-bash)"
 eval "$(manager --completion-script-zsh)"
 ```
 
+### Keyring
+A keyring is a secure storage for passwords, keys and token. This app can and should use one. [This](https://github.com/zalando/go-keyring#dependencies) is required in order to use a keyring.
+
+
+### Keystore
+The keystore is a local folder containing all of your keys and a sqlite database with the keys assigned to the files. You can use a 
+custom directory to store them secure (eg using an encrypted vault). Have in mind, that all of those keys are stored unencrypted, so
+watch for it's access permissions.<br>
+To use it run "manager keystore create <path>". Your keys will be saved in this directory automatically
+`manager keystore --help` shows you a list with available commands.
+
 ### Examples
 
 #### User
+- Setup `manager setup <serverURL>` // create a new config and login
 - Register `manager register`
 - Login `manager login`
 
