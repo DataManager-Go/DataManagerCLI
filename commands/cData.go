@@ -113,7 +113,16 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool) {
+	if short {
+		if len(ur.PublicFilename) > 0 {
+			fmt.Printf("%s %d; %s %s;\t%s %s\n", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
+		} else {
+			fmt.Printf("%s %d; %s %s\n", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
+		}
+		return
+	}
+
 	table := clitable.New()
 	table.ColSeparator = " "
 	table.Padding = 4
@@ -125,11 +134,9 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse) {
 
 	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
 
-	if !cData.Quiet {
-		table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
-		table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
-		table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
-	}
+	table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
+	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
+	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
 	fmt.Println(table)
 }

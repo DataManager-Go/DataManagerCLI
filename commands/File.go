@@ -26,25 +26,30 @@ func UploadFile(cData *CommandData, uris []string, name, publicName string, publ
 	progress := uiprogress.New()
 	progress.Start()
 
-	if threads == 0 {
-		fmt.Println("You need to specify at least one thread!")
+	if totalFiles == 0 && !fromStdin {
+		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
 		return
 	}
 
-	if totalFiles > 0 {
+	// In case a user is dumb,
+	// correct him
+	if threads == 0 {
+		threads = 1
+	}
+
+	// Verify combinations
+	if totalFiles > 1 {
 		if fromStdin {
 			fmt.Println("Can't upload from stdin and files at the same time")
 			return
 		}
-		if setClip && totalFiles > 1 {
+		if setClip {
 			fmt.Println("You can't set clipboard while uploading multiple files")
 			return
 		}
-	}
-
-	if totalFiles == 0 && !fromStdin {
-		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
-		return
+		if len(publicName) > 0 {
+			fmt.Println("You can't upload multiple files with the same public name")
+		}
 	}
 
 	wg := sync.WaitGroup{}

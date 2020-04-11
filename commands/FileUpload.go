@@ -14,42 +14,11 @@ import (
 	"github.com/JojiiOfficial/gaw"
 	"github.com/atotto/clipboard"
 	"github.com/gosuri/uiprogress"
-	"github.com/gosuri/uiprogress/util/strutil"
-	"github.com/sbani/go-humanizer/units"
 )
 
-type barProxyData struct {
-	bytesWritten int
-}
-
-// Bar proxy a proxywriter for progressbars
-type barProxy struct {
-	data *barProxyData
-	bar  *uiprogress.Bar
-	w    io.Writer
-	r    io.Reader
-}
-
-func (p barProxy) Write(b []byte) (int, error) {
-	size := len(b)
-	p.bar.Incr(size)
-	p.data.bytesWritten += size
-	return p.w.Write(b)
-}
-
-func barProxyFromBar(bar *uiprogress.Bar, w io.Writer) *barProxy {
-	proxy := &barProxy{
-		data: &barProxyData{},
-		bar:  bar,
-		w:    w,
-	}
-
-	bar.Data = proxy
-	return proxy
-}
-
-// Returns a file and its size
-func getFileReader(uri string) (*os.File, int64) {
+// Returns a file and its size. Exit on error
+func getFile(uri string) (*os.File, int64) {
+	// Open file
 	f, err := os.Open(uri)
 	if err != nil {
 		printError("opening file", err.Error())
@@ -57,6 +26,7 @@ func getFileReader(uri string) (*os.File, int64) {
 		return nil, 0
 	}
 
+	// Get it's stats
 	stat, err := f.Stat()
 	if err != nil {
 		printError("reading file", err.Error())
@@ -64,41 +34,6 @@ func getFileReader(uri string) (*os.File, int64) {
 	}
 
 	return f, stat.Size()
-}
-
-// Build a progressbar and a proxy for it
-func buildProgressbar(prefix string, len uint) (*uiprogress.Bar, func(io.Writer) io.Writer) {
-	// Create bar
-	bar := uiprogress.NewBar(0).PrependCompleted()
-
-	// Prepend prefix
-	if prefix != "" && len > 0 {
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			return strutil.Resize(prefix, len)
-		})
-	}
-
-	// Append amount
-	bar.AppendFunc(func(b *uiprogress.Bar) string {
-		if proxy, ok := (b.Data).(*barProxy); ok {
-			_ = proxy
-			return fmt.Sprintf("[%s/%s]", units.BinarySuffix(float64(proxy.data.bytesWritten)), units.BinarySuffix(float64(b.Total)))
-		}
-
-		return ""
-	})
-
-	// Set custom bar style
-	bar.LeftEnd = '('
-	bar.RightEnd = ')'
-	bar.Empty = '_'
-
-	// Create proxy
-	proxy := func(w io.Writer) io.Writer {
-		return barProxyFromBar(bar, w)
-	}
-
-	return bar, proxy
 }
 
 // Upload file uploads a file
@@ -112,10 +47,11 @@ func uploadFile(cData *CommandData, uploadRequest *libdm.UploadRequest, uri stri
 	var err error
 	var bar *uiprogress.Bar
 
+	// Select upload source reader
 	if !fromStdin {
 		// Open file
 		var f *os.File
-		f, size = getFileReader(uri)
+		f, size = getFile(uri)
 		defer f.Close()
 
 		r = f
@@ -167,16 +103,20 @@ func uploadFile(cData *CommandData, uploadRequest *libdm.UploadRequest, uri stri
 	case chsum = <-done:
 	}
 
-	if len(chsum) == 0 {
-		fmt.Println("Unexpected error occured")
-		return
-	}
-
 	if err != nil {
 		printError("uploading file", err.Error())
 		return
 	}
 
+	// Checksum is not supposed to be empty
+	// If any known error were thrown, this
+	// part wouldn't be executed
+	if len(chsum) == 0 {
+		fmt.Println("Unexpected error occured")
+		return
+	}
+
+	// Verify checksum
 	if !cData.verifyChecksum(chsum, uploadResponse.Checksum) {
 		return
 	}
@@ -208,8 +148,9 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 
 	var uploadResponse *libdm.UploadResponse
 
+	// Do upload request
 	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
-		// Upload URL
+		// -----> Upload URL <------
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
 			printError("uploading url", err.Error())
@@ -218,14 +159,14 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 
 		printSuccess("uploaded URL: %s", uri)
 	} else {
-		// Upload file/stdin
+		// -----> Upload file/stdin <-----
 		uploadResponse = uploadFile(cData, uploadRequest, uri, fromStdin, totalFiles, progress)
 		if uploadResponse == nil {
 			return
 		}
 	}
 
-	// Set clipboard to public file
+	// Set clipboard to public file if required
 	if setClip && len(uploadResponse.PublicFilename) > 0 {
 		if clipboard.Unsupported {
 			fmt.Println("Clipboard not supported on this OS")
@@ -246,14 +187,12 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 		}
 	}
 
+	// Print output
 	// Print response as json
 	if cData.OutputJSON {
 		fmt.Println(toJSON(uploadResponse))
 		return
 	}
-
-	if totalFiles == 1 {
-		// Render table with informations
-		cData.printUploadResponse(uploadResponse)
-	}
+	// Render table with informations
+	cData.printUploadResponse(uploadResponse, (cData.Quiet || totalFiles > 1))
 }
