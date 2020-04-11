@@ -39,10 +39,15 @@ func (cData *CommandData) Init() bool {
 	// Get requestconfig
 	// Allow setup, register and login command to continue without
 	// handling the error
-	config, err := cData.Config.ToRequestConfig()
-	if err != nil && !gaw.IsInStringArray(cData.Command, []string{"setup", "register", "login"}) {
-		fmt.Println(err)
-		return false
+
+	var config *libdm.RequestConfig
+	if cData.Config != nil {
+		var err error
+		config, err = cData.Config.ToRequestConfig()
+		if err != nil && !gaw.IsInStringArray(cData.Command, []string{"setup", "register", "login"}) {
+			fmt.Println(err)
+			return false
+		}
 	}
 
 	// Create new dmanager lib object
