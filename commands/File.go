@@ -444,8 +444,9 @@ func GetFile(cData CommandData, fileName string, id uint, savePath string, displ
 		}
 
 		// channel if filewriting is done
-		errChan := make(chan error)
-		doneChan := saveFileToFile(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
+		errChan := make(chan error, 1)
+		doneChan, f := saveFileToFile(outFile, encryption, determineDecryptionKey(&cData, resp), respData, errChan, bar)
+		defer f.Close()
 		var chsum string
 
 		// Wait for download to be finished

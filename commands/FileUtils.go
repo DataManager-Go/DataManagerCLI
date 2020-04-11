@@ -45,15 +45,14 @@ func determineDecryptionKey(cData *CommandData, resp *http.Response) []byte {
 }
 
 // Saves data from r to file. Shows progressbar after 500ms if still saving
-func saveFileToFile(outFile, encryption string, key []byte, r io.Reader, c chan error, bar *pb.ProgressBar) chan string {
+func saveFileToFile(outFile, encryption string, key []byte, r io.Reader, c chan error, bar *pb.ProgressBar) (chan string, *os.File) {
 	f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	defer f.Close()
 	if err != nil {
 		c <- err
-		return nil
+		return nil, nil
 	}
 
-	return writeFileToWriter(f, encryption, key, r, c, bar)
+	return writeFileToWriter(f, encryption, key, r, c, bar), f
 }
 
 // Saves data from r to file. Shows progressbar after 500ms if still saving
@@ -77,6 +76,7 @@ func writeFileToWriter(wr io.Writer, encryption string, key []byte, r io.Reader,
 			}
 		}
 		if err != nil {
+			fmt.Println(err)
 			c <- err
 			return
 		}
@@ -107,7 +107,8 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 	file := GetTempFile(serverFileName)
 
 	// Save stream and decrypt if necessary
-	doneCh := saveFileToFile(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
+	doneCh, f := saveFileToFile(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
+	defer f.Close()
 
 	// Show bar only if uploading takes more than 500ms
 	if bar != nil {
