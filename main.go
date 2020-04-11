@@ -38,34 +38,39 @@ func getEnVar(name string) string {
 	return fmt.Sprintf("%s_%s", EnVarPrefix, name)
 }
 
-//App commands
+// App commands
 var (
 	app = kingpin.New(appName, "A DataManager")
 
 	// Global flags
 	appYes     = app.Flag("yes", "Skip confirmations").Short('y').Bool()
-	appNoColor = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
-	appQuiet   = app.Flag("quiet", "Less verbose output").Short('q').Bool()
 
-	appNamespace               = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
-	appTags                    = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups                  = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appOutputJSON              = app.Flag("json", "Print output as json").Bool()
-	appNoRedaction             = app.Flag("no-redact", "Don't redact secrets").Bool()
-	appDetails                 = app.Flag("details", "Print more details of something").Short('d').Counter()
-	appAll                     = app.Flag("all", "Do action for all found files").Short('a').Bool()
-	appAllNamespaces           = app.Flag("all-namespaces", "Do action for all found files").Bool()
-	appForce                   = app.Flag("force", "Forces an action").Short('f').Bool()
-	appNoDecrypt               = app.Flag("no-decrypt", "Don't decrypt files").Bool()
-	appNoEmojis                = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
-	appFileEncryption          = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
-	appFileEncryptionKey       = app.Flag("key", "Encryption/Decryption key").Short('k').String()
-	appFileEncryptionKeyFile   = app.Flag("keyfile", "File containing a Encryption/Decryption key").HintAction(hintListKeyFiles).String()
-	appFileEncryptionRandKey   = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
-	appFileEncryptionPassKey   = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
-	appFileEncryptionFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
-	appVerify                  = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
+	// File related flags
+	appTags           = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups         = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appNamespace      = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
+	appAllNamespaces  = app.Flag("all-namespaces", "Do action for all found files").Bool()
+	appAll            = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appVerify         = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
+	appNoDecrypt      = app.Flag("no-decrypt", "Don't decrypt files").Bool()
+	appForce          = app.Flag("force", "Forces an action").Short('f').Bool()
+	appFileEncryption = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
+
+	// Output related flags
+	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
+	appQuiet       = app.Flag("quiet", "Less verbose output").Short('q').Bool()
+	appOutputJSON  = app.Flag("json", "Print output as json").Bool()
+	appNoRedaction = app.Flag("no-redact", "Don't redact secrets").Bool()
+	appNoColor     = app.Flag("no-color", "Disable colors").Envar(getEnVar(EnVarNoColor)).Bool()
+	appNoEmojis    = app.Flag("no-emojis", "Don't decrypt files").Envar(getEnVar(EnVarNoEmojis)).Bool()
+
+	// Encryptionkey related flags
+	appFileEncrRandKey      = app.Flag("gen-key", "Generate Encryption key").Short('r').HintOptions("16", "24", "32").Int()
+	appFileEncrKey          = app.Flag("key", "Encryption/Decryption key").Short('k').String()
+	appFileEncrPassKey      = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
+	appFileEncrKeyFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
+	appFileEncrKeyFile      = app.Flag("keyfile", "File containing a Encryption/Decryption key").HintAction(hintListKeyFiles).String()
 
 	//
 	// ---------> Ping --------------------------------------
@@ -243,7 +248,7 @@ func main() {
 	// Init random seed from gaw
 	gaw.Init()
 
-	// Parsing the args
+	// Prase cli flags
 	parsed := kingpin.MustParse(app.Parse(os.Args[1:]))
 
 	// Init config
@@ -254,12 +259,14 @@ func main() {
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
+	initDefaults()
+
 	// Bulid commandData
 	commandData := buildCData(parsed, appTrimName)
 	if commandData == nil {
 		return
 	}
-	defer commandData.Keystore.Close()
+	defer commandData.CloseKeystore()
 
 	// Run desired command
 	runCommand(parsed, commandData)
@@ -315,7 +322,7 @@ func initDefaults() {
 	}
 }
 
-// ---- CLI Hints ------
+// ---- CLI Hint funcs ------
 
 // Returns a slice containing all files in current folder
 func hintListFiles() []string {

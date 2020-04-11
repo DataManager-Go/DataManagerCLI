@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -79,9 +78,10 @@ func UploadFile(cData *CommandData, uri, name, publicName string, public, fromSt
 		}
 	}
 
+	keystore, _ := cData.GetKeystore()
 	// Add key to keystore
-	if cData.Keystore != nil && len(cData.Keyfile) > 0 {
-		err := cData.Keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
+	if keystore != nil && len(cData.Keyfile) > 0 {
+		err := keystore.AddKey(uploadResponse.FileID, cData.Keyfile)
 		if err != nil {
 			printError("writing keystore", err.Error())
 		}
@@ -127,8 +127,9 @@ func DeleteFile(cData *CommandData, name string, id uint) {
 	}
 
 	// rm keys from keystore
-	if cData.Keystore != nil {
-		rmFilesFromkeystore(cData.Keystore, resp.IDs)
+	if cData.HasKeystoreSupport() {
+		keystore, _ := cData.GetKeystore()
+		rmFilesFromkeystore(keystore, resp.IDs)
 	}
 }
 
@@ -424,7 +425,7 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 					fmt.Println("An unexpected error occured")
 				}
 			case chsum := <-chSum:
-				verifyChecksum(cData, chsum, checksum)
+				cData.verifyChecksum(chsum, checksum)
 			}
 
 		}
@@ -465,7 +466,7 @@ func GetFile(cData *CommandData, fileName string, id uint, savePath string, disp
 		case chsum = <-doneChan:
 		}
 
-		if !verifyChecksum(cData, chsum, checksum) {
+		if !cData.verifyChecksum(chsum, checksum) {
 			return
 		}
 
@@ -534,32 +535,4 @@ func EditFile(cData *CommandData, id uint) {
 
 	// Replace file on server with new file
 	UploadFile(cData, filePath, serverName, "", false, false, false, id, false)
-}
-
-func editFile(file string) bool {
-	editor := os.Getenv("EDITOR")
-	if len(editor) == 0 {
-		editor = "/usr/bin/nano"
-	}
-
-	// Check editor
-	if _, err := os.Stat(editor); err != nil {
-		fmtError("finding editor. Either install nano or set $EDITOR to your desired editor")
-		return false
-	}
-
-	// Launch editor
-	cmd := exec.Command(editor, file)
-	cmd.Stdout = os.Stdout
-	cmd.Stdin = os.Stdin
-
-	// Wait for it to finish
-	err := cmd.Run()
-
-	if err != nil {
-		fmt.Println(err)
-		return false
-	}
-
-	return true
 }

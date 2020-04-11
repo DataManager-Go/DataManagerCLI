@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"strconv"
 	"strings"
@@ -26,12 +27,13 @@ func determineDecryptionKey(cData *CommandData, resp *http.Response) []byte {
 
 	// If keystore is enabled and no key was passed, try
 	// search in keystore for matching key and use it
-	if cData.Config.KeystoreEnabled() && len(key) == 0 && cData.Keystore != nil {
+	if cData.HasKeystoreSupport() && len(key) == 0 {
+		keystore, _ := cData.GetKeystore()
 		// Get fileID from header
 		fileid, err := strconv.ParseUint(resp.Header.Get(libdm.HeaderFileID), 10, 32)
 		if err == nil {
 			// Search Key in keystore
-			k, err := cData.Keystore.GetKey(uint(fileid))
+			k, err := keystore.GetKey(uint(fileid))
 			if err == nil {
 				return k
 			}
@@ -137,7 +139,7 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 	case chsum = <-doneCh:
 	}
 
-	if !verifyChecksum(cData, chsum, checksum) {
+	if !cData.verifyChecksum(chsum, checksum) {
 		return ""
 	}
 
@@ -152,7 +154,7 @@ func guiPreview(cData *CommandData, serverFileName, encryption, checksum string,
 }
 
 // verifyChecksum return true on success
-func verifyChecksum(cData *CommandData, localCs, remoteCs string) bool {
+func (cData *CommandData) verifyChecksum(localCs, remoteCs string) bool {
 	// Verify checksum
 	if localCs != remoteCs {
 		if cData.VerifyFile {
@@ -260,9 +262,37 @@ func uploadFileCommand(cData *CommandData, uploadRequest *libdm.UploadRequest, u
 		return
 	}
 
-	if !verifyChecksum(cData, chsum, uploadResponse.Checksum) {
+	if !cData.verifyChecksum(chsum, uploadResponse.Checksum) {
 		return
 	}
 
 	return uploadResponse
+}
+
+func editFile(file string) bool {
+	editor := os.Getenv("EDITOR")
+	if len(editor) == 0 {
+		editor = "/usr/bin/nano"
+	}
+
+	// Check editor
+	if _, err := os.Stat(editor); err != nil {
+		fmtError("finding editor. Either install nano or set $EDITOR to your desired editor")
+		return false
+	}
+
+	// Launch editor
+	cmd := exec.Command(editor, file)
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+
+	// Wait for it to finish
+	err := cmd.Run()
+
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
 }
