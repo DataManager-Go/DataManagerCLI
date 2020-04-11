@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -204,4 +206,32 @@ func editFile(file string) bool {
 	}
 
 	return true
+}
+
+func parseURIArgUploadCommand(uris []string) []string {
+	var newURIList []string
+	for i := range uris {
+		s, err := os.Stat(uris[i])
+		if err != nil {
+			fmt.Println("Skipping", uris[i], err.Error())
+			continue
+		}
+
+		if s.IsDir() {
+			dd, err := ioutil.ReadDir(uris[i])
+			if err != nil {
+				printError("reading directory", err.Error())
+				return nil
+			}
+			for j := range dd {
+				if !dd[j].IsDir() {
+					newURIList = append(newURIList, filepath.Join(uris[i], dd[j].Name()))
+				}
+			}
+		} else {
+			newURIList = append(newURIList, uris[i])
+		}
+	}
+
+	return newURIList
 }

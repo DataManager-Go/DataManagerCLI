@@ -22,6 +22,12 @@ import (
 
 // UploadFile uploads the given file to the server and set's its affiliations
 func UploadFile(cData *CommandData, uris []string, name, publicName string, public, fromStdin, setClip bool, replaceFile, threads uint, deletInvalid bool) {
+	// Extract directories
+	uris = parseURIArgUploadCommand(uris)
+	if uris == nil {
+		return
+	}
+
 	totalFiles := len(uris)
 	progress := uiprogress.New()
 	progress.Start()
