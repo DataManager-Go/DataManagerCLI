@@ -278,6 +278,8 @@ func (cData *CommandData) EditFile(id uint) {
 		return
 	}
 
+	buildRequest(cData, resp, false)
+
 	if resp.FileID == 0 {
 		fmt.Println("Unexpected error occured, received File Id is invalid")
 		return
@@ -316,6 +318,10 @@ func (cData *CommandData) EditFile(id uint) {
 	if len(resp.Encryption) != 0 {
 		cData.Encryption = resp.Encryption
 	}
+
+	// Set key and encryption to use for upload
+	cData.EncryptionKey = resp.DownloadRequest.Key
+	cData.Encryption = resp.Encryption
 
 	// Replace file on server with new file
 	// cData.UploadFile([]string{filePath}, serverName, "", false, false, false, id, 1, false)

@@ -69,8 +69,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Edit file
 	case fileEditCmd.FullCommand():
-		// TODO rewrite
-		//commands.EditFile(commandData, *fileEditID)
+		commandData.EditFile(*fileEditID)
 
 	// -- Attributes commands
 	// Update tag
