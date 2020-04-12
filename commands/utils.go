@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"bufio"
 	"crypto/md5"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -12,12 +9,12 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
@@ -100,12 +97,13 @@ func previewFile(filepath string) {
 		err := cmd.Run()
 
 		if err != nil {
-			fmt.Println("Error:\n", err)
+			fmt.Println("Error: ", err)
 		}
 	}
 }
 
-func getFileCommandData(n string, fid uint) (name string, id uint) {
+// GetFileCommandData returns id if name is id
+func GetFileCommandData(n string, fid uint) (name string, id uint) {
 	// Check if name is a fileID
 	siID, err := strconv.ParseUint(n, 10, 32)
 	if err == nil {
@@ -161,60 +159,6 @@ func addEmoji(name, emojiStr string, addSpace bool) string {
 	}
 
 	return emoji.Sprintf(fmt.Sprintf(format, name, emojiStr))
-}
-
-func encodeBase64(b []byte) []byte {
-	return []byte(base64.StdEncoding.EncodeToString(b))
-}
-
-func decodeBase64(b []byte) []byte {
-	data, err := base64.StdEncoding.DecodeString(string(b))
-	if err != nil {
-		fmt.Println("Error: Bad Key!")
-		os.Exit(1)
-	}
-	return data
-}
-
-// Return byte slice with base64 encoded file content
-func fileToBase64(filename string, fh *os.File) ([]byte, error) {
-	s, err := os.Stat(filename)
-	if err != nil {
-		return nil, err
-	}
-	src := make([]byte, s.Size())
-	_, err = fh.Read(src)
-	if err != nil {
-		return nil, err
-	}
-
-	return encodeBase64(src), nil
-}
-
-func hashFileMd5(filePath string) (string, error) {
-	var returnMD5String string
-	file, err := os.Open(filePath)
-	if err != nil {
-		return returnMD5String, err
-	}
-	defer file.Close()
-	hash := md5.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return returnMD5String, err
-	}
-	hashInBytes := hash.Sum(nil)[:16]
-	returnMD5String = hex.EncodeToString(hashInBytes)
-	return returnMD5String, nil
-
-}
-
-func fileMd5(file string) string {
-	md5, err := hashFileMd5(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return md5
 }
 
 // ShredderFile shreddres a file
@@ -299,87 +243,6 @@ func printResponseError(err error, msg string) {
 	}
 }
 
-func isValidAESLen(l int) bool {
-	switch l {
-	case 16, 24, 32:
-		return true
-	}
-	return false
-}
-
-// Read from stdin with a timeout of 2s
-func readFullStdin(bufferSize int) string {
-	c := make(chan []byte, 1)
-
-	// Read in background to allow using a select for a timeout
-	go (func() {
-		r := bufio.NewReader(os.Stdin)
-		buf := make([]byte, bufferSize)
-
-		n, err := r.Read(buf)
-		if err != nil && err != io.EOF {
-			log.Fatal(err)
-		}
-
-		c <- buf[:n]
-	})()
-
-	select {
-	case b := <-c:
-		return string(b)
-	// Timeout
-	case <-time.After(2 * time.Second):
-		fmtError("No input received")
-		os.Exit(1)
-		return ""
-	}
-}
-
-// Generates a secure random key
-func randKey(l int) []byte {
-	b := make([]byte, l)
-	_, err := rand.Read(b)
-	if err != nil {
-		fmt.Println("error:", err)
-		return nil
-	}
-
-	return b
-}
-
-func saveFile(key []byte, file string) error {
-	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	defer f.Close()
-
-	if err != nil {
-		return err
-	}
-
-	_, err = f.Write(key)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Gen filename for args
-func genFileName(path, prefix string) string {
-	var name string
-	for {
-		name = prefix + gaw.RandString(7)
-
-		if len(path) > 0 {
-			name = filepath.Join(path, name)
-		}
-
-		_, err := os.Stat(name)
-		if err != nil {
-			break
-		}
-	}
-	return name
-}
-
 // Read password/key from stdin
 func readPassword(message string) []byte {
 	fmt.Print(message + "> ")
@@ -413,4 +276,43 @@ func isEmpty(name string) (bool, error) {
 		return true, nil
 	}
 	return false, err // Either not empty or error, suits both cases
+}
+
+func awaitOrInterrupt(Ch chan string, onInterrupt func(os.Signal), onChan func(string)) {
+	// make channel to listen for kill signals
+	kill := make(chan os.Signal, 1)
+	signal.Notify(kill, os.Interrupt, os.Kill, syscall.SIGTERM)
+
+	select {
+	case killsig := <-kill:
+		onInterrupt(killsig)
+	case data := <-Ch:
+		onChan(data)
+	}
+}
+
+func hashFileMd5(filePath string) (string, error) {
+	var returnMD5String string
+	file, err := os.Open(filePath)
+	if err != nil {
+		return returnMD5String, err
+	}
+	defer file.Close()
+	hash := md5.New()
+	if _, err := io.Copy(hash, file); err != nil {
+		return returnMD5String, err
+	}
+	hashInBytes := hash.Sum(nil)[:16]
+	returnMD5String = hex.EncodeToString(hashInBytes)
+	return returnMD5String, nil
+
+}
+
+func fileMd5(file string) string {
+	md5, err := hashFileMd5(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return md5
 }

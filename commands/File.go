@@ -3,92 +3,24 @@ package commands
 import (
 	"bufio"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
+	"github.com/gosuri/uiprogress"
 	"github.com/sbani/go-humanizer/units"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/gosuri/uiprogress"
 	humanTime "github.com/sbani/go-humanizer/time"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
-// UploadFile uploads the given file to the server and set's its affiliations
-func UploadFile(cData *CommandData, uris []string, name, publicName string, public, fromStdin, setClip bool, replaceFile, threads uint, deletInvalid bool) {
-	// Extract directories
-	uris = parseURIArgUploadCommand(uris)
-	if uris == nil {
-		return
-	}
-
-	totalFiles := len(uris)
-	progress := uiprogress.New()
-	progress.Start()
-
-	if totalFiles == 0 && !fromStdin {
-		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
-		return
-	}
-
-	// In case a user is dumb,
-	// correct him
-	if threads == 0 {
-		threads = 1
-	}
-
-	// Verify combinations
-	if totalFiles > 1 {
-		if fromStdin {
-			fmt.Println("Can't upload from stdin and files at the same time")
-			return
-		}
-		if setClip {
-			fmt.Println("You can't set clipboard while uploading multiple files")
-			return
-		}
-		if len(publicName) > 0 {
-			fmt.Println("You can't upload multiple files with the same public name")
-		}
-	}
-
-	wg := sync.WaitGroup{}
-	c := make(chan uint, 1)
-
-	if threads > uint(totalFiles) {
-		threads = uint(totalFiles)
-	}
-
-	c <- threads
-	var pos int
-
-	// Start Uploader pool
-	for pos < totalFiles {
-		read := <-c
-		for i := 0; i < int(read) && pos < totalFiles; i++ {
-			wg.Add(1)
-			go func(uri string) {
-				upload(cData, uri, name, publicName, public, fromStdin, setClip, replaceFile, deletInvalid, totalFiles, progress)
-				wg.Done()
-				c <- 1
-			}(uris[pos])
-			pos++
-		}
-	}
-
-	wg.Wait()
-}
-
 // DeleteFile deletes the desired file(s)
 func DeleteFile(cData *CommandData, name string, id uint) {
 	// Convert input
-	name, id = getFileCommandData(name, id)
+	name, id = GetFileCommandData(name, id)
 
 	if len(strings.TrimSpace(name)) == 0 && id <= 0 {
 		fmtError("Missing a valid parameter. Provide fileID or Filename")
@@ -124,7 +56,7 @@ func DeleteFile(cData *CommandData, name string, id uint) {
 // ListFiles lists the files corresponding to the args
 func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 	// Convert input
-	name, id = getFileCommandData(name, id)
+	name, id = GetFileCommandData(name, id)
 
 	resp, err := cData.LibDM.ListFiles(name, id, cData.AllNamespaces, cData.FileAttributes, cData.Details)
 	if err != nil {
@@ -271,7 +203,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 // PublishFile publishes a file
 func PublishFile(cData *CommandData, name string, id uint, publicName string) {
 	// Convert input
-	name, id = getFileCommandData(name, id)
+	name, id = GetFileCommandData(name, id)
 
 	resp, err := cData.LibDM.PublishFile(name, id, publicName, cData.All, cData.FileAttributes)
 	if err != nil || resp == nil {
@@ -303,7 +235,7 @@ func UpdateFile(cData *CommandData, name string, id uint, newName string, newNam
 	ProcesStrSliceParams(&addTags, &addGroups, &removeTags, &removeGroups)
 
 	// Convert input
-	name, id = getFileCommandData(name, id)
+	name, id = GetFileCommandData(name, id)
 
 	// Can't use both
 	if setPrivate && setPublic {
@@ -334,160 +266,27 @@ func UpdateFile(cData *CommandData, name string, id uint, newName string, newNam
 	}
 }
 
-// GetFile requests the file from the server and displays or saves it
-func GetFile(cData *CommandData, fileName string, id uint, savePath string, displayOutput, noPreview, preview bool, args ...bool) (success bool, encryption, serverFileName string) {
-	// Convert input
-	fileName, id = getFileCommandData(fileName, id)
-
-	shouldPreview := cData.Config.Client.AutoFilePreview || preview
-	if noPreview {
-		shouldPreview = false
-	}
-
-	// a very complicated 'showBar' AI algorythm DON'T TOUCH
-	showBar :=
-		// Not quiet and preview (using default app)
-		(!cData.Quiet && ((displayOutput && shouldPreview) ||
-			// OR not printed to stdout
-			(!displayOutput && len(savePath) > 0))) ||
-			// OR forced to display
-			(len(args) > 0 && args[0])
-
-	// Don't show bar if first arg is set to false
-	if len(args) > 0 && !args[0] {
-		showBar = false
-	}
-
-	// Errorhandling 100
-	if noPreview && preview {
-		fmt.Print("rlly?")
-		return
-	}
-
-	// Get the file
-	resp, serverFileName, checksum, err := cData.LibDM.GetFile(fileName, id, cData.Namespace)
-	if err != nil {
-		printResponseError(err, "downloading file")
-		return
-	}
-
-	key := determineDecryptionKey(cData, resp)
-
-	var respData io.Reader
-	respData = resp.Body
-	if !cData.NoDecrypt {
-		encryption = resp.Header.Get(libdm.HeaderEncryption)
-		if len(key) == 0 && len(encryption) > 0 {
-			fmtError("Error: file is encrypted but no key was given. To ignore this use --no-decrypt")
-			os.Exit(1)
-		}
-	}
-
-	// Create and setup bar
-	var bar *uiprogress.Bar
-	if showBar {
-		prefix := "Downloading " + serverFileName
-		bar, _ = buildProgressbar(prefix, uint(len(prefix)))
-		bar.Total = int(libdm.GetFilesizeFromDownloadRequest(resp))
-	}
-
-	// Display or save file
-	if displayOutput && len(savePath) == 0 {
-		// Only write to tmpfile if a gui-like preview needed
-		if shouldPreview {
-			// Save, decrypt and preview file
-			file := guiPreview(cData, serverFileName, encryption, checksum, resp, respData, bar)
-			if file != "" {
-				// Shredder/Delete file
-				ShredderFile(file, -1)
-			}
-		} else {
-			// Write file to os.Stdout
-			// Decrypts stream if necessary
-			errCh := make(chan error, 1)
-			chSum := writeFileToWriter(os.Stdout, encryption, key, respData, errCh, nil)
-
-			select {
-			case err := <-errCh:
-				if err != nil {
-					printError("downloading", err.Error())
-				} else {
-					fmt.Println("An unexpected error occured")
-				}
-			case chsum := <-chSum:
-				cData.verifyChecksum(chsum, checksum)
-			}
-		}
-	} else if len(savePath) > 0 {
-		// Use server filename if a wildcard was used
-		if strings.HasSuffix(fileName, "%") || strings.HasPrefix(fileName, "%") || len(fileName) == 0 {
-			fileName = serverFileName
-		}
-
-		// Determine output file/path
-		outFile := savePath
-		if strings.HasSuffix(savePath, "/") {
-			outFile = filepath.Join(savePath, fileName)
-		} else {
-			stat, err := os.Stat(outFile)
-			if err == nil && stat.IsDir() {
-				outFile = filepath.Join(outFile, fileName)
-			} else if stat != nil && stat.Mode().IsRegular() && !cData.Force {
-				fmt.Println("File already exists. Use -f to overwrite it")
-				return
-			}
-		}
-
-		// channel if filewriting is done
-		errChan := make(chan error, 1)
-		doneChan, f := saveFileToFile(outFile, encryption, key, respData, errChan, bar)
-		defer f.Close()
-		var chsum string
-
-		// Wait for download to be finished
-		// or an error to occur
-		select {
-		case err := <-errChan:
-			if err = <-errChan; err != nil {
-				fmt.Println(err)
-				return
-			}
-		case chsum = <-doneChan:
-		}
-
-		if !cData.verifyChecksum(chsum, checksum) {
-			return
-		}
-
-		// Preview
-		if displayOutput {
-			previewFile(savePath)
-		}
-
-		if !cData.Quiet {
-			// Print success message
-			fmt.Printf("Saved file into %s\n", outFile)
-		}
-	} else if !displayOutput && len(savePath) == 0 {
-		fmtError("Can't save file if you don't specify a path.")
-		return
-	}
-
-	// Close body
-	resp.Body.Close()
-
-	success = true
-	return
-}
-
 // EditFile edits a file
-func EditFile(cData *CommandData, id uint) {
+func (cData *CommandData) EditFile(id uint) {
 	// Generate temp-filePath
 	filePath := GetTempFile(gaw.RandString(10))
 
-	// Download File
-	success, encryption, serverName := GetFile(cData, "", id, filePath, false, true, false, false)
-	if !success {
+	// Do file Request
+	resp, err := cData.LibDM.NewFileRequestByID(id).Do()
+	if err != nil {
+		printError("downloading file", err.Error())
+		return
+	}
+
+	if resp.FileID == 0 {
+		fmt.Println("Unexpected error occured, received File Id is invalid")
+		return
+	}
+
+	// Save File
+	err = resp.WriteToFile(filePath, 0600)
+	if err != nil {
+		printError("downloading file", err.Error())
 		return
 	}
 
@@ -514,10 +313,14 @@ func EditFile(cData *CommandData, id uint) {
 	}
 
 	// Set encryption to keep its encrypted state
-	if len(encryption) != 0 {
-		cData.Encryption = encryption
+	if len(resp.Encryption) != 0 {
+		cData.Encryption = resp.Encryption
 	}
 
 	// Replace file on server with new file
-	UploadFile(cData, []string{filePath}, serverName, "", false, false, false, id, 1, false)
+	// cData.UploadFile([]string{filePath}, serverName, "", false, false, false, id, 1, false)
+	cData.UploadFile([]string{filePath}, 1, &UploadData{
+		ReplaceFile: resp.FileID,
+		Progress:    uiprogress.New(),
+	})
 }

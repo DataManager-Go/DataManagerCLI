@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/gosuri/uiprogress"
-	"github.com/gosuri/uiprogress/util/strutil"
 	"github.com/sbani/go-humanizer/units"
 )
 
@@ -42,14 +42,14 @@ func barProxyFromBar(bar *uiprogress.Bar, w io.Writer) *barProxy {
 }
 
 // Build a progressbar and a proxy for it
-func buildProgressbar(prefix string, len uint) (*uiprogress.Bar, func(io.Writer) io.Writer) {
+func buildProgressbar(prefix string, len uint) (*uiprogress.Bar, libdm.WriterProxy) {
 	// Create bar
 	bar := uiprogress.NewBar(0).PrependCompleted()
 
 	// Prepend prefix
 	if prefix != "" && len > 0 {
 		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			return strutil.Resize(prefix, len)
+			return uiprogress.Resize(prefix, len)
 		})
 	}
 

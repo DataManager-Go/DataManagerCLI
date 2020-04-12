@@ -3,26 +3,45 @@ package main
 import (
 	"fmt"
 
-	libdm "github.com/DataManager-Go/libdatamanager"
-
 	"github.com/DataManager-Go/DataManagerCLI/commands"
+	libdm "github.com/DataManager-Go/libdatamanager"
 )
 
 func runCommand(parsed string, commandData *commands.CommandData) {
 	// Execute the desired command
 	switch parsed {
 	// -- File commands
+	// Download file
 	case fileDownloadCmd.FullCommand():
-		// Download file
-		commands.GetFile(commandData, *fileDownloadName, *fileDownloadID, *fileDownloadPath, *fileDownloadPreview, *viewNoPreview, *viewPreview)
+		commandData.DownloadFile(&commands.DownloadData{
+			FileName:  *fileDownloadName,
+			FileID:    *fileDownloadID,
+			Preview:   *viewPreview,
+			NoPreview: *viewNoPreview,
+			LocalPath: *fileDownloadPath,
+		})
 
 	// View file
 	case viewCmd.FullCommand():
-		commands.GetFile(commandData, *viewFileName, *viewFileID, "", true, *viewNoPreview, *viewPreview)
+		filename, id := commands.GetFileCommandData(*viewFileName, *viewFileID)
+		commandData.ViewFile(&commands.DownloadData{
+			FileName:  filename,
+			FileID:    id,
+			Preview:   *viewPreview,
+			NoPreview: *viewNoPreview,
+		})
 
 	// Upload
 	case appUpload.FullCommand():
-		commands.UploadFile(commandData, *fileUploadPath, *fileUploadName, *fileUploadPublicName, *fileUploadPublic, *fileUploadFromStdin, *fileUploadSetClipboard, *fileUploadReplace, *fileUploadThreads, *fileUploadDeletInvaid)
+		commandData.UploadFile(*fileUploadPaths, *fileUploadParallelism, &commands.UploadData{
+			Name:          *fileUploadName,
+			DeleteInvalid: *fileUploadDeletInvaid,
+			FromStdIn:     *fileUploadFromStdin,
+			Public:        *fileUploadPublic,
+			Publicname:    *fileUploadPublicName,
+			ReplaceFile:   *fileUploadReplace,
+			SetClip:       *fileUploadSetClipboard,
+		})
 
 	// Delete file
 	case fileDeleteCmd.FullCommand():
@@ -50,7 +69,8 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Edit file
 	case fileEditCmd.FullCommand():
-		commands.EditFile(commandData, *fileEditID)
+		// TODO rewrite
+		//commands.EditFile(commandData, *fileEditID)
 
 	// -- Attributes commands
 	// Update tag

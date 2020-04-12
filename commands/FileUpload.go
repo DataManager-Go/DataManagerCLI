@@ -5,9 +5,8 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
+	"sync"
 	"time"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -16,39 +15,104 @@ import (
 	"github.com/gosuri/uiprogress"
 )
 
-// Returns a file and its size. Exit on error
-func getFile(uri string) (*os.File, int64) {
-	// Open file
-	f, err := os.Open(uri)
-	if err != nil {
-		printError("opening file", err.Error())
-		os.Exit(1)
-		return nil, 0
+// UploadData data for uploads
+type UploadData struct {
+	Name          string
+	Publicname    string
+	FromStdIn     bool
+	SetClip       bool
+	Public        bool
+	ReplaceFile   uint
+	DeleteInvalid bool
+	TotalFiles    int
+	Progress      *uiprogress.Progress
+}
+
+// UploadFile uploads the given file to the server and set's its affiliations
+func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *UploadData) {
+	// Extract directories
+	uris = parseURIArgUploadCommand(uris)
+	if uris == nil {
+		return
 	}
 
-	// Get it's stats
-	stat, err := f.Stat()
-	if err != nil {
-		printError("reading file", err.Error())
-		os.Exit(1)
+	// Setup uploadData
+	uploadData.TotalFiles = len(uris)
+	uploadData.Progress = uiprogress.New()
+	uploadData.Progress.Start()
+
+	if uploadData.TotalFiles == 0 && !uploadData.FromStdIn {
+		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
+		return
 	}
 
-	return f, stat.Size()
+	// In case a user is dumb,
+	// correct him
+	if threads == 0 {
+		threads = 1
+	}
+
+	// Verify combinations
+	if uploadData.TotalFiles > 1 {
+		if uploadData.FromStdIn {
+			fmt.Println("Can't upload from stdin and files at the same time")
+			return
+		}
+		if uploadData.SetClip {
+			fmt.Println("You can't set clipboard while uploading multiple files")
+			return
+		}
+		if len(uploadData.Publicname) > 0 {
+			fmt.Println("You can't upload multiple files with the same public name")
+		}
+	}
+
+	// Waitgroup to wait for all "threads" to be done
+	wg := sync.WaitGroup{}
+	// Channel for managing amount of parallel upload processes
+	c := make(chan uint, 1)
+
+	if threads > uint(uploadData.TotalFiles) {
+		threads = uint(uploadData.TotalFiles)
+	}
+
+	c <- threads
+	var pos int
+
+	// Start Uploader pool
+	for pos < uploadData.TotalFiles {
+		read := <-c
+		for i := 0; i < int(read) && pos < uploadData.TotalFiles; i++ {
+			wg.Add(1)
+
+			go func(uri string) {
+				cData.upload(uploadData, uri)
+
+				wg.Done()
+				c <- 1
+			}(uris[pos])
+
+			pos++
+		}
+	}
+
+	// Wait for all
+	// threads to be done
+	wg.Wait()
 }
 
 // Upload file uploads a file
-func uploadFile(cData *CommandData, uploadRequest *libdm.UploadRequest, uri string, fromStdin bool, totalFiles int, progress *uiprogress.Progress) (uploadResponse *libdm.UploadResponse) {
+func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse) {
 	var r io.Reader
 	var size int64
 	var chsum string
-	fsDer := make(chan int64, 1)
-	done := make(chan string, 1)
-	proxy := libdm.NoProxyWriter
 	var err error
 	var bar *uiprogress.Bar
+	var proxy libdm.WriterProxy
+	done := make(chan string, 1)
 
 	// Select upload source reader
-	if !fromStdin {
+	if !uploadData.FromStdIn {
 		// Open file
 		var f *os.File
 		f, size = getFile(uri)
@@ -60,57 +124,57 @@ func uploadFile(cData *CommandData, uploadRequest *libdm.UploadRequest, uri stri
 	}
 
 	// Progressbar setup
-	if !cData.Quiet && !fromStdin {
-		prefix := "Uploading " + uri
+	if !cData.Quiet && !uploadData.FromStdIn {
+		prefix := "Uploading " + uploadData.Name
 		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
+
+		// Setup proxy
+		uploadRequest.ProxyWriter = proxy
+		uploadRequest.SetFileSizeCallback(func(size int64) {
+			bar.Total = int(size)
+		})
 	}
 
 	// Start uploading
 	go func() {
 		c := make(chan string, 1)
-		uploadResponse, err = uploadRequest.UploadFromReader(r, size, fsDer, proxy, c)
+		uploadResponse, err = uploadRequest.UploadFromReader(r, size, c)
 		done <- <-c
 	}()
 
 	if bar != nil {
-		bar.Total = int(<-fsDer)
-
 		// Show bar after 500ms if upload
-		// wasn't canceled until then
+		// is not done by then
 		go (func() {
 			time.Sleep(500 * time.Millisecond)
 			select {
 			case <-done:
 			default:
-				progress.AddBar(bar)
+				uploadData.Progress.AddBar(bar)
 			}
 		})()
 	}
 
-	// make channel to listen for kill signals
-	kill := make(chan os.Signal, 1)
-	signal.Notify(kill, os.Interrupt, os.Kill, syscall.SIGTERM)
-
-	select {
-	case killsig := <-kill:
-		// Delete keyfile if upload was canceled
+	// Delete keyfile if upload was canceled
+	awaitOrInterrupt(done, func(s os.Signal) {
 		if !cData.Quiet {
-			fmt.Println(killsig)
+			fmt.Println(s)
 		}
 		cData.deleteKeyfile()
 		os.Exit(1)
-		return
-	case chsum = <-done:
-	}
+	}, func(checksum string) {
+		// On file upload done set chsum to received checksum
+		chsum = checksum
+	})
 
+	// Handle upload errors
 	if err != nil {
 		printError("uploading file", err.Error())
 		return
 	}
 
-	// Checksum is not supposed to be empty
-	// If any known error were thrown, this
-	// part wouldn't be executed
+	// Checksum is not supposed to be empty If any known error
+	// were thrown, this part wouldn't be executed
 	if len(chsum) == 0 {
 		fmt.Println("Unexpected error occured")
 		return
@@ -125,25 +189,25 @@ func uploadFile(cData *CommandData, uploadRequest *libdm.UploadRequest, uri stri
 }
 
 // Upload uploads a file or a url
-func upload(cData *CommandData, uri string, name, publicName string, public, fromStdin, setClip bool, replaceFile uint, deletInvalid bool, totalFiles int, progress *uiprogress.Progress) {
+func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 	_, fileName := filepath.Split(uri)
-	if len(name) != 0 {
-		fileName = name
+	if len(uploadData.Name) != 0 {
+		fileName = uploadData.Name
 	}
 
 	// Make public if public name was specified
-	if len(publicName) > 0 {
-		public = true
+	if len(uploadData.Publicname) > 0 {
+		uploadData.Public = true
 	}
 
 	// Create upload request
 	uploadRequest := cData.LibDM.NewUploadRequest(fileName, cData.FileAttributes)
-	uploadRequest.ReplaceFileID = replaceFile
+	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
 	if len(cData.Encryption) > 0 {
 		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
 	}
-	if public {
-		uploadRequest.MakePublic(publicName)
+	if uploadData.Public {
+		uploadRequest.MakePublic(uploadData.Publicname)
 	}
 
 	var uploadResponse *libdm.UploadResponse
@@ -160,14 +224,14 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 		printSuccess("uploaded URL: %s", uri)
 	} else {
 		// -----> Upload file/stdin <-----
-		uploadResponse = uploadFile(cData, uploadRequest, uri, fromStdin, totalFiles, progress)
+		uploadResponse = cData.uploadFile(uploadRequest, uploadData, uri)
 		if uploadResponse == nil {
 			return
 		}
 	}
 
 	// Set clipboard to public file if required
-	if setClip && len(uploadResponse.PublicFilename) > 0 {
+	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
 		if clipboard.Unsupported {
 			fmt.Println("Clipboard not supported on this OS")
 		} else {
@@ -193,6 +257,7 @@ func upload(cData *CommandData, uri string, name, publicName string, public, fro
 		fmt.Println(toJSON(uploadResponse))
 		return
 	}
+
 	// Render table with informations
-	cData.printUploadResponse(uploadResponse, (cData.Quiet || totalFiles > 1))
+	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1))
 }

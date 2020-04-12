@@ -1,10 +1,7 @@
 package commands
 
 import (
-	"encoding/hex"
 	"fmt"
-	"hash/crc32"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -12,17 +9,14 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/fatih/color"
-	"github.com/gosuri/uiprogress"
 )
 
 // determineDecryptionKey  gets the correct decryption key from either the arguments of
 // the command or from the keystore
-func determineDecryptionKey(cData *CommandData, resp *http.Response) []byte {
+func (cData *CommandData) determineDecryptionKey(resp *http.Response) []byte {
 	key := []byte(cData.EncryptionKey)
 
 	// If keystore is enabled and no key was passed, try
@@ -46,119 +40,24 @@ func determineDecryptionKey(cData *CommandData, resp *http.Response) []byte {
 	return key
 }
 
-// Saves data from r to file. Shows progressbar after 500ms if still saving
-func saveFileToFile(outFile, encryption string, key []byte, r io.Reader, c chan error, bar *uiprogress.Bar) (chan string, *os.File) {
-	f, err := os.OpenFile(outFile, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+// Returns a file and its size. Exit on error
+func getFile(uri string) (*os.File, int64) {
+	// Open file
+	f, err := os.Open(uri)
 	if err != nil {
-		c <- err
-		return nil, nil
+		printError("opening file", err.Error())
+		os.Exit(1)
+		return nil, 0
 	}
 
-	var w io.Writer
-
-	// Use multiwriter for file and bar
-	// if bar is displayed
-	if bar != nil {
-		w = io.MultiWriter(f, barProxyFromBar(bar, f))
-	} else {
-		w = f
+	// Get it's stats
+	stat, err := f.Stat()
+	if err != nil {
+		printError("reading file", err.Error())
+		os.Exit(1)
 	}
 
-	return writeFileToWriter(w, encryption, key, r, c, bar), f
-}
-
-// Saves data from r to file. Shows progressbar after 500ms if still saving
-func writeFileToWriter(wr io.Writer, encryption string, key []byte, r io.Reader, c chan error, bar *uiprogress.Bar) chan string {
-	doneChan := make(chan string, 1)
-
-	go (func() {
-		buf := make([]byte, 10*1024)
-		hash := crc32.NewIEEE()
-		var err error
-		// Write file
-		switch encryption {
-		case constants.EncryptionCiphers[0]:
-			{
-				err = libdm.Decrypt(r, wr, hash, key, buf)
-			}
-		case "":
-			{
-				w := io.MultiWriter(wr, hash)
-				_, err = io.CopyBuffer(w, r, buf)
-			}
-		}
-		if err != nil {
-			fmt.Println(err)
-			c <- err
-			return
-		}
-
-		doneChan <- hex.EncodeToString(hash.Sum(nil))
-	})()
-
-	// Show bar if desired
-	if bar != nil {
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-c:
-			default:
-				if bar != nil {
-					uiprogress.AddBar(bar)
-					uiprogress.Start()
-				}
-			}
-		})()
-	}
-
-	return doneChan
-}
-
-func guiPreview(cData *CommandData, serverFileName, encryption, checksum string, resp *http.Response, respData io.Reader, bar *uiprogress.Bar) string {
-	done := make(chan bool)
-	errCh := make(chan error)
-
-	// Generate tempfile
-	file := GetTempFile(serverFileName)
-
-	// Save stream and decrypt if necessary
-	doneCh, f := saveFileToFile(file, encryption, determineDecryptionKey(cData, resp), respData, errCh, bar)
-	defer f.Close()
-
-	// Show bar only if uploading takes more than 500ms
-	if bar != nil {
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-done:
-				break
-			default:
-				uiprogress.AddBar(bar)
-			}
-		})()
-	}
-
-	var chsum string
-
-	// Wait for download to be finished
-	// or an error to occur
-	select {
-	case err := <-errCh:
-		if err = <-errCh; err != nil {
-			printError("while downloading", err.Error())
-			fmt.Println(err)
-			return ""
-		}
-	case chsum = <-doneCh:
-	}
-
-	if !cData.verifyChecksum(chsum, checksum) {
-		return ""
-	}
-
-	// Preview file
-	previewFile(file)
-	return file
+	return f, stat.Size()
 }
 
 // verifyChecksum return true on success
@@ -178,6 +77,14 @@ func (cData *CommandData) verifyChecksum(localCs, remoteCs string) bool {
 	}
 
 	return true
+}
+
+func (cData *CommandData) printChecksumError(resp *libdm.FileDownloadResponse) {
+	fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+	if !cData.Quiet {
+		fmt.Printf("Local CS:\t%s\n", resp.LocalChecksum)
+		fmt.Printf("Rem. CS:\t%s\n", resp.ServerChecksum)
+	}
 }
 
 func editFile(file string) bool {

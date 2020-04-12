@@ -78,6 +78,8 @@ func initInputKey(cData commands.CommandData) *commands.CommandData {
 		cData.EncryptionKey = readStdinWithTimeout(48)
 	}
 
+	// TODO password
+
 	// --> Keyfile
 	encrKeyFile := *appFileEncrKeyFile
 	if len(encrKeyFile) > 0 {
