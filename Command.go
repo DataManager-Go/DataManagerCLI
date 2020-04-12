@@ -13,9 +13,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// -- File commands
 	// Download file
 	case fileDownloadCmd.FullCommand():
+		filename, id := commands.GetFileCommandData(*fileDownloadName, *fileDownloadID)
 		commandData.DownloadFile(&commands.DownloadData{
-			FileName:  *fileDownloadName,
-			FileID:    *fileDownloadID,
+			FileName:  filename,
+			FileID:    id,
 			Preview:   *viewPreview,
 			NoPreview: *viewNoPreview,
 			LocalPath: *fileDownloadPath,
