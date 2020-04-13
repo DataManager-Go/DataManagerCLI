@@ -14,6 +14,7 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
+	"github.com/gosuri/uiprogress"
 )
 
 // determineDecryptionKey  gets the correct decryption key from either the arguments of
@@ -155,4 +156,14 @@ func parseURIArgUploadCommand(uris []string) []string {
 	}
 
 	return newURIList
+}
+
+// If bar is set, use it to print text
+// Otherwise print a new line
+func printBar(text string, bar *uiprogress.Bar) {
+	if bar.IsValid() {
+		bar.SetText(text)
+	} else {
+		fmt.Println(text)
+	}
 }

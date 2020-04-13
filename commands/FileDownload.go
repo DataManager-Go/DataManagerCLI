@@ -158,16 +158,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 		// await shredder
 		<-c
 	}, func(s string) {
-		text := sPrintSuccess("saved '%s'", outFile)
-
-		// If a progressbar was used, set its text
-		// instead of printing a new line
-		if data.bar != nil {
-			data.bar.SetText(text)
-		} else {
-			fmt.Println(text + "\n")
-		}
-
+		printBar(sPrintSuccess("saved '%s'", outFile), data.bar)
 	})
 }
 
@@ -183,14 +174,4 @@ func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string
 	}
 
 	return err
-}
-
-// If bar is set, use it to print text
-// Otherwise print a new line
-func printBar(text string, bar *uiprogress.Bar) {
-	if bar == nil {
-		fmt.Println(text)
-	} else {
-		bar.SetText(text)
-	}
 }
