@@ -125,11 +125,11 @@ var (
 	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Create
-	fileCreateCmd     = appFileCmd.Command("create", "create a file")
+	fileCreateCmd     = appFileCmd.Command("create", "create a file").Alias("c").Alias("cr")
 	filecreateCmdName = fileCreateCmd.Arg("name", "The name of file to create").String()
 
 	// -- Edit
-	fileEditCmd = appFileCmd.Command("edit", "Edit a file")
+	fileEditCmd = appFileCmd.Command("edit", "Edit a file").Alias("e")
 	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
 
 	// -- Delete file -> rm
@@ -141,12 +141,12 @@ var (
 	fileDeleteName = fileDeleteCmd.Arg("fileName", "Name of the file that should be removed").String()
 	fileDeleteID   = fileDeleteCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	// -- List
-	fileListCmd   = appFileCmd.Command("list", "List files")
+	fileListCmd   = appFileCmd.Command("list", "List files").Alias("ls")
 	fileListName  = fileListCmd.Arg("fileName", "Show files with this name").String()
 	fileListID    = fileListCmd.Arg("fileID", "The fileID").Uint()
 	fileListOrder = fileListCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 	// -- Update
-	fileUpdateCmd          = appFileCmd.Command("update", "Update a file")
+	fileUpdateCmd          = appFileCmd.Command("update", "Update a file").Alias("u")
 	fileUpdateName         = fileUpdateCmd.Arg("fileName", "Name of the file that should be updated").Required().String()
 	fileUpdateID           = fileUpdateCmd.Arg("fileID", "FileID of file. Only required if mulitple files with same name are available").Uint()
 	fileUpdateSetPublic    = fileUpdateCmd.Flag("set-public", "Sets a file public").Bool()
@@ -158,18 +158,18 @@ var (
 	fileUpdateAddGroups    = fileUpdateCmd.Flag("add-groups", "Add groups to a file").Strings()
 	fileUpdateRemoveGroups = fileUpdateCmd.Flag("remove-groups", "Remove groups from a file").Strings()
 	// -- Download
-	fileDownloadCmd     = appFileCmd.Command("download", "Download a file from the server")
+	fileDownloadCmd     = appFileCmd.Command("download", "Download a file from the server").Alias("dl")
 	fileDownloadName    = fileDownloadCmd.Arg("fileName", "Download files with this name").String()
 	fileDownloadID      = fileDownloadCmd.Arg("fileId", "Specify the fileID").Uint()
 	fileDownloadPath    = fileDownloadCmd.Flag("output", "Where to store the file").Default("./").Short('o').String()
 	fileDownloadPreview = fileDownloadCmd.Flag("preview", "Whether you want to open the file after downloading it").Bool()
 	// -- Publish
-	filePublishCmd    = appFileCmd.Command("publish", "publish something")
+	filePublishCmd    = appFileCmd.Command("publish", "publish something").Alias("pub")
 	filePublishName   = filePublishCmd.Arg("fileName", "Name of the file that should be published").Required().String()
 	filePublishID     = filePublishCmd.Arg("fileID", "FileID of specified file. Only required if mulitple files with same name are available").Uint()
 	publishPublicName = filePublishCmd.Flag("public-name", "Specify the public filename").String()
 	// -- View
-	viewCmd       = appFileCmd.Command("view", "View something")
+	viewCmd       = appFileCmd.Command("view", "View something").Alias("v")
 	viewFileName  = viewCmd.Arg("fileName", "filename of file to view").Required().String()
 	viewFileID    = viewCmd.Arg("fileID", "fileID of file to view").Uint()
 	viewNoPreview = viewCmd.Flag("no-preview", "Disable preview for command").Bool()
@@ -183,7 +183,7 @@ var (
 	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag").Alias("rm").Alias("del")
 	tagDeleteName = tagDeleteCmd.Arg("tagName", "Name of tag to delete").Required().String()
 	// -- Update
-	tagUpdateCmd     = tagCmd.Command("update", "Update a tag")
+	tagUpdateCmd     = tagCmd.Command("update", "Update a tag").Alias("u")
 	tagUpdateName    = tagUpdateCmd.Arg("tagname", "Name of the tag that should be updated").Required().String()
 	tagUpdateNewName = tagUpdateCmd.Flag("new-name", "New name of a tag").String()
 
@@ -195,7 +195,7 @@ var (
 	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group").Alias("rm").Alias("del")
 	groupDeleteName = groupDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()
 	// -- Update
-	groupUpdateCmd     = groupCmd.Command("update", "Update a group")
+	groupUpdateCmd     = groupCmd.Command("update", "Update a group").Alias("u")
 	groupUpdateName    = groupUpdateCmd.Arg("groupName", "Name of the group that should be updated").Required().String()
 	groupUpdateNewName = groupUpdateCmd.Flag("new-name", "Rename a group").String()
 
@@ -205,11 +205,11 @@ var (
 	namespacesCmd = app.Command("namespaces", "List your namespaces").Alias("nss")
 
 	// -- Create
-	namespaceCreateCmd    = namespaceCmd.Command("create", "Create a namespace")
+	namespaceCreateCmd    = namespaceCmd.Command("create", "Create a namespace").Alias("c").Alias("cr")
 	namespaceCreateName   = namespaceCreateCmd.Arg("namespaceName", "Name of namespace").Required().String()
 	namespaceCreateCustom = namespaceCreateCmd.Flag("custom", "Create a custom namespace (no username prefix)").Bool()
 	// -- Update
-	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a namespace")
+	namespaceUpdateCmd     = namespaceCmd.Command("update", "Update a namespace").Alias("u")
 	namespaceUpdateName    = namespaceUpdateCmd.Arg("namespaceName", "Name of the namespace that should be updated").Required().String()
 	namespaceUpdateNewName = namespaceUpdateCmd.Flag("new-name", "Rename a namespace").String()
 	// -- Delete
@@ -223,7 +223,7 @@ var (
 	keystoreCmd = app.Command("keystore", "Save keys to assigned to files and store them into a specific directory").Alias("ks")
 
 	// -- Create
-	keystoreCreateCmd          = keystoreCmd.Command("create", "Create a keystore")
+	keystoreCreateCmd          = keystoreCmd.Command("create", "Create a keystore").Alias("c").Alias("cr")
 	keystoreCreateCmdPath      = keystoreCreateCmd.Arg("path", "The path to store the keys in").Required().String()
 	keystoreCreateCmdOverwrite = keystoreCreateCmd.Flag("overwrite", "Overwrite an existing keystore setting").Short('o').Bool()
 	// -- Info
@@ -232,14 +232,14 @@ var (
 	keystoreDeleteCmd           = keystoreCmd.Command("delete", "Delete a keystore")
 	keystoreDeleteCmdShredCount = keystoreDeleteCmd.Flag("shredder", "Overwrite your keys").Default("6").Uint()
 	// -- CleanUp
-	keystoreCleanupCmd           = keystoreCmd.Command("cleanup", "Cleans up unassigned keys")
+	keystoreCleanupCmd           = keystoreCmd.Command("cleanup", "Cleans up unassigned keys").Alias("c").Alias("clean")
 	keystoreCleanupCmdShredCount = keystoreCleanupCmd.Flag("shredder", "Overwrite your keys").Default("6").Uint()
 	// -- AddKey
-	keystoreAddKeyCmd       = keystoreCmd.Command("add", "Adds a Key to a file to the keystore")
+	keystoreAddKeyCmd       = keystoreCmd.Command("add", "Adds a Key to a file to the keystore").Alias("a")
 	keystoreAddKeyCmdFileID = keystoreAddKeyCmd.Arg("fileID", "The file id where the key should be assigned to").Required().Uint()
 	keystoreAddKeyCmdKey    = keystoreAddKeyCmd.Arg("keyfile", "The filename of the keyfile. Must be located in the keystore path").HintAction(hintListKeyFiles).Required().String()
 	// -- RemoveKey
-	keystoreRemoveKeyCmd   = keystoreCmd.Command("remove", "Removes a key from keystore by it's assigned fileid")
+	keystoreRemoveKeyCmd   = keystoreCmd.Command("remove", "Removes a key from keystore by it's assigned fileid").Alias("rm")
 	keystoreRemoveKeyCmdID = keystoreRemoveKeyCmd.Arg("fileID", "The fileID to delete the key from ").Required().Uint()
 )
 
