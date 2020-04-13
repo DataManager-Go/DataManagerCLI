@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
 )
 
@@ -118,6 +120,12 @@ func editFile(file string) bool {
 func parseURIArgUploadCommand(uris []string) []string {
 	var newURIList []string
 	for i := range uris {
+		// Skip urls
+		if u, err := url.Parse(uris[i]); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
+			newURIList = append(newURIList, uris[i])
+			continue
+		}
+
 		s, err := os.Stat(uris[i])
 		if err != nil {
 			fmt.Println("Skipping", uris[i], err.Error())
