@@ -133,17 +133,26 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 		return
 	}
 
-	err = writeFile(cData, resp, outFile)
-	if err != nil {
-		// Delete file on error. On checksum error only delete if --verify was passed
-		if err != libdm.ErrChecksumNotMatch || cData.VerifyFile {
-			ShredderFile(outFile, -1)
+	c := make(chan string, 1)
+
+	go func() {
+		err = writeFile(cData, resp, outFile)
+		if err != nil {
+			// Delete file on error. On checksum error only delete if --verify was passed
+			if err != libdm.ErrChecksumNotMatch || cData.VerifyFile {
+				ShredderFile(outFile, -1)
+			}
+
+			return
 		}
+		c <- ""
+	}()
 
-		return
-	}
-
-	printSuccess("saved '%s'", outFile)
+	awaitOrInterrupt(c, func(s os.Signal) {
+		ShredderFile(outFile, -1)
+	}, func(s string) {
+		printSuccess("saved '%s'", outFile)
+	})
 }
 
 func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string) error {

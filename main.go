@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
@@ -55,7 +54,7 @@ var (
 	appVerify         = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
 	appNoDecrypt      = app.Flag("no-decrypt", "Don't decrypt files").Bool()
 	appForce          = app.Flag("force", "Forces an action").Short('f').Bool()
-	appFileEncryption = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(constants.EncryptionCiphers...).String()
+	appFileEncryption = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(libdm.EncryptionCiphers...).String()
 
 	// Output related flags
 	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()

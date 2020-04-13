@@ -3,7 +3,13 @@ package commands
 import (
 	"fmt"
 
-	"github.com/DataManager-Go/DataManagerServer/constants"
+	"github.com/fatih/color"
+)
+
+//Colorized strings
+var (
+	GreenSuccessfully = color.HiGreenString("Successfully")
+	RedError          = color.HiRedString("Error")
 )
 
 // CreateNamespace creates a namespace
@@ -14,7 +20,7 @@ func CreateNamespace(cData *CommandData, name string, customNS bool) {
 		return
 	}
 
-	fmt.Printf("%s created namespace '%s'\n", constants.GreenSuccessfully, createResponse.String)
+	fmt.Printf("%s created namespace '%s'\n", GreenSuccessfully, createResponse.String)
 }
 
 // UpdateNamespace update a namespace
@@ -25,7 +31,7 @@ func UpdateNamespace(cData *CommandData, name, newName string, customNS bool) {
 		return
 	}
 
-	fmt.Printf("%s updated namespace '%s'\n", constants.GreenSuccessfully, updateResponse.String)
+	fmt.Printf("%s updated namespace '%s'\n", GreenSuccessfully, updateResponse.String)
 }
 
 // DeleteNamespace update a namespace
@@ -36,7 +42,7 @@ func DeleteNamespace(cData *CommandData, name string) {
 		return
 	}
 
-	fmt.Printf("%s deleted namespace '%s'\n", constants.GreenSuccessfully, deleteResponse.String)
+	fmt.Printf("%s deleted namespace '%s'\n", GreenSuccessfully, deleteResponse.String)
 }
 
 // ListNamespace lists your namespace

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
-	"github.com/DataManager-Go/DataManagerServer/constants"
 	libdm "github.com/DataManager-Go/libdatamanager"
 )
 
@@ -58,7 +57,7 @@ func initInputKey(cData commands.CommandData) *commands.CommandData {
 	if randKeySize > 0 && cData.RequestedEncryptionInput() {
 		// Check correct keylen for given encryption
 		switch *appFileEncryption {
-		case constants.EncryptionCiphers[0]:
+		case libdm.EncryptionCiphers[0]:
 			// AES
 			if !vaildAESkeylen(randKeySize) {
 				fmt.Printf("The keysize %d is invalid\n", randKeySize)
