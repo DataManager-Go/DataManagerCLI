@@ -44,6 +44,9 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			SetClip:       *fileUploadSetClipboard,
 		})
 
+	case fileCreateCmd.FullCommand():
+		commandData.CreateFile(*filecreateCmdName)
+
 	// Delete file
 	case fileDeleteCmd.FullCommand():
 		commands.DeleteFile(commandData, *fileDeleteName, *fileDeleteID)

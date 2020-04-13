@@ -324,3 +324,25 @@ func fileMd5(file string) string {
 
 	return md5
 }
+
+// create a temporary file ending with "name"
+func createTempFile(name *string) string {
+	if name == nil {
+		return ""
+	}
+
+	if len(*name) == 0 {
+		*name = gaw.RandString(10)
+	}
+
+	tmpFile := GetTempFile(*name)
+
+	f, err := os.OpenFile(tmpFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0600)
+	if err != nil {
+		printError("opening tempfile", err.Error())
+		return ""
+	}
+	f.Close()
+
+	return tmpFile
+}

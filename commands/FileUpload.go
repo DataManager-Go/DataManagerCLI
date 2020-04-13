@@ -188,7 +188,7 @@ func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadD
 }
 
 // Upload uploads a file or a url
-func (cData *CommandData) upload(uploadData *UploadData, uri string) {
+func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool) {
 	_, fileName := filepath.Split(uri)
 	if len(uploadData.Name) != 0 {
 		fileName = uploadData.Name
@@ -255,9 +255,10 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 	// Print response as json
 	if cData.OutputJSON {
 		fmt.Println(toJSON(uploadResponse))
-		return
+		return true
 	}
 
 	// Render table with informations
 	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
+	return true
 }

@@ -121,8 +121,12 @@ var (
 	//
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls")
+	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir").Alias("la") // TODO implement la
 	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
+
+	// -- Create
+	fileCreateCmd     = appFileCmd.Command("create", "create a file")
+	filecreateCmdName = fileCreateCmd.Arg("name", "The name of file to create").String()
 
 	// -- Edit
 	fileEditCmd = appFileCmd.Command("edit", "Edit a file")

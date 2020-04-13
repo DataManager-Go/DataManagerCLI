@@ -268,15 +268,16 @@ func UpdateFile(cData *CommandData, name string, id uint, newName string, newNam
 
 // EditFile edits a file
 func (cData *CommandData) EditFile(id uint) {
-	// Generate temp-filePath
-	filePath := GetTempFile(gaw.RandString(10))
-
 	// Do file Request
 	resp, err := cData.LibDM.NewFileRequestByID(id).Do()
 	if err != nil {
 		printError("downloading file", err.Error())
 		return
 	}
+
+	// Generate temp-filePath
+	filePath := GetTempFile(resp.ServerFileName)
+	fmt.Println(resp.ServerFileName)
 
 	buildRequest(cData, resp, false)
 
@@ -328,4 +329,71 @@ func (cData *CommandData) EditFile(id uint) {
 		ReplaceFile: resp.FileID,
 		Progress:    uiprogress.New(),
 	})
+}
+
+// CreateFile create a file and upload it
+func (cData *CommandData) CreateFile(name string) {
+	// Create tempfile
+	file := createTempFile(&name)
+	if len(file) == 0 {
+		return
+	}
+
+	var success bool
+	fmt.Printf("File %s created\n", file)
+
+	// Shredder file at the end
+	defer func() {
+		if !success {
+			if !cData.Yes {
+				if y, _ := gaw.ConfirmInput("Upload was unsuccessful. Do you want to delete the local file? (y/n)> ", bufio.NewReader(os.Stdin)); !y {
+					return
+				}
+			}
+
+			defer func() {
+				fmt.Printf("%s Deleted", file)
+			}()
+		}
+
+		ShredderFile(file, -1)
+	}()
+
+	// Open file for user "editing"
+	if !editFile(file) {
+		return
+	}
+
+	// Open temp file
+	f, err := os.Open(file)
+	defer f.Close()
+	if err != nil {
+		printError("open tempfile", err.Error())
+		return
+	}
+
+	// Get fileinfo
+	stat, err := f.Stat()
+	if err != nil {
+		printError("open tempfile", err.Error())
+		return
+	}
+
+	// Return if file is empty
+	if stat.Size() == 0 {
+		success = true
+		return
+	}
+
+	// Upload file
+	chDone := make(chan string, 1)
+	request := cData.LibDM.NewUploadRequest(name, cData.FileAttributes)
+	resp, err := request.UploadFile(f, chDone, nil)
+	if err != nil {
+		printResponseError(err, "uploading")
+		return
+	}
+
+	success = len(<-chDone) > 0
+	cData.printUploadResponse(resp, cData.Quiet, nil)
 }
