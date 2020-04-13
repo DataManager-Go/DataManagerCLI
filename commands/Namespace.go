@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/fatih/color"
 )
@@ -57,6 +58,7 @@ func ListNamespace(cData *CommandData) {
 		fmt.Println(toJSON(getNamespaceResponse))
 	} else {
 		fmt.Println("Your namespaces:")
+		sort.Strings(getNamespaceResponse.Slice)
 		for _, namespace := range getNamespaceResponse.Slice {
 			fmt.Println(namespace)
 		}

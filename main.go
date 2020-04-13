@@ -121,7 +121,7 @@ var (
 	//
 	// ---------> File commands --------------------------------------
 	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir").Alias("la") // TODO implement la
+	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir")
 	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Create
@@ -202,7 +202,7 @@ var (
 	//
 	// ---------> Namespace commands --------------------------------------
 	namespaceCmd  = app.Command("namespace", "Do something with namespaces").Alias("ns").Alias("n")
-	namespacesCmd = app.Command("namespaces", "List your namespaces")
+	namespacesCmd = app.Command("namespaces", "List your namespaces").Alias("nss")
 
 	// -- Create
 	namespaceCreateCmd    = namespaceCmd.Command("create", "Create a namespace")
@@ -216,7 +216,7 @@ var (
 	namespaceDeleteCmd  = namespaceCmd.Command("delete", "Delete a namespace").Alias("rm").Alias("del")
 	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
 	// -- List
-	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces")
+	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces").Alias("ls")
 
 	//
 	// ---------> Keystore commands --------------------------------------
