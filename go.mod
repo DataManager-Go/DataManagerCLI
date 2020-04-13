@@ -2,12 +2,12 @@ module github.com/DataManager-Go/DataManagerCLI
 
 go 1.14
 
-replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.3
+replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.4
 
 require (
 	github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0
 	github.com/DataManager-Go/libdatamanager v1.1.15
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200412231115-a82508b229bb
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200413125811-cf32dc70af40
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
 	github.com/JojiiOfficial/shred v1.2.1

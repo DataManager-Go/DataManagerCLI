@@ -28,8 +28,12 @@ func fmtError(message ...interface{}) {
 	fmt.Printf("%s %s\n", color.HiRedString("Error:"), fmt.Sprint(message...))
 }
 
+func getError(message interface{}, err string) string {
+	return fmt.Sprintf("%s %s: %s\n", color.HiRedString("Error"), message, err)
+}
+
 func printError(message interface{}, err string) {
-	fmt.Printf("%s %s: %s\n", color.HiRedString("Error"), message, err)
+	fmt.Println(getError(message, err))
 }
 
 func printWarning(message interface{}, err string) {
@@ -42,8 +46,12 @@ func printJSONError(message interface{}) {
 	json.NewEncoder(os.Stdout).Encode(m)
 }
 
+func sPrintSuccess(format string, message ...interface{}) string {
+	return fmt.Sprintf("%s %s", color.HiGreenString("Successfully"), fmt.Sprintf(format, message...))
+}
+
 func printSuccess(format string, message ...interface{}) {
-	fmt.Printf("%s %s\n", color.HiGreenString("Successfully"), fmt.Sprintf(format, message...))
+	fmt.Println(sPrintSuccess(format, message...) + "\n")
 }
 
 // ProcesStrSliceParam divides args by ,

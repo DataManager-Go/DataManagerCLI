@@ -81,12 +81,18 @@ func (cData *CommandData) verifyChecksum(localCs, remoteCs string) bool {
 	return true
 }
 
-func (cData *CommandData) printChecksumError(resp *libdm.FileDownloadResponse) {
-	fmt.Printf("%s checksums don't match!\n", color.YellowString("Warning"))
+func (cData *CommandData) getChecksumError(resp *libdm.FileDownloadResponse) string {
+	var s string
+	s += fmt.Sprintf("%s checksums don't match!\n", color.YellowString("Warning"))
 	if !cData.Quiet {
-		fmt.Printf("Local CS:\t%s\n", resp.LocalChecksum)
-		fmt.Printf("Rem. CS:\t%s\n", resp.ServerChecksum)
+		s += fmt.Sprintf("Local CS:\t%s\n", resp.LocalChecksum)
+		s += fmt.Sprintf("Rem. CS:\t%s\n", resp.ServerChecksum)
 	}
+	return s
+}
+
+func (cData *CommandData) printChecksumError(resp *libdm.FileDownloadResponse) {
+	fmt.Println(cData.getChecksumError(resp))
 }
 
 func editFile(file string) bool {

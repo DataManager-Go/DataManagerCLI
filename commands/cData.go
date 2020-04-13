@@ -7,6 +7,7 @@ import (
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
+	"github.com/gosuri/uiprogress"
 	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
@@ -113,13 +114,17 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool) {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *uiprogress.Bar) {
 	if short {
+		var text string
 		if len(ur.PublicFilename) > 0 {
-			fmt.Printf("%s %d; %s %s;\t%s %s\n", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
+			text = fmt.Sprintf("%s %d; %s %s;\t%s %s", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
 		} else {
-			fmt.Printf("%s %d; %s %s\n", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
+			text = fmt.Sprintf("%s %d; %s %s", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
 		}
+
+		printBar(text, bar)
+
 		return
 	}
 
@@ -138,5 +143,5 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
-	fmt.Println(table)
+	printBar(table.String(), bar)
 }

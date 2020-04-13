@@ -78,7 +78,7 @@ func (cData *CommandData) ViewFile(data *DownloadData) {
 		defer ShredderFile(tmpFile, -1)
 
 		// Write file
-		if err = writeFile(cData, resp, tmpFile, nil); err != nil {
+		if err = writeFile(cData, resp, tmpFile, nil, data.bar); err != nil {
 			return
 		}
 
@@ -137,7 +137,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 	c := make(chan string, 1)
 
 	go func() {
-		err = writeFile(cData, resp, outFile, cancel)
+		err = writeFile(cData, resp, outFile, cancel, data.bar)
 		if err != nil {
 			// Delete file on error. On checksum error only delete if --verify was passed
 			if err != libdm.ErrChecksumNotMatch || cData.VerifyFile {
@@ -158,20 +158,39 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 		// await shredder
 		<-c
 	}, func(s string) {
-		printSuccess("saved '%s'", outFile)
+		text := sPrintSuccess("saved '%s'", outFile)
+
+		// If a progressbar was used, set its text
+		// instead of printing a new line
+		if data.bar != nil {
+			data.bar.SetText(text)
+		} else {
+			fmt.Println(text + "\n")
+		}
+
 	})
 }
 
-func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string, cancel chan bool) error {
+func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string, cancel chan bool, bar *uiprogress.Bar) error {
 	// Save file to tempFile
 	err := resp.WriteToFile(file, 0600, cancel)
 	if err != nil {
 		if err == libdm.ErrChecksumNotMatch {
-			cData.printChecksumError(resp)
-		} else if err != libdm.ErrCancelled {
-			printError("downloading file", err.Error())
+			printBar(cData.getChecksumError(resp), bar)
+		} else {
+			printBar(getError("downloading file", err.Error()), bar)
 		}
 	}
 
 	return err
+}
+
+// If bar is set, use it to print text
+// Otherwise print a new line
+func printBar(text string, bar *uiprogress.Bar) {
+	if bar == nil {
+		fmt.Println(text)
+	} else {
+		bar.SetText(text)
+	}
 }

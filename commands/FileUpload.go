@@ -102,12 +102,11 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 }
 
 // Upload file uploads a file
-func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse) {
+func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
 	var r io.Reader
 	var size int64
 	var chsum string
 	var err error
-	var bar *uiprogress.Bar
 	var proxy libdm.WriterProxy
 	done := make(chan string, 1)
 
@@ -185,7 +184,7 @@ func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadD
 		return
 	}
 
-	return uploadResponse
+	return uploadResponse, bar
 }
 
 // Upload uploads a file or a url
@@ -211,6 +210,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 	}
 
 	var uploadResponse *libdm.UploadResponse
+	var bar *uiprogress.Bar
 
 	// Do upload request
 	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
@@ -224,7 +224,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 		printSuccess("uploaded URL: %s", uri)
 	} else {
 		// -----> Upload file/stdin <-----
-		uploadResponse = cData.uploadFile(uploadRequest, uploadData, uri)
+		uploadResponse, bar = cData.uploadFile(uploadRequest, uploadData, uri)
 		if uploadResponse == nil {
 			return
 		}
@@ -259,5 +259,5 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 	}
 
 	// Render table with informations
-	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1))
+	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
 }
