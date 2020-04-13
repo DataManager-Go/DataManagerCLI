@@ -169,7 +169,7 @@ func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadD
 
 	// Handle upload errors
 	if err != nil {
-		printError("uploading file", err.Error())
+		printResponseError(err, "uploading file")
 		return
 	}
 
@@ -217,7 +217,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) {
 		// -----> Upload URL <------
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
-			printError("uploading url", err.Error())
+			printResponseError(err, "uploading url")
 			return
 		}
 

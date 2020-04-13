@@ -88,7 +88,7 @@ func (cData *CommandData) ViewFile(data *DownloadData) {
 		// Display file in os.Stdout (cli)
 		err = resp.SaveTo(os.Stdout)
 		if err != nil {
-			printError("viewing file", err.Error())
+			printResponseError(err, "downloading file")
 			return
 		}
 
@@ -111,7 +111,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 	// Do request but don't read the body yet
 	resp, err := data.doRequest(cData, true)
 	if err != nil {
-		printError("downloading file", err.Error())
+		printResponseError(err, "downloading file")
 		return
 	}
 
