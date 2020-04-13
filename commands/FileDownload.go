@@ -78,7 +78,7 @@ func (cData *CommandData) ViewFile(data *DownloadData) {
 		defer ShredderFile(tmpFile, -1)
 
 		// Write file
-		if err = writeFile(cData, resp, tmpFile); err != nil {
+		if err = writeFile(cData, resp, tmpFile, nil); err != nil {
 			return
 		}
 
@@ -86,7 +86,7 @@ func (cData *CommandData) ViewFile(data *DownloadData) {
 		previewFile(tmpFile)
 	} else {
 		// Display file in os.Stdout (cli)
-		err = resp.SaveTo(os.Stdout)
+		err = resp.SaveTo(os.Stdout, nil)
 		if err != nil {
 			printResponseError(err, "downloading file")
 			return
@@ -133,35 +133,42 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 		return
 	}
 
+	cancel := make(chan bool, 1)
 	c := make(chan string, 1)
 
 	go func() {
-		err = writeFile(cData, resp, outFile)
+		err = writeFile(cData, resp, outFile, cancel)
 		if err != nil {
 			// Delete file on error. On checksum error only delete if --verify was passed
 			if err != libdm.ErrChecksumNotMatch || cData.VerifyFile {
 				ShredderFile(outFile, -1)
 			}
 
+			c <- "exit"
 			return
 		}
+
 		c <- ""
 	}()
 
+	// Wait for download to be done or delete file on interrupt
 	awaitOrInterrupt(c, func(s os.Signal) {
-		ShredderFile(outFile, -1)
+		cancel <- true
+
+		// await shredder
+		<-c
 	}, func(s string) {
 		printSuccess("saved '%s'", outFile)
 	})
 }
 
-func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string) error {
+func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string, cancel chan bool) error {
 	// Save file to tempFile
-	err := resp.WriteToFile(file, 0600)
+	err := resp.WriteToFile(file, 0600, cancel)
 	if err != nil {
 		if err == libdm.ErrChecksumNotMatch {
 			cData.printChecksumError(resp)
-		} else {
+		} else if err != libdm.ErrCancelled {
 			printError("downloading file", err.Error())
 		}
 	}

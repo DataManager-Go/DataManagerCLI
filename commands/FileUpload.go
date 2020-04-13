@@ -138,7 +138,7 @@ func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadD
 	// Start uploading
 	go func() {
 		c := make(chan string, 1)
-		uploadResponse, err = uploadRequest.UploadFromReader(r, size, c)
+		uploadResponse, err = uploadRequest.UploadFromReader(r, size, c, nil)
 		done <- <-c
 	}()
 

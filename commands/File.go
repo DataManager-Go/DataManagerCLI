@@ -286,7 +286,7 @@ func (cData *CommandData) EditFile(id uint) {
 	}
 
 	// Save File
-	err = resp.WriteToFile(filePath, 0600)
+	err = resp.WriteToFile(filePath, 0600, nil)
 	if err != nil {
 		printError("downloading file", err.Error())
 		return
@@ -324,7 +324,6 @@ func (cData *CommandData) EditFile(id uint) {
 	cData.Encryption = resp.Encryption
 
 	// Replace file on server with new file
-	// cData.UploadFile([]string{filePath}, serverName, "", false, false, false, id, 1, false)
 	cData.UploadFile([]string{filePath}, 1, &UploadData{
 		ReplaceFile: resp.FileID,
 		Progress:    uiprogress.New(),
