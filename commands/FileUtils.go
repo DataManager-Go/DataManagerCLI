@@ -167,3 +167,20 @@ func printBar(text string, bar *uiprogress.Bar) {
 		fmt.Println(text)
 	}
 }
+
+func determineLocalOutputfile(serverFilename, outputFile string) string {
+	outFile := outputFile
+	serverFilename = strings.ReplaceAll(serverFilename, string(filepath.Separator), "-")
+
+	if strings.HasSuffix(outputFile, "/") {
+		// If no special file was choosen
+		outFile = filepath.Join(outputFile, serverFilename)
+	} else {
+		stat, err := os.Stat(outFile)
+		if err == nil && stat.IsDir() {
+			outFile = filepath.Join(outFile, serverFilename)
+		}
+	}
+
+	return outFile
+}

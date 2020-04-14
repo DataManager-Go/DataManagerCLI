@@ -3,8 +3,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
@@ -116,16 +114,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 	}
 
 	// Determine where the file should be stored in
-	outFile := data.LocalPath
-	if strings.HasSuffix(data.LocalPath, "/") {
-		// If no special file was choosen
-		outFile = filepath.Join(data.LocalPath, resp.ServerFileName)
-	} else {
-		stat, err := os.Stat(outFile)
-		if err == nil && stat.IsDir() {
-			outFile = filepath.Join(outFile, resp.ServerFileName)
-		}
-	}
+	outFile := determineLocalOutputfile(resp.ServerFileName, data.LocalPath)
 
 	// Prevent accitentally overwrite the file
 	if gaw.FileExists(outFile) && !cData.Force {
