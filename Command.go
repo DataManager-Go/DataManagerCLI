@@ -63,6 +63,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case appFilesCmd.FullCommand():
 		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
 
+	// File Tree
+	case appFileTree.FullCommand():
+		commandData.FileTree()
+
 	// Update File
 	case fileUpdateCmd.FullCommand():
 		commands.UpdateFile(commandData, *fileUpdateName, *fileUpdateID, *fileUpdateNewName, *fileUpdateNewNamespace, *fileUpdateAddTags, *fileUpdateRemoveTags, *fileUpdateAddGroups, *fileUpdateRemoveGroups, *fileUpdateSetPublic, *fileUpdateSetPrivate)

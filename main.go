@@ -10,8 +10,8 @@ import (
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 
-	_ "github.com/CovenantSQL/go-sqlite3-encrypt"
 	"github.com/DataManager-Go/DataManagerCLI/commands"
+	_ "github.com/mattn/go-sqlite3"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -73,7 +73,7 @@ var (
 
 	//
 	// ---------> Ping --------------------------------------
-	appPing = app.Command("ping", "pings the server and checks connectivity")
+	appPing = app.Command("ping", "pings the server and checks connectivity").Alias("p")
 
 	//
 	// ---------> UserCommands --------------------------------------
@@ -131,6 +131,9 @@ var (
 	// -- Edit
 	fileEditCmd = appFileCmd.Command("edit", "Edit a file").Alias("e")
 	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
+
+	// -- Tree
+	appFileTree = app.Command("tree", "Show your files like the unix file tree")
 
 	// -- Delete file -> rm
 	fileRmCmd  = app.Command("rm", "Delete a file")
@@ -244,8 +247,9 @@ var (
 )
 
 var (
-	config      *dmConfig.Config
-	appTrimName int
+	config       *dmConfig.Config
+	appTrimName  int
+	unmodifiedNS string
 )
 
 func main() {
@@ -262,6 +266,8 @@ func main() {
 	if !initConfig(parsed) {
 		return
 	}
+
+	unmodifiedNS = *appNamespace
 
 	// Process params: make t1,t2 -> [t1 t2]
 	commands.ProcesStrSliceParams(appTags, appGroups)

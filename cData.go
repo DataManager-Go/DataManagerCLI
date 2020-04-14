@@ -33,11 +33,12 @@ func buildCData(parsed string, appTrimName int) *commands.CommandData {
 
 		Encryption: *appFileEncryption,
 
-		NoDecrypt:  *appNoDecrypt,
-		NoEmojis:   *appNoEmojis,
-		RandKey:    *appFileEncrRandKey,
-		Quiet:      *appQuiet,
-		VerifyFile: *appVerify,
+		NoDecrypt:           *appNoDecrypt,
+		NoEmojis:            *appNoEmojis,
+		RandKey:             *appFileEncrRandKey,
+		Quiet:               *appQuiet,
+		VerifyFile:          *appVerify,
+		UnmodifiedNamespace: unmodifiedNS,
 	}
 
 	// Init cdata

@@ -1,14 +1,8 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
-github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0 h1:GPtIZW4KZhul21SrmmpgUCx+wEPhnFlzOceTtzMypzs=
-github.com/CovenantSQL/go-sqlite3-encrypt v1.9.0/go.mod h1:EH9sjhhyDGHNIj/Wx59f7CURbVp1C1x/eRVi07WPsvg=
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
-github.com/DataManager-Go/libdatamanager v1.1.15 h1:6ftBaMXLWD1hlxjylidh578W4afVH8Yb00Va8HYXBeg=
-github.com/DataManager-Go/libdatamanager v1.1.15/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
 github.com/DataManager-Go/libdatamanager v1.1.16 h1:HIHQQJeQRAoxyJGCb0kRRdD3FqZNyNFTneW6NxXma9M=
 github.com/DataManager-Go/libdatamanager v1.1.16/go.mod h1:s2ywdIZpWEfgxJ7iMtCOdLCNaHVnO8dr7e9cE2NzgL4=
-github.com/DataManager-Go/libdatamanager/config v0.0.0-20200412231115-a82508b229bb h1:w53VeyM2XITRcIAGf8ArdKy1Q60McFIbuL+Jz4o6HV4=
-github.com/DataManager-Go/libdatamanager/config v0.0.0-20200412231115-a82508b229bb/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200413125811-cf32dc70af40 h1:prAklwiqvcLkXnjm9Zl7H3IUW3nnB6U0ebrNuMacjZ4=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200413125811-cf32dc70af40/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
@@ -19,10 +13,6 @@ github.com/JojiiOfficial/gaw v1.2.1 h1:zwVLf5TQrXQF+pwI+/sVsfxTxmAZbZ5BjVT/nKxb2
 github.com/JojiiOfficial/gaw v1.2.1/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
 github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
-github.com/JojiiOfficial/uiprogress v1.0.3 h1:FeSJKEPlfyUokrA4zi/hl6s3m2DAHdo8TXDiJ44aotU=
-github.com/JojiiOfficial/uiprogress v1.0.3/go.mod h1:MsdctZCVERbGDu5lcgHZY12ANTIWkUjk7JyqGSTmQYg=
-github.com/JojiiOfficial/uiprogress v1.0.4 h1:2YL/YX6QoB5twDt2sK9cry5V277S5e9dEGzKelgOnGc=
-github.com/JojiiOfficial/uiprogress v1.0.4/go.mod h1:MsdctZCVERbGDu5lcgHZY12ANTIWkUjk7JyqGSTmQYg=
 github.com/JojiiOfficial/uiprogress v1.0.5 h1:aDvOcDRwXfDk6tsx6TmnjK3IAsbhzjJ3hZ4BpBZtotE=
 github.com/JojiiOfficial/uiprogress v1.0.5/go.mod h1:MsdctZCVERbGDu5lcgHZY12ANTIWkUjk7JyqGSTmQYg=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
@@ -100,8 +90,6 @@ golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20191026070338-33540a1f6037/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200406155108-e3b113bbe6a4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
-golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa h1:mQTN3ECqfsViCNBgq+A40vdwhkGykrrQlYe3mPj6BoU=
-golang.org/x/sys v0.0.0-20200409092240-59c9f1ba88fa/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 h1:opSr2sbRXk5X5/givKrrKj9HXxFpW2sdCiP8MJSKLQY=
 golang.org/x/sys v0.0.0-20200413165638-669c56c373c4/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=

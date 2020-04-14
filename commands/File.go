@@ -401,3 +401,24 @@ func (cData *CommandData) CreateFile(name string) {
 	success = len(<-chDone) > 0
 	cData.printUploadResponse(resp, cData.Quiet, nil)
 }
+
+// FileTree shows a unix tree like view of files
+func (cData *CommandData) FileTree() {
+	// Get requested namespace. If no ns was set, show all files
+	cData.FileAttributes.Namespace = cData.getRealNamespace()
+	allNamespaces := len(cData.FileAttributes.Namespace) == 0
+
+	// Do file list request
+	resp, err := cData.LibDM.ListFiles("", 0, allNamespaces, cData.FileAttributes, 3)
+	if err != nil {
+		printResponseError(err, "getting files")
+		return
+	}
+
+	if len(resp.Files) == 0 {
+		fmt.Println("No files found")
+		return
+	}
+
+	cData.renderTree(resp.Files)
+}

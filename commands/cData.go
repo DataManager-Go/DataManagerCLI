@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
@@ -25,6 +27,7 @@ type CommandData struct {
 	RandKey             int
 
 	Namespace               string
+	UnmodifiedNamespace     string
 	FileAttributes          libdm.FileAttributes
 	Details                 uint8
 	NameLen                 int
@@ -144,4 +147,22 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
 	printBar(table.String(), bar)
+}
+
+func namespaceOverwritten() bool {
+	if len(os.Args) < 2 {
+		return false
+	}
+
+	cmdj := strings.Join(os.Args[1:], ",")
+	return (strings.Contains(cmdj, "--namespace ") || strings.Contains(cmdj, "-n "))
+}
+
+// Get real set namespace. If no --namespace was provided "" will be returned
+func (cData *CommandData) getRealNamespace() string {
+	if !namespaceOverwritten() {
+		return ""
+	}
+
+	return cData.UnmodifiedNamespace
 }
