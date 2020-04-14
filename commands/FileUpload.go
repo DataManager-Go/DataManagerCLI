@@ -215,6 +215,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 	// Do upload request
 	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
 		// -----> Upload URL <------
+		uploadRequest.Name = nameFromURL(u)
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
 			printResponseError(err, "uploading url")
@@ -232,7 +233,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 
 	// Set clipboard to public file if required
 	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
-		cData.setClipboard(uploadRequest.Publicname)
+		cData.setClipboard(uploadResponse.PublicFilename)
 	}
 
 	// Add key to keystore

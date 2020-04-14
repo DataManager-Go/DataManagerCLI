@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -345,4 +346,14 @@ func createTempFile(name *string) string {
 	f.Close()
 
 	return tmpFile
+}
+
+func nameFromURL(u *url.URL) string {
+	path := strings.ReplaceAll(u.EscapedPath(), string(filepath.Separator), "")
+	name := u.Host
+	if len(path) > 0 {
+		name = filepath.Join(name, path)
+		name = strings.ReplaceAll(name, string(filepath.Separator), "-")
+	}
+	return name
 }
