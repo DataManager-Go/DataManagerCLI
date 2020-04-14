@@ -155,7 +155,7 @@ func namespaceOverwritten() bool {
 	}
 
 	cmdj := strings.Join(os.Args[1:], ",")
-	return (strings.Contains(cmdj, "--namespace ") || strings.Contains(cmdj, "-n "))
+	return (strings.Contains(cmdj, "--namespace,") || strings.Contains(cmdj, "-n,"))
 }
 
 // Get real set namespace. If no --namespace was provided "" will be returned

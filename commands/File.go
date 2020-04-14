@@ -109,20 +109,10 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			}
 		}
 
-		// Order output
-		if len(sOrder) > 0 {
-			if order := FileOrderFromString(sOrder); order != nil {
-				// Sort
-				NewFileSorter(resp.Files).
-					Reversed(IsOrderReversed(sOrder)).
-					SortBy(*order)
-			} else {
-				fmtError(fmt.Sprintf("sort by '%s' not supporded", sOrder))
-				return
-			}
-		} else {
-			// By default sort by creation desc
-			NewFileSorter(resp.Files).Reversed(true).SortBy(CreatedOrder)
+		refFiles := fileSliceToRef(resp.Files)
+
+		if !sortFiles(sOrder, refFiles) {
+			return
 		}
 
 		header := []interface{}{
@@ -155,7 +145,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 
 		table.AddRow(header...)
 
-		for _, file := range resp.Files {
+		for _, file := range refFiles {
 			// Colorize private pubNames if not public
 			pubname := file.PublicName
 			if len(pubname) > 0 && !file.IsPublic {
@@ -165,7 +155,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			// Add items
 			rowItems := []interface{}{
 				file.ID,
-				formatFilename(&file, cData.NameLen, cData),
+				formatFilename(file, cData.NameLen, cData),
 				units.BinarySuffix(float64(file.Size)),
 			}
 
@@ -403,13 +393,13 @@ func (cData *CommandData) CreateFile(name string) {
 }
 
 // FileTree shows a unix tree like view of files
-func (cData *CommandData) FileTree() {
+func (cData *CommandData) FileTree(sOrder string) {
 	// Get requested namespace. If no ns was set, show all files
 	cData.FileAttributes.Namespace = cData.getRealNamespace()
-	allNamespaces := len(cData.FileAttributes.Namespace) == 0
+	cData.AllNamespaces = len(cData.FileAttributes.Namespace) == 0
 
 	// Do file list request
-	resp, err := cData.LibDM.ListFiles("", 0, allNamespaces, cData.FileAttributes, 3)
+	resp, err := cData.LibDM.ListFiles("", 0, cData.AllNamespaces, cData.FileAttributes, 3)
 	if err != nil {
 		printResponseError(err, "getting files")
 		return
@@ -420,5 +410,5 @@ func (cData *CommandData) FileTree() {
 		return
 	}
 
-	cData.renderTree(resp.Files)
+	cData.renderTree(resp.Files, sOrder)
 }

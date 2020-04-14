@@ -134,7 +134,8 @@ var (
 	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
 
 	// -- Tree
-	appFileTree = app.Command("tree", "Show your files like the unix file tree")
+	appFileTree      = app.Command("tree", "Show your files like the unix file tree")
+	appFileTreeOrder = appFileTree.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Delete file -> rm
 	fileRmCmd  = app.Command("rm", "Delete a file")

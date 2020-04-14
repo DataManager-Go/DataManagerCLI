@@ -13,12 +13,12 @@ type FileOrder int16
 
 //FileSorter a sorter
 type FileSorter struct {
-	Files   []libdm.FileResponseItem
+	Files   []*libdm.FileResponseItem
 	Reverse bool
 }
 
 //NewFileSorter create a new sorter
-func NewFileSorter(files []libdm.FileResponseItem) *FileSorter {
+func NewFileSorter(files []*libdm.FileResponseItem) *FileSorter {
 	return &FileSorter{
 		Files:   files,
 		Reverse: false,

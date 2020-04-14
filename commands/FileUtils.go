@@ -184,3 +184,33 @@ func determineLocalOutputfile(serverFilename, outputFile string) string {
 
 	return outFile
 }
+
+func sortFiles(sOrder string, files []*libdm.FileResponseItem) bool {
+	// Order output
+	if len(sOrder) > 0 {
+		if order := FileOrderFromString(sOrder); order != nil {
+			// Sort
+			NewFileSorter(files).
+				Reversed(IsOrderReversed(sOrder)).
+				SortBy(*order)
+		} else {
+			fmtError(fmt.Sprintf("sort by '%s' not supporded", sOrder))
+			return false
+		}
+	} else {
+		// By default sort by creation desc
+		NewFileSorter(files).Reversed(true).SortBy(CreatedOrder)
+	}
+
+	return true
+}
+
+func fileSliceToRef(inpItems []libdm.FileResponseItem) []*libdm.FileResponseItem {
+	var respsl []*libdm.FileResponseItem
+
+	for i := range inpItems {
+		respsl = append(respsl, &inpItems[i])
+	}
+
+	return respsl
+}

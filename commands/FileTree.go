@@ -15,7 +15,7 @@ type treeItemList []*libdm.FileResponseItem
 // treeList a list of treeItems sorted by something (group/namespace)
 type treeList map[string]treeItemList
 
-func (cData *CommandData) renderTree(files []libdm.FileResponseItem) {
+func (cData *CommandData) renderTree(files []libdm.FileResponseItem, sOrder string) {
 	// Create Treelist
 	fileMap := createNamespaceTreeList(files)
 	namespaces := fileMap.getNamespaces()
@@ -23,25 +23,29 @@ func (cData *CommandData) renderTree(files []libdm.FileResponseItem) {
 	// Loop namespaces and render each
 	for _, namespace := range namespaces {
 		renderNamespace(namespace)
-		fileMap[namespace].renderNamespaceBranch(cData)
+		fileMap[namespace].renderNamespaceBranch(cData, sOrder)
 	}
 }
 
-func (treeItemList treeItemList) renderNamespaceBranch(cData *CommandData) {
+func (treeItemList treeItemList) renderNamespaceBranch(cData *CommandData, sOrder string) {
 	groupedList := createGroupTreeList(treeItemList)
 	for k, v := range groupedList {
 		renderGroupLine(k, len(v))
-		v.renderFileItems(cData, 30)
+		v.renderFileItems(cData, 30, sOrder)
 	}
 }
 
 // renderFileItems prints files inside TreeItemList
-func (treeItemList treeItemList) renderFileItems(cData *CommandData, maxFiles int) {
+func (treeItemList treeItemList) renderFileItems(cData *CommandData, maxFiles int, sOrder string) {
 	totalfiles := len(treeItemList)
 	limit := totalfiles
 
 	if totalfiles > maxFiles && !cData.All {
 		limit = maxFiles
+	}
+
+	if !sortFiles(sOrder, treeItemList) {
+		return
 	}
 
 	// Print files
@@ -123,7 +127,7 @@ func (treeList *treeList) getNamespaces() []string {
 
 // Render file
 func (cData *CommandData) renderTreeFile(file *libdm.FileResponseItem, last bool) {
-	renderTreeFileBranch(fmt.Sprintf("%s", formatFilename(file, 0, cData)), last)
+	renderTreeFileBranch(fmt.Sprintf("[%d] %s", file.ID, formatFilename(file, 0, cData)), last)
 }
 
 // Render File-branch
@@ -153,5 +157,4 @@ func renderGroupLine(groupName string, groupSize int) {
 	} else {
 		fmt.Printf("     └── %s\n", groupName)
 	}
-
 }
