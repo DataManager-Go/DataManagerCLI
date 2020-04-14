@@ -201,7 +201,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 }
 
 // PublishFile publishes a file
-func PublishFile(cData *CommandData, name string, id uint, publicName string) {
+func PublishFile(cData *CommandData, name string, id uint, publicName string, setClip bool) {
 	// Convert input
 	name, id = GetFileCommandData(name, id)
 
@@ -225,6 +225,10 @@ func PublishFile(cData *CommandData, name string, id uint, publicName string) {
 		} else {
 			pubName := (resp.(libdm.PublishResponse)).PublicFilename
 			fmt.Printf(cData.Config.GetPreviewURL(pubName))
+
+			if setClip {
+				cData.setClipboard(pubName)
+			}
 		}
 	}
 }

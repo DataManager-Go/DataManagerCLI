@@ -69,7 +69,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Publish file
 	case filePublishCmd.FullCommand():
-		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName)
+		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName, *fileUploadSetClipboard)
 
 	// Edit file
 	case fileEditCmd.FullCommand():

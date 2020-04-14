@@ -232,14 +232,7 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 
 	// Set clipboard to public file if required
 	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
-		if clipboard.Unsupported {
-			fmt.Println("Clipboard not supported on this OS")
-		} else {
-			err := clipboard.WriteAll(cData.Config.GetPreviewURL(uploadResponse.PublicFilename))
-			if err != nil {
-				printError("setting clipboard", err.Error())
-			}
-		}
+		cData.setClipboard(uploadRequest.Publicname)
 	}
 
 	// Add key to keystore
@@ -260,5 +253,18 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 
 	// Render table with informations
 	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
+	return true
+}
+
+func (cData *CommandData) setClipboard(publicName string) bool {
+	if clipboard.Unsupported {
+		fmt.Println("Clipboard not supported on this OS")
+		return false
+	}
+	err := clipboard.WriteAll(cData.Config.GetPreviewURL(publicName))
+	if err != nil {
+		printError("setting clipboard", err.Error())
+		return false
+	}
 	return true
 }

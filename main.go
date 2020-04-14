@@ -164,7 +164,7 @@ var (
 	fileDownloadPath    = fileDownloadCmd.Flag("output", "Where to store the file").Default("./").Short('o').String()
 	fileDownloadPreview = fileDownloadCmd.Flag("preview", "Whether you want to open the file after downloading it").Bool()
 	// -- Publish
-	filePublishCmd    = appFileCmd.Command("publish", "publish something").Alias("pub")
+	filePublishCmd    = appFileCmd.Command("publish", "publish something").Alias("pub").Alias("p")
 	filePublishName   = filePublishCmd.Arg("fileName", "Name of the file that should be published").Required().String()
 	filePublishID     = filePublishCmd.Arg("fileID", "FileID of specified file. Only required if mulitple files with same name are available").Uint()
 	publishPublicName = filePublishCmd.Flag("public-name", "Specify the public filename").String()
