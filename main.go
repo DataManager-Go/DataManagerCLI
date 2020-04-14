@@ -9,6 +9,7 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/fatih/color"
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
 	_ "github.com/mattn/go-sqlite3"
@@ -273,6 +274,10 @@ func main() {
 	commands.ProcesStrSliceParams(appTags, appGroups)
 
 	initDefaults()
+
+	if *appNoColor {
+		color.NoColor = true
+	}
 
 	// Bulid commandData
 	commandData := buildCData(parsed, appTrimName)
