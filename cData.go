@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -119,7 +120,7 @@ func initKeyfile(encrKeyFile string, cData *commands.CommandData) {
 	}
 
 	// Read key
-	cData.EncryptionKey, err = ioutil.ReadFile(encrKeyFile)
+	cData.EncryptionKey, err = ioutil.ReadFile(filepath.Clean(encrKeyFile))
 	if err != nil {
 		log.Fatal(err)
 	}
