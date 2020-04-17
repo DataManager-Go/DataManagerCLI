@@ -393,9 +393,12 @@ func (cData *CommandData) CreateFile(name string) {
 }
 
 // FileTree shows a unix tree like view of files
-func (cData *CommandData) FileTree(sOrder string) {
+func (cData *CommandData) FileTree(sOrder, namespace string) {
 	// Get requested namespace. If no ns was set, show all files
 	cData.FileAttributes.Namespace = cData.getRealNamespace()
+	if len(cData.FileAttributes.Namespace) == 0 && len(namespace) > 0 {
+		cData.FileAttributes.Namespace = namespace
+	}
 	cData.AllNamespaces = len(cData.FileAttributes.Namespace) == 0
 
 	// Do file list request

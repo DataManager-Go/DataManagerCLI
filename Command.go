@@ -65,7 +65,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// File Tree
 	case appFileTree.FullCommand():
-		commandData.FileTree(*appFileTreeOrder)
+		commandData.FileTree(*appFileTreeOrder, *appFileTreeNamespace)
 
 	// Update File
 	case fileUpdateCmd.FullCommand():
