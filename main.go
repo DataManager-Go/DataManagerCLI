@@ -185,6 +185,8 @@ var (
 	// ---------> Tag commands --------------------------------------
 	tagCmd = app.Command("tag", "Do something with tags").Alias("t")
 
+	// -- List
+	tagListCmd = app.Command("tags", "List existing tags").Alias("ts")
 	// -- Delete
 	tagDeleteCmd  = tagCmd.Command("delete", "Delete a tag").Alias("rm").Alias("del")
 	tagDeleteName = tagDeleteCmd.Arg("tagName", "Name of tag to delete").Required().String()
@@ -197,6 +199,8 @@ var (
 	// ---------> Group commands --------------------------------------
 	groupCmd = app.Command("group", "Do something with groups").Alias("g").Alias("gr")
 
+	// -- List
+	groupListCmd = app.Command("groups", "List existing groups").Alias("gs")
 	// -- Delete
 	groupDeleteCmd  = groupCmd.Command("delete", "Delete a group").Alias("rm").Alias("del")
 	groupDeleteName = groupDeleteCmd.Arg("groupName", "Name of group to delete").Required().String()

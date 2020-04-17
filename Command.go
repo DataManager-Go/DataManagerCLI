@@ -80,6 +80,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 		commandData.EditFile(*fileEditID)
 
 	// -- Attributes commands
+	// List Tags
+	case tagListCmd.FullCommand():
+		commandData.ListAttributes(libdm.TagAttribute)
+
 	// Update tag
 	case tagUpdateCmd.FullCommand():
 		commands.UpdateAttribute(commandData, libdm.TagAttribute, *tagUpdateName, *tagUpdateNewName)
@@ -87,6 +91,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// Delete Tag
 	case tagDeleteCmd.FullCommand():
 		commands.DeleteAttribute(commandData, libdm.TagAttribute, *tagDeleteName)
+
+	// List Groups
+	case groupListCmd.FullCommand():
+		commandData.ListAttributes(libdm.GroupAttribute)
 
 	// Update group
 	case groupUpdateCmd.FullCommand():
@@ -171,6 +179,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case keystoreAddKeyCmd.FullCommand():
 		commands.KeystoreAddKey(commandData, *keystoreAddKeyCmdKey, *keystoreAddKeyCmdFileID)
 
+	// Remove key from keystore
 	case keystoreRemoveKeyCmd.FullCommand():
 		commands.KeystoreRemoveKey(commandData, *keystoreRemoveKeyCmdID)
 
