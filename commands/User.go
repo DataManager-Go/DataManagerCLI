@@ -87,6 +87,7 @@ func credentials(bUser string, repeat bool, index uint8) (string, string) {
 		fmt.Print("Enter Username: ")
 		username, _ = reader.ReadString('\n')
 	}
+	username = strings.ToLower(username)
 
 	if len(username) > 30 {
 		fmt.Println("Username too long!")
