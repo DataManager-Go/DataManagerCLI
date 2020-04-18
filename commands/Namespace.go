@@ -15,7 +15,7 @@ var (
 
 // CreateNamespace creates a namespace
 func CreateNamespace(cData *CommandData, name string, customNS bool) {
-	createResponse, err := cData.LibDM.CreateNamespace(name, customNS)
+	createResponse, err := cData.LibDM.CreateNamespace(name)
 	if err != nil {
 		printResponseError(err, "creating namespace")
 		return
@@ -26,7 +26,7 @@ func CreateNamespace(cData *CommandData, name string, customNS bool) {
 
 // UpdateNamespace update a namespace
 func UpdateNamespace(cData *CommandData, name, newName string, customNS bool) {
-	updateResponse, err := cData.LibDM.UpdateNamespace(name, newName, customNS)
+	updateResponse, err := cData.LibDM.UpdateNamespace(name, newName)
 	if err != nil {
 		printResponseError(err, "updating namespace")
 		return
