@@ -82,6 +82,13 @@ func ConfigUse(cData *CommandData, target string, values []string) {
 
 // ConfigView view config
 func ConfigView(cData *CommandData) {
+	if len(cData.Config.User.SessionToken) == 0 && cData.NoRedaction {
+		s, err := cData.Config.GetToken()
+		if err == nil {
+			cData.Config.User.SessionToken = s
+		}
+	}
+
 	if !cData.OutputJSON {
 		// Print human output
 		fmt.Println(cData.Config.View(!cData.NoRedaction))
