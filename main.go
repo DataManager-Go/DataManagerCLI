@@ -81,6 +81,9 @@ var (
 	// -- Login
 	loginCmd     = app.Command("login", "Login")
 	loginCmdUser = loginCmd.Flag("username", "Your username").String()
+	// -- Logout
+	logoutCmd     = app.Command("logout", "logout from a session")
+	logoutCmdUser = logoutCmd.Arg("username", "Delete sessiondata assigned to a different username than the current one").String()
 	// -- Register
 	registerCmd = app.Command("register", "Create an account").FullCommand()
 	// -- Setup

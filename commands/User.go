@@ -10,6 +10,7 @@ import (
 
 	"github.com/JojiiOfficial/configService"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/zalando/go-keyring"
 
 	"github.com/fatih/color"
 	"golang.org/x/crypto/ssh/terminal"
@@ -71,6 +72,16 @@ func RegisterCommand(cData *CommandData) {
 	y, _ := gaw.ConfirmInput("Do you want to login to this account? [y/n]> ", bufio.NewReader(os.Stdin))
 	if y {
 		LoginCommand(cData, username, true)
+	}
+}
+
+// Logout Logs out the user
+func (cData *CommandData) Logout(username string) {
+	err := cData.Config.ClearKeyring(username)
+	if err == nil || err == keyring.ErrNotFound {
+		printSuccess("logged out")
+	} else {
+		fmt.Println(err)
 	}
 }
 

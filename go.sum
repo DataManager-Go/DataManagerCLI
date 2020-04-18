@@ -15,6 +15,8 @@ github.com/DataManager-Go/libdatamanager/config v0.0.0-20200417223247-afbf5204a7
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200417223247-afbf5204a71a/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200418001729-691c701da199 h1:hSeYQSfMC6yT1/nNK6Bpkn9MQiw2ED1hEqO9JJFhZTA=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200418001729-691c701da199/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200418113028-b95e60ce986e h1:GpLHBsAGkVgfEiL8ycKZb37yWsufEvZXo392+G5RjYU=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200418113028-b95e60ce986e/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=

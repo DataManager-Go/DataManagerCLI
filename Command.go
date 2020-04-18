@@ -130,6 +130,9 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case loginCmd.FullCommand():
 		commands.LoginCommand(commandData, *loginCmdUser)
 
+	case logoutCmd.FullCommand():
+		commandData.Logout(*logoutCmdUser)
+
 	// Register
 	case registerCmd:
 		commands.RegisterCommand(commandData)
