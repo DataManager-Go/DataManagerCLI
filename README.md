@@ -5,13 +5,18 @@ This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/
 ![File List](https://very.highly.illegal-dark-web-server.xyz/preview/raw/5eFeAZ5HRIxuUMIxx4SzUbYwZ)
 
 # Installation
+Use the newest binary from the [releases](https://github.com/DataManager-Go/DataManagerCLI/releases) or compile it by yourself:
+
 Go 1.11+ is required
 ```go
 go mod download && go build -o main && sudo mv main /usr/local/bin/manager
 ```
 
 # Setup
-Run `manager ping` once to create a config file in `~/.dmanager/`. Change the 'server.url' to your DataManager server url.
+Run `manager setup <host>` to create a configuration file and login.<br>
+Alternatively you can use `manager setup <host> --register` to create an account instead of loggin in.<br>
+If you want to create a config and don't want to login/register at all, run `manager setup <host> --no-login`<br>
+If Your server has no valid SSL certificate, but you want to use it anyway (not recommended), use the `--Ignore-cert` flag.
 
 # Register/Login
 Use `manager register` to create an account. The `allowregistration` must be set to true in the server config.<br>
