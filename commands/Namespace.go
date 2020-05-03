@@ -2,14 +2,10 @@ package commands
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
-	"sync"
 
 	"github.com/DataManager-Go/libdatamanager"
 	"github.com/fatih/color"
-	"github.com/gosuri/uiprogress"
 )
 
 //Colorized strings
@@ -72,10 +68,7 @@ func ListNamespace(cData *CommandData) {
 
 // DownloadNamespace download files from  namespace
 func (cData *CommandData) DownloadNamespace(exGroups, exTags []string, parallelism uint, outDir string) {
-	// Prevent user stupidity
-	if parallelism == 0 {
-		parallelism = 1
-	}
+	ProcesStrSliceParams(&exTags, &exGroups)
 
 	// Get files in namespace from server
 	files, err := cData.LibDM.ListFiles("", 0, false, libdatamanager.FileAttributes{
@@ -108,83 +101,12 @@ a:
 		toDownloadFiles = append(toDownloadFiles, files.Files[i])
 	}
 
-	if len(toDownloadFiles) == 0 {
-		fmt.Println("No files found")
-		return
-	}
-
-	// Reduce threads if files are less than threads
-	if uint(len(toDownloadFiles)) < parallelism {
-		parallelism = uint(len(toDownloadFiles))
-	}
-
-	// Waitgroup to wait for all "threads" to be done
-	wg := sync.WaitGroup{}
-	// Channel for managing amount of parallel upload processes
-	c := make(chan uint, 1)
-
-	c <- parallelism
-	var pos int
-
-	totalfiles := len(toDownloadFiles)
-
-	// Create and start progress
-	progress := uiprogress.New()
-	progress.Start()
-
-	// Use first files namespace as destination dir
-	if len(outDir) == 0 {
-		outDir = toDownloadFiles[0].Attributes.Namespace
-	}
-
-	rootDir := filepath.Clean(filepath.Join("./", outDir))
-
-	// Overwrite files
-	cData.Force = true
-
-	// Start Uploader pool
-	for pos < totalfiles {
-		read := <-c
-		for i := 0; i < int(read) && pos < totalfiles; i++ {
-			wg.Add(1)
-
-			go func(file libdatamanager.FileResponseItem) {
-				// Build dest group dir name
-				dir := "no_group"
-				if len(file.Attributes.Groups) > 0 {
-					dir = file.Attributes.Groups[0]
-				}
-
-				// Create dir if not exists
-				path := filepath.Clean(filepath.Join(rootDir, dir))
-				if _, err := os.Stat(path); err != nil {
-					err := os.MkdirAll(path, 0750)
-					if err != nil {
-						printError("Creating dir", err.Error())
-						os.Exit(1)
-					}
-				}
-
-				// Download file
-				err := cData.DownloadFile(&DownloadData{
-					FileName:  file.Name,
-					FileID:    file.ID,
-					LocalPath: filepath.Join(rootDir, dir),
-				}, progress)
-
-				if err != nil {
-					os.Exit(1)
-				}
-
-				wg.Done()
-				c <- 1
-			}(toDownloadFiles[pos])
-
-			pos++
+	cData.downloadFiles(toDownloadFiles, outDir, parallelism, func(file libdatamanager.FileResponseItem) string {
+		name := "no_group"
+		if len(file.Attributes.Groups) > 0 {
+			name = file.Attributes.Groups[0]
 		}
-	}
 
-	// Wait for all threads
-	// to be done
-	wg.Wait()
+		return name
+	})
 }

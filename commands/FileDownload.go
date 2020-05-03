@@ -3,7 +3,10 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"sync"
 
+	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
@@ -187,4 +190,88 @@ func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string
 	}
 
 	return err
+}
+
+func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir string, parallelism uint, getSubDirName func(file libdm.FileResponseItem) string) {
+	if len(files) == 0 {
+		fmt.Println("No files found")
+		return
+	}
+
+	// Prevent user stupidity
+	if parallelism == 0 {
+		parallelism = 1
+	}
+
+	// Reduce threads if files are less than threads
+	if uint(len(files)) < parallelism {
+		parallelism = uint(len(files))
+	}
+
+	// Use first files namespace as destination dir
+	if len(outDir) == 0 {
+		outDir = files[0].Attributes.Namespace
+	}
+
+	rootDir := filepath.Clean(outDir)
+
+	// Overwrite files
+	cData.Force = true
+
+	// Create and start progress
+	progress := uiprogress.New()
+	progress.Start()
+
+	// Waitgroup to wait for all "threads" to be done
+	wg := sync.WaitGroup{}
+	// Channel for managing amount of parallel upload processes
+	c := make(chan uint, 1)
+
+	c <- parallelism
+	var pos int
+
+	totalfiles := len(files)
+
+	// Start Uploader pool
+	for pos < totalfiles {
+		read := <-c
+		for i := 0; i < int(read) && pos < totalfiles; i++ {
+			wg.Add(1)
+
+			go func(file libdatamanager.FileResponseItem) {
+				// Build dest group dir name
+				dir := getSubDirName(file)
+
+				// Create dir if not exists
+				path := filepath.Clean(filepath.Join(rootDir, dir))
+				if _, err := os.Stat(path); err != nil {
+					err := os.MkdirAll(path, 0750)
+					if err != nil {
+						printError("Creating dir", err.Error())
+						os.Exit(1)
+					}
+				}
+
+				// Download file
+				err := cData.DownloadFile(&DownloadData{
+					FileName:  file.Name,
+					FileID:    file.ID,
+					LocalPath: filepath.Join(rootDir, dir),
+				}, progress)
+
+				if err != nil {
+					os.Exit(1)
+				}
+
+				wg.Done()
+				c <- 1
+			}(files[pos])
+
+			pos++
+		}
+	}
+
+	// Wait for all threads
+	// to be done
+	wg.Wait()
 }
