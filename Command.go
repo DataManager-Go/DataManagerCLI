@@ -61,6 +61,9 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// List file(s)
 	case appFilesCmd.FullCommand():
+		if len(*appFilesCmdNamespace) > 0 {
+			commandData.FileAttributes.Namespace = *appFilesCmdNamespace
+		}
 		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
 
 	// File Tree

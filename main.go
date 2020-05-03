@@ -124,9 +124,10 @@ var (
 
 	//
 	// ---------> File commands --------------------------------------
-	appFileCmd    = app.Command("file", "Do something with a file").Alias("f")
-	appFilesCmd   = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir")
-	appFilesOrder = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
+	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
+	appFilesCmd          = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir")
+	appFilesCmdNamespace = appFilesCmd.Arg("namespace", "List files in a specific namespace").String()
+	appFilesOrder        = appFilesCmd.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
 
 	// -- Create
 	fileCreateCmd     = appFileCmd.Command("create", "create a file").Alias("c").Alias("cr")
