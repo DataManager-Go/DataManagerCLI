@@ -273,7 +273,7 @@ func (cData *CommandData) EditFile(id uint) {
 	filePath := GetTempFile(resp.ServerFileName)
 	fmt.Println(resp.ServerFileName)
 
-	buildRequest(cData, resp, false)
+	buildRequest(cData, resp, false, nil)
 
 	if resp.FileID == 0 {
 		fmt.Println("Unexpected error occured, received File Id is invalid")

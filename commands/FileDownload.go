@@ -6,6 +6,7 @@ import (
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/fatih/color"
 	"github.com/gosuri/uiprogress"
 )
 
@@ -17,13 +18,14 @@ type DownloadData struct {
 	Preview   bool
 	NoPreview bool
 	bar       *uiprogress.Bar
+	progress  *uiprogress.Progress
 }
 
 func (downloadData *DownloadData) needPreview() bool {
 	return downloadData.Preview && !downloadData.NoPreview
 }
 
-func buildRequest(cData *CommandData, resp *libdm.FileDownloadResponse, showBar bool) (bar *uiprogress.Bar) {
+func buildRequest(cData *CommandData, resp *libdm.FileDownloadResponse, showBar bool, progress *uiprogress.Progress) (bar *uiprogress.Bar) {
 	// Set decryptionkey
 	if cData.NoDecrypt {
 		resp.DownloadRequest.DecryptWith(nil)
@@ -32,26 +34,39 @@ func buildRequest(cData *CommandData, resp *libdm.FileDownloadResponse, showBar 
 	}
 
 	if !cData.Quiet && showBar {
-		uiprogress.Start()
+		if progress == nil {
+			uiprogress.Start()
+		}
 
-		prefix := "Downloading " + resp.ServerFileName
-		bar, proxy := buildProgressbar(prefix, uint(len(prefix)))
-		bar.Total = int(resp.Size)
+		bar, proxy := createDownloadBar(progress, resp.ServerFileName, resp.Size)
 		resp.DownloadRequest.Proxy = proxy
-		uiprogress.AddBar(bar)
 		return bar
 	}
 
 	return nil
 }
 
-func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool) (*libdm.FileDownloadResponse, error) {
+func createDownloadBar(progress *uiprogress.Progress, fileName string, fileSize int64) (*uiprogress.Bar, libdm.WriterProxy) {
+	prefix := "Downloading " + fileName
+	bar, proxy := buildProgressbar(prefix, uint(len(prefix)))
+	bar.Total = int(fileSize)
+
+	if progress == nil {
+		uiprogress.AddBar(bar)
+	} else {
+		progress.AddBar(bar)
+	}
+
+	return bar, proxy
+}
+
+func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool, progress *uiprogress.Progress) (*libdm.FileDownloadResponse, error) {
 	resp, err := cData.LibDM.NewFileRequest(downloadData.FileID, downloadData.FileName, cData.FileAttributes.Namespace).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	bar := buildRequest(cData, resp, showBar)
+	bar := buildRequest(cData, resp, showBar, progress)
 
 	if bar != nil {
 		downloadData.bar = bar
@@ -61,8 +76,8 @@ func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool) (*
 }
 
 // ViewFile view file
-func (cData *CommandData) ViewFile(data *DownloadData) {
-	resp, err := data.doRequest(cData, data.needPreview())
+func (cData *CommandData) ViewFile(data *DownloadData, progress *uiprogress.Progress) {
+	resp, err := data.doRequest(cData, data.needPreview(), progress)
 	if err != nil {
 		printError("viewing file", err.Error())
 		return
@@ -100,26 +115,27 @@ func (cData *CommandData) ViewFile(data *DownloadData) {
 	}
 }
 
-// DownloadFile view file
-func (cData *CommandData) DownloadFile(data *DownloadData) {
+// DownloadFile download a file specified by data
+func (cData *CommandData) DownloadFile(data *DownloadData, progress *uiprogress.Progress) error {
 	if len(data.LocalPath) == 0 {
 		fmt.Println("You have to pass a local file")
 	}
 
 	// Do request but don't read the body yet
-	resp, err := data.doRequest(cData, true)
+	resp, err := data.doRequest(cData, true, progress)
 	if err != nil {
 		printResponseError(err, "downloading file")
-		return
+		return err
 	}
 
 	// Determine where the file should be stored in
 	outFile := determineLocalOutputfile(resp.ServerFileName, data.LocalPath)
 
-	// Prevent accitentally overwrite the file
+	// Prevent accidentally overwriting the file
+	// TODO add chechksum validation
 	if gaw.FileExists(outFile) && !cData.Force {
 		fmt.Printf("File '%s' already exists. Use -f to overwrite it or choose a different outputfile", outFile)
-		return
+		return err
 	}
 
 	cancel := make(chan bool, 1)
@@ -133,7 +149,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 				ShredderFile(outFile, -1)
 			}
 
-			c <- "exit"
+			c <- err.Error()
 			return
 		}
 
@@ -146,9 +162,17 @@ func (cData *CommandData) DownloadFile(data *DownloadData) {
 
 		// await shredder
 		<-c
+		os.Exit(1)
 	}, func(s string) {
-		printBar(sPrintSuccess("saved '%s'", outFile), data.bar)
+		if len(s) > 0 {
+			printBar(fmt.Sprintf("%s %s: %s", color.HiRedString("Error"), "downloading file", s), data.bar)
+			os.Exit(1)
+		} else {
+			printBar(sPrintSuccess("saved '%s'", outFile), data.bar)
+		}
 	})
+
+	return nil
 }
 
 func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string, cancel chan bool, bar *uiprogress.Bar) error {
@@ -158,7 +182,7 @@ func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string
 		if err == libdm.ErrChecksumNotMatch {
 			printBar(cData.getChecksumError(resp), bar)
 		} else {
-			printBar(getError("downloading file", err.Error()), bar)
+			printBar(fmt.Sprintf("%s %s: %s", color.HiRedString("Error"), "downloading file", err.Error()), bar)
 		}
 	}
 

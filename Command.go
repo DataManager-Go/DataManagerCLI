@@ -20,7 +20,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			Preview:   *viewPreview,
 			NoPreview: *viewNoPreview,
 			LocalPath: *fileDownloadPath,
-		})
+		}, nil)
 
 	// View file
 	case viewCmd.FullCommand():
@@ -30,7 +30,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			FileID:    id,
 			Preview:   *viewPreview,
 			NoPreview: *viewNoPreview,
-		})
+		}, nil)
 
 	// Upload
 	case appUpload.FullCommand():
@@ -57,14 +57,14 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// List files
 	case fileListCmd.FullCommand():
-		commands.ListFiles(commandData, *fileListName, *fileDownloadID, *fileListOrder)
+		commands.ListFiles(commandData, *fileListName, *fileListID, *fileListOrder)
 
 	// List file(s)
 	case appFilesCmd.FullCommand():
 		if len(*appFilesCmdNamespace) > 0 {
 			commandData.FileAttributes.Namespace = *appFilesCmdNamespace
 		}
-		commands.ListFiles(commandData, "", *fileDownloadID, *appFilesOrder)
+		commands.ListFiles(commandData, "", *fileListID, *appFilesOrder)
 
 	// File Tree
 	case appFileTree.FullCommand():
@@ -123,6 +123,11 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// List namespaces
 	case namespaceListCmd.FullCommand(), namespacesCmd.FullCommand():
 		commands.ListNamespace(commandData)
+
+	// Download files in namespace
+	case namespaceDownloadCmd.FullCommand():
+		commandData.FileAttributes.Namespace = *namespaceDownloadNs
+		commandData.DownloadNamespace(*namespaceDownloadExcludeGroups, *namespaceDownloadExcludeTags, *namespaceDownloadParallelism)
 
 	// -- Ping command
 	case appPing.FullCommand():

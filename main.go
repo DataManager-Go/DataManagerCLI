@@ -107,9 +107,7 @@ var (
 	configView = configCMD.Command("view", "View config")
 
 	//
-	// ---------> Universal commands --------------------------------------
-	//
-
+	// ---------> File commands --------------------------------------
 	// -- Upload
 	appUpload              = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
 	fileUploadPaths        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Strings()
@@ -122,8 +120,7 @@ var (
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
 
-	//
-	// ---------> File commands --------------------------------------
+	// -- List
 	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
 	appFilesCmd          = app.Command("files", "List files").Alias("fs").Alias("ls").Alias("dir")
 	appFilesCmdNamespace = appFilesCmd.Arg("namespace", "List files in a specific namespace").String()
@@ -231,6 +228,12 @@ var (
 	namespaceDeleteName = namespaceDeleteCmd.Arg("namespaceName", "Name of namespace to delete").Required().String()
 	// -- List
 	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces").Alias("ls")
+	// -- Download
+	namespaceDownloadCmd           = namespaceCmd.Command("download", "Download all files in a namespace")
+	namespaceDownloadNs            = namespaceDownloadCmd.Arg("namespace", "The namespace to download the files from").HintAction(hintListNamespaces).Required().String()
+	namespaceDownloadExcludeGroups = namespaceDownloadCmd.Flag("exclude-groups", "Exclude files in specified group(s) from getting downloaded").Strings()
+	namespaceDownloadExcludeTags   = namespaceDownloadCmd.Flag("exclude-tags", "Exclude files having specified tags(s) from getting downloaded").Strings()
+	namespaceDownloadParallelism   = namespaceDownloadCmd.Flag("parallelism", "Download multiple files at the same time").Default("1").Uint()
 
 	//
 	// ---------> Keystore commands --------------------------------------

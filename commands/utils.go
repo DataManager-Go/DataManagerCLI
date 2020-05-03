@@ -17,6 +17,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
@@ -356,4 +357,24 @@ func nameFromURL(u *url.URL) string {
 		name = strings.ReplaceAll(name, string(filepath.Separator), "-")
 	}
 	return name
+}
+
+func fileHasGroup(file *libdatamanager.FileResponseItem, group string) bool {
+	for i := range file.Attributes.Groups {
+		if file.Attributes.Groups[i] == group {
+			return true
+		}
+	}
+
+	return false
+}
+
+func fileHasTag(file *libdatamanager.FileResponseItem, tag string) bool {
+	for i := range file.Attributes.Tags {
+		if file.Attributes.Tags[i] == tag {
+			return true
+		}
+	}
+
+	return false
 }
