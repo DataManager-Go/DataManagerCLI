@@ -71,7 +71,7 @@ func ListNamespace(cData *CommandData) {
 }
 
 // DownloadNamespace download files from  namespace
-func (cData *CommandData) DownloadNamespace(exGroups, exTags []string, parallelism uint) {
+func (cData *CommandData) DownloadNamespace(exGroups, exTags []string, parallelism uint, outDir string) {
 	// Prevent user stupidity
 	if parallelism == 0 {
 		parallelism = 1
@@ -133,7 +133,11 @@ a:
 	progress.Start()
 
 	// Use first files namespace as destination dir
-	rootDir := filepath.Clean(filepath.Join("./", toDownloadFiles[0].Attributes.Namespace))
+	if len(outDir) == 0 {
+		outDir = toDownloadFiles[0].Attributes.Namespace
+	}
+
+	rootDir := filepath.Clean(filepath.Join("./", outDir))
 
 	// Overwrite files
 	cData.Force = true

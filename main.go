@@ -234,6 +234,7 @@ var (
 	namespaceDownloadExcludeGroups = namespaceDownloadCmd.Flag("exclude-groups", "Exclude files in specified group(s) from getting downloaded").Strings()
 	namespaceDownloadExcludeTags   = namespaceDownloadCmd.Flag("exclude-tags", "Exclude files having specified tags(s) from getting downloaded").Strings()
 	namespaceDownloadParallelism   = namespaceDownloadCmd.Flag("parallelism", "Download multiple files at the same time").Default("1").Uint()
+	namespaceDownloadOutputDir     = namespaceDownloadCmd.Flag("output", "Save namespace in a custom directory than the namespacename").String()
 
 	//
 	// ---------> Keystore commands --------------------------------------
