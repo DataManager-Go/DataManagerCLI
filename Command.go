@@ -127,7 +127,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// Download files in namespace
 	case namespaceDownloadCmd.FullCommand():
 		commandData.FileAttributes.Namespace = *namespaceDownloadNs
-		commandData.DownloadNamespace(*namespaceDownloadExcludeGroups, *namespaceDownloadExcludeTags, *namespaceDownloadParallelism, *namespaceDownloadOutputDir)
+		commandData.DownloadNamespace(*namespaceDownloadExcludeGroups, *namespaceDownloadExcludeTags, *namespaceDownloadExcludeFiles, *namespaceDownloadParallelism, *namespaceDownloadOutputDir)
 
 	// -- Ping command
 	case appPing.FullCommand():

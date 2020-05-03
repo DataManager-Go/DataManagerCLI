@@ -1,10 +1,14 @@
 package commands
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
 
 	"github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
 )
 
@@ -38,6 +42,12 @@ func UpdateNamespace(cData *CommandData, name, newName string, customNS bool) {
 
 // DeleteNamespace update a namespace
 func DeleteNamespace(cData *CommandData, name string) {
+	if !cData.Yes {
+		if y, _ := gaw.ConfirmInput("Do you really want to delete this namespace [yn]> ", bufio.NewReader(os.Stdin)); !y {
+			return
+		}
+	}
+
 	deleteResponse, err := cData.LibDM.DeleteNamespace(name)
 	if err != nil {
 		printResponseError(err, "deleting namespace")
@@ -67,8 +77,8 @@ func ListNamespace(cData *CommandData) {
 }
 
 // DownloadNamespace download files from  namespace
-func (cData *CommandData) DownloadNamespace(exGroups, exTags []string, parallelism uint, outDir string) {
-	ProcesStrSliceParams(&exTags, &exGroups)
+func (cData *CommandData) DownloadNamespace(exGroups, exTags, exFiles []string, parallelism uint, outDir string) {
+	ProcesStrSliceParams(&exTags, &exGroups, &exFiles)
 
 	// Get files in namespace from server
 	files, err := cData.LibDM.ListFiles("", 0, false, libdatamanager.FileAttributes{
@@ -86,12 +96,19 @@ func (cData *CommandData) DownloadNamespace(exGroups, exTags []string, paralleli
 	// Filter files by tags and groups
 a:
 	for i := range files.Files {
+		// Exclude FileID
+		if gaw.IsInStringArray(strconv.FormatUint(uint64(files.Files[i].ID), 10), exFiles) {
+			continue
+		}
+
+		// Exclude Groups
 		for j := range exGroups {
 			if fileHasGroup(&files.Files[i], exGroups[j]) {
 				continue a
 			}
 		}
 
+		// Exclude Tags
 		for j := range exTags {
 			if fileHasTag(&files.Files[i], exTags[j]) {
 				continue a

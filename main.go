@@ -229,12 +229,13 @@ var (
 	// -- List
 	namespaceListCmd = namespaceCmd.Command("list", "List your namespaces").Alias("ls")
 	// -- Download
-	namespaceDownloadCmd           = namespaceCmd.Command("download", "Download all files in a namespace")
+	namespaceDownloadCmd           = namespaceCmd.Command("download", "Download all files in a namespace").Alias("dl")
 	namespaceDownloadNs            = namespaceDownloadCmd.Arg("namespace", "The namespace to download the files from").HintAction(hintListNamespaces).Required().String()
 	namespaceDownloadExcludeGroups = namespaceDownloadCmd.Flag("exclude-groups", "Exclude files in specified group(s) from getting downloaded").Strings()
 	namespaceDownloadExcludeTags   = namespaceDownloadCmd.Flag("exclude-tags", "Exclude files having specified tags(s) from getting downloaded").Strings()
+	namespaceDownloadExcludeFiles  = namespaceDownloadCmd.Flag("exclude-files", "Exclude files by ID").Strings()
 	namespaceDownloadParallelism   = namespaceDownloadCmd.Flag("parallelism", "Download multiple files at the same time").Default("1").Uint()
-	namespaceDownloadOutputDir     = namespaceDownloadCmd.Flag("output", "Save namespace in a custom directory than the namespacename").Default("./").String()
+	namespaceDownloadOutputDir     = namespaceDownloadCmd.Flag("output", "Save namespace in a custom directory than the namespacename").Short('o').Default("./").String()
 
 	//
 	// ---------> Keystore commands --------------------------------------
