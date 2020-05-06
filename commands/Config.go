@@ -118,7 +118,7 @@ func ConfigView(cData *CommandData, sessionBase64 bool) {
 
 // SetupClient sets up client config
 func SetupClient(cData *CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool, token, username string) {
-	if len(token)*len(username) == 0 {
+	if len(token)*len(username) == 0 && len(token)+len(username) > 0 {
 		fmt.Println("Either --user or --token is missing")
 		return
 	}
