@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -81,11 +82,16 @@ func ConfigUse(cData *CommandData, target string, values []string) {
 }
 
 // ConfigView view config
-func ConfigView(cData *CommandData) {
+func ConfigView(cData *CommandData, sessionBase64 bool) {
 	if len(cData.Config.User.SessionToken) == 0 && cData.NoRedaction {
 		s, err := cData.Config.GetToken()
 		if err == nil {
-			cData.Config.User.SessionToken = s
+			if sessionBase64 {
+				enc := base64.RawStdEncoding.EncodeToString([]byte(s))
+				cData.Config.User.SessionToken = enc
+			} else {
+				cData.Config.User.SessionToken = s
+			}
 		}
 	}
 
@@ -168,6 +174,14 @@ func SetupClient(cData *CommandData, host, configFile string, ignoreCert, server
 
 	// Insert user directly if token and user is set
 	if len(token) > 0 && len(username) > 0 {
+		// Decode token
+		dec, err := base64.RawStdEncoding.DecodeString(token)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		token = string(dec)
 		cData.Config.InsertUser(username, token)
 		cData.Config.Save()
 		return

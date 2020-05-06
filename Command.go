@@ -167,7 +167,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Config view
 	case configView.FullCommand():
-		commands.ConfigView(commandData)
+		commands.ConfigView(commandData, *configViewTokenBase)
 
 	// -- KeystoreCommands
 	// Keystore create

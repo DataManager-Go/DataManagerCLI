@@ -106,7 +106,8 @@ var (
 	configUseTarget      = configUse.Arg("target", "Use different namespace as default").HintOptions(commands.UseTargets...).Required().String()
 	configUseTargetValue = configUse.Arg("value", "the value of the new target").HintOptions("default").Strings()
 	// -- View
-	configView = configCMD.Command("view", "View config")
+	configView          = configCMD.Command("view", "View config")
+	configViewTokenBase = configView.Flag("base64", "Encode the sessiontoken as base64").Default("false").Bool()
 
 	//
 	// ---------> File commands --------------------------------------
