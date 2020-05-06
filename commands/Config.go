@@ -111,7 +111,12 @@ func ConfigView(cData *CommandData) {
 }
 
 // SetupClient sets up client config
-func SetupClient(cData *CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool) {
+func SetupClient(cData *CommandData, host, configFile string, ignoreCert, serverOnly, register, noLogin bool, token, username string) {
+	if len(token)*len(username) == 0 {
+		fmt.Println("Either --user or --token is missing")
+		return
+	}
+
 	// Confirm creating a config anyway
 	if cData.Config != nil && !cData.Config.IsDefault() && !cData.Yes {
 		y, _ := gaw.ConfirmInput("There is already a config. Do you want to overwrite it? [y/n]> ", bufio.NewReader(os.Stdin))
@@ -160,6 +165,13 @@ func SetupClient(cData *CommandData, host, configFile string, ignoreCert, server
 	// be logged in after setup process
 	config, _ := cData.Config.ToRequestConfig()
 	cData.LibDM = libdm.NewLibDM(config)
+
+	// Insert user directly if token and user is set
+	if len(token) > 0 && len(username) > 0 {
+		cData.Config.InsertUser(username, token)
+		cData.Config.Save()
+		return
+	}
 
 	// In register mode, don't login
 	if register {

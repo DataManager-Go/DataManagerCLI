@@ -94,6 +94,8 @@ var (
 	setupCmdServerOnly = setupCmd.Flag("server-only", "Setup the server connection only. No login").Bool()
 	setupCmdRegister   = setupCmd.Flag("register", "Register after logging in").Bool()
 	setupCmdNoLogin    = setupCmd.Flag("no-login", "Don't login after setting up").Bool()
+	setupCmdToken      = setupCmd.Flag("token", "Use token").String()
+	setupCmdUsername   = setupCmd.Flag("user", "The Username. Required if --token is set").String()
 
 	//
 	// ---------> Config commands --------------------------------------

@@ -157,7 +157,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 				return
 			}
 
-			commands.SetupClient(commandData, host, *appCfgFile, *setupCmdIgnoreCert, *setupCmdServerOnly, *setupCmdRegister, *setupCmdNoLogin)
+			commands.SetupClient(commandData, host, *appCfgFile, *setupCmdIgnoreCert, *setupCmdServerOnly, *setupCmdRegister, *setupCmdNoLogin, *setupCmdToken, *setupCmdUsername)
 		}
 
 	// -- Config commands
