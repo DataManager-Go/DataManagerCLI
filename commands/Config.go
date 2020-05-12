@@ -83,17 +83,18 @@ func ConfigUse(cData *CommandData, target string, values []string) {
 
 // ConfigView view config
 func ConfigView(cData *CommandData, sessionBase64 bool) {
-	if len(cData.Config.User.SessionToken) == 0 && cData.NoRedaction {
-		s, err := cData.Config.GetToken()
-		if err == nil {
-			if sessionBase64 {
-				enc := base64.RawStdEncoding.EncodeToString([]byte(s))
-				cData.Config.User.SessionToken = enc
-			} else {
-				cData.Config.User.SessionToken = s
-			}
-		}
+	token, err := cData.Config.GetToken()
+	if err != nil {
+		token = cData.Config.User.SessionToken
 	}
+
+	if cData.NoRedaction && sessionBase64 {
+		token = base64.RawStdEncoding.EncodeToString([]byte(token))
+	} else if sessionBase64 {
+		token = "<redacted>"
+	}
+
+	cData.Config.User.SessionToken = token
 
 	if !cData.OutputJSON {
 		// Print human output
