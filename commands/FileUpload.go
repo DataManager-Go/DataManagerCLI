@@ -215,7 +215,6 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 	// Do upload request
 	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
 		// -----> Upload URL <------
-		uploadRequest.Name = nameFromURL(u)
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
 			printResponseError(err, "uploading url")
