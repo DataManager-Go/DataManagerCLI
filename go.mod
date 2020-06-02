@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/zalando/go-keyring v0.0.0-20200121091418-667557018717
-	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/crypto v0.0.0-20200602180216-279210d13fed
 	golang.org/x/sys v0.0.0-20200602100848-8d3cce7afc34 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
