@@ -24,3 +24,5 @@ data/
 test
 input
 compileAll.sh
+manager.exe
+manager_*
