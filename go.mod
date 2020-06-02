@@ -5,8 +5,8 @@ go 1.14
 replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.5
 
 require (
-	github.com/DataManager-Go/libdatamanager v1.2.1
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200418113028-b95e60ce986e
+	github.com/DataManager-Go/libdatamanager v1.2.4
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200421144809-c51b64037a89
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.1
 	github.com/JojiiOfficial/shred v1.2.1
@@ -22,8 +22,8 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/zalando/go-keyring v0.0.0-20200121091418-667557018717
-	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
-	golang.org/x/sys v0.0.0-20200413165638-669c56c373c4 // indirect
+	golang.org/x/crypto v0.0.0-20200510223506-06a226fb4e37
+	golang.org/x/sys v0.0.0-20200602100848-8d3cce7afc34 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
 )
