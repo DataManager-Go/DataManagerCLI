@@ -136,11 +136,12 @@ func (cData *CommandData) previewFile(filepath string) {
 	}
 }
 
+// Get all PIDs in current terminal
 func getTerminalPIDs() ([]int, error) {
 	var nums []int
 
 	// Get current terminals processes
-	out, err := exec.Command("sh", "-c", "ps --no-headers | grep -vE 'sh$' | grep -vE 'ps|grep|for' | cut -d ' ' -f2").Output()
+	out, err := exec.Command("sh", "-c", "ps --no-headers | grep -vE 'sh$' | grep -vE 'ps|grep' | cut -d ' ' -f2").Output()
 	if err != nil {
 		return nil, err
 	}
