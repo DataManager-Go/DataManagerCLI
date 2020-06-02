@@ -2,8 +2,11 @@
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
 # Screenshot
-![Treeview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
+## Listview
 ![Listview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
+
+## Treeview
+![Treeview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
 
 # Installation
 Use the newest binary from the [releases](https://github.com/DataManager-Go/DataManagerCLI/releases) or compile it by yourself:
