@@ -1,7 +1,7 @@
 # DataManagerClient
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
-# Screenshot
+# Screenshots
 ## Listview
 ![Listview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
 
