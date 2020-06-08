@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/fatih/color"
@@ -23,20 +24,20 @@ func (cData *CommandData) renderTree(files []libdm.FileResponseItem, sOrder stri
 	// Loop namespaces and render each
 	for _, namespace := range namespaces {
 		renderNamespace(namespace)
-		fileMap[namespace].renderNamespaceBranch(cData, sOrder)
+		fileMap[namespace].renderNamespaceBranch(cData, sOrder, getFigureAmount(maxFileID(files))+1)
 	}
 }
 
-func (treeItemList treeItemList) renderNamespaceBranch(cData *CommandData, sOrder string) {
+func (treeItemList treeItemList) renderNamespaceBranch(cData *CommandData, sOrder string, indentSize int) {
 	groupedList := createGroupTreeList(treeItemList)
 	for k, v := range groupedList {
 		renderGroupLine(k, len(v))
-		v.renderFileItems(cData, 30, sOrder)
+		v.renderFileItems(cData, 30, indentSize, sOrder)
 	}
 }
 
 // renderFileItems prints files inside TreeItemList
-func (treeItemList treeItemList) renderFileItems(cData *CommandData, maxFiles int, sOrder string) {
+func (treeItemList treeItemList) renderFileItems(cData *CommandData, maxFiles, indentSize int, sOrder string) {
 	totalfiles := len(treeItemList)
 	limit := totalfiles
 
@@ -50,7 +51,7 @@ func (treeItemList treeItemList) renderFileItems(cData *CommandData, maxFiles in
 
 	// Print files
 	for i := 0; i < limit; i++ {
-		cData.renderTreeFile(treeItemList[i], (i == totalfiles-1 && limit == totalfiles))
+		cData.renderTreeFile(treeItemList[i], (i == totalfiles-1 && limit == totalfiles), indentSize)
 	}
 
 	// In case there are more files than allowed
@@ -126,8 +127,11 @@ func (treeList *treeList) getNamespaces() []string {
 //
 
 // Render file
-func (cData *CommandData) renderTreeFile(file *libdm.FileResponseItem, last bool) {
-	renderTreeFileBranch(fmt.Sprintf("[%d] %s", file.ID, formatFilename(file, 0, cData)), last)
+func (cData *CommandData) renderTreeFile(file *libdm.FileResponseItem, last bool, indentSize int) {
+	// Calc amount of characters of fileid
+	reqIndent := getFigureAmount(file.ID)
+	// Render Branch
+	renderTreeFileBranch(fmt.Sprintf("[%d]%s%s", file.ID, strings.Repeat(" ", indentSize-reqIndent), formatFilename(file, 0, cData)), last)
 }
 
 // Render File-branch
@@ -157,4 +161,24 @@ func renderGroupLine(groupName string, groupSize int) {
 	} else {
 		fmt.Printf("     └── %s\n", groupName)
 	}
+}
+
+// Get biggest fileID of a file slice
+func maxFileID(files []libdm.FileResponseItem) uint {
+	if len(files) == 0 {
+		return 0
+	}
+
+	// Can use first item sinc
+	// we checked the slice len
+	max := files[0].ID
+
+	// Get max file
+	for i := range files {
+		if files[i].ID > max {
+			max = files[i].ID
+		}
+	}
+
+	return max
 }

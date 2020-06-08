@@ -127,31 +127,34 @@ func editFile(file string) bool {
 func parseURIArgUploadCommand(uris []string) []string {
 	var newURIList []string
 	for i := range uris {
+		// TODO resolve ~/ - dir
+		uriPath := filepath.Clean(uris[i])
+
 		// Skip urls
 		if u, err := url.Parse(uris[i]); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
-			newURIList = append(newURIList, uris[i])
+			newURIList = append(newURIList, uriPath)
 			continue
 		}
 
-		s, err := os.Stat(uris[i])
+		s, err := os.Stat(uriPath)
 		if err != nil {
-			fmt.Println("Skipping", uris[i], err.Error())
+			fmt.Println("Skipping", uriPath, err.Error())
 			continue
 		}
 
 		if s.IsDir() {
-			dd, err := ioutil.ReadDir(uris[i])
+			dd, err := ioutil.ReadDir(uriPath)
 			if err != nil {
 				printError("reading directory", err.Error())
 				return nil
 			}
 			for j := range dd {
 				if !dd[j].IsDir() {
-					newURIList = append(newURIList, filepath.Join(uris[i], dd[j].Name()))
+					newURIList = append(newURIList, filepath.Join(uriPath, dd[j].Name()))
 				}
 			}
 		} else {
-			newURIList = append(newURIList, uris[i])
+			newURIList = append(newURIList, uriPath)
 		}
 	}
 

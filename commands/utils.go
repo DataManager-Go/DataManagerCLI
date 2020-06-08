@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -428,4 +429,9 @@ func fileHasTag(file *libdatamanager.FileResponseItem, tag string) bool {
 	}
 
 	return false
+}
+
+// Return amount of figures of nr
+func getFigureAmount(nr uint) int {
+	return int(math.Log10(float64(nr))) + 1
 }
