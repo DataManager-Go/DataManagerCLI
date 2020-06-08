@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
@@ -140,7 +141,7 @@ var (
 	// -- Tree
 	appFileTree          = app.Command("tree", "Show your files like the unix file tree")
 	appFileTreeOrder     = appFileTree.Flag("order", "Order the output").Short('o').HintOptions(commands.AvailableOrders...).String()
-	appFileTreeNamespace = appFileTree.Arg("namespace", "View only a namespace").String()
+	appFileTreeNamespace = appFileTree.Arg("namespace", "View only a namespace").HintAction(hintListNamespaces).String()
 
 	// -- Delete file -> rm
 	fileRmCmd  = app.Command("rm", "Delete a file")
@@ -397,15 +398,22 @@ func hintListNamespaces() []string {
 		return []string{}
 	}
 
+	// Init config
 	config, err := config.ToRequestConfig()
 	if err != nil {
 		return []string{}
 	}
-
 	libDM := libdm.NewLibDM(config)
+
+	// Get namespaces
 	namespaces, err := libDM.GetNamespaces()
 	if err != nil {
 		return []string{}
+	}
+
+	// Remove user prefix
+	for i := range namespaces.Slice {
+		namespaces.Slice[i] = namespaces.Slice[i][strings.Index(namespaces.Slice[i], "_")+1:]
 	}
 
 	return namespaces.Slice
