@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -124,7 +123,7 @@ func editFile(file string) bool {
 	return true
 }
 
-func parseURIArgUploadCommand(uris []string) []string {
+func parseURIArgUploadCommand(uris []string, noCompress bool) []string {
 	var newURIList []string
 	for i := range uris {
 		uriPath := gaw.ResolveFullPath(uris[i])
@@ -141,17 +140,17 @@ func parseURIArgUploadCommand(uris []string) []string {
 			continue
 		}
 
-		if s.IsDir() {
-			dd, err := ioutil.ReadDir(uriPath)
+		// Using --no-compress means uploading all
+		// files inside a given folder
+		if s.IsDir() && noCompress {
+			// Get all files in uriPath
+			files, err := gaw.ListDir(uriPath, true)
 			if err != nil {
-				printError("reading directory", err.Error())
+				printError("Listing dir", err.Error())
 				return nil
 			}
-			for j := range dd {
-				if !dd[j].IsDir() {
-					newURIList = append(newURIList, filepath.Join(uriPath, dd[j].Name()))
-				}
-			}
+
+			newURIList = append(newURIList, files...)
 		} else {
 			newURIList = append(newURIList, uriPath)
 		}

@@ -18,7 +18,7 @@ import (
 // UploadData data for uploads
 type UploadData struct {
 	Name          string
-	Publicname    string
+	PublicName    string
 	FromStdIn     bool
 	SetClip       bool
 	Public        bool
@@ -32,7 +32,7 @@ type UploadData struct {
 // UploadFile uploads the given file to the server and set's its affiliations
 func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *UploadData) {
 	// Extract directories
-	uris = parseURIArgUploadCommand(uris)
+	uris = parseURIArgUploadCommand(uris, uploadData.NoCompress)
 	if uris == nil {
 		return
 	}
@@ -63,7 +63,7 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 			fmt.Println("You can't set clipboard while uploading multiple files")
 			return
 		}
-		if len(uploadData.Publicname) > 0 {
+		if len(uploadData.PublicName) > 0 {
 			fmt.Println("You can't upload multiple files with the same public name")
 		}
 	}
@@ -102,8 +102,71 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 	wg.Wait()
 }
 
+// Upload a folder
+func (cData *CommandData) uploadCompressedFolder(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
+	var chsum string
+	var err error
+	var proxy libdm.WriterProxy
+	done := make(chan string, 1)
+
+	if !cData.Quiet {
+		prefix := "Uploading " + uploadData.Name
+		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
+
+		// Setup proxy
+		uploadRequest.ProxyWriter = proxy
+		uploadRequest.SetFileSizeCallback(func(size int64) {
+			bar.Total = int(size)
+		})
+	}
+
+	go func() {
+		c := make(chan string, 1)
+		uploadResponse, err = uploadRequest.UploadCompressedFolder(uri, c, nil)
+		done <- <-c
+	}()
+
+	if bar != nil {
+		// Show bar after 500ms if upload
+		// is not done by then
+		go (func() {
+			time.Sleep(500 * time.Millisecond)
+			select {
+			case <-done:
+			default:
+				uploadData.Progress.AddBar(bar)
+			}
+		})()
+	}
+
+	// Delete keyfile if upload was canceled
+	awaitOrInterrupt(done, func(s os.Signal) {
+		if !cData.Quiet {
+			fmt.Println(s)
+		}
+		cData.deleteKeyfile()
+		os.Exit(1)
+	}, func(checksum string) {
+		// On file upload done set chsum to received checksum
+		chsum = checksum
+	})
+
+	// Handle upload errors
+	if err != nil {
+		printResponseError(err, "uploading file")
+		return
+	}
+
+	// Verify checksum
+	if !cData.verifyChecksum(chsum, uploadResponse.Checksum) {
+		return
+	}
+
+	return uploadResponse, bar
+}
+
 // Upload file uploads a file
-func (cData *CommandData) uploadFile(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
+func (cData *CommandData) uploadSingleItem(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
 	var r io.Reader
 	var size int64
 	var chsum string
@@ -196,18 +259,22 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 	}
 
 	// Make public if public name was specified
-	if len(uploadData.Publicname) > 0 {
+	if len(uploadData.PublicName) > 0 {
 		uploadData.Public = true
 	}
 
 	// Create upload request
 	uploadRequest := cData.LibDM.NewUploadRequest(fileName, cData.FileAttributes)
 	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
+
+	// Encrypt file
 	if len(cData.Encryption) > 0 {
 		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
 	}
+
+	// Publish file
 	if uploadData.Public {
-		uploadRequest.MakePublic(uploadData.Publicname)
+		uploadRequest.MakePublic(uploadData.PublicName)
 	}
 
 	var uploadResponse *libdm.UploadResponse
@@ -224,8 +291,25 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 
 		printSuccess("uploaded URL: %s", uri)
 	} else {
-		// -----> Upload file/stdin <-----
-		uploadResponse, bar = cData.uploadFile(uploadRequest, uploadData, uri)
+		// Get uri info
+		s, err := os.Stat(uri)
+		if err != nil {
+			printError(err, "reading file")
+			return
+		}
+
+		// Call required lib func.
+		// Since we replaced all dir-uris which shouldn't be uploaded
+		// compressed, we can safely upload all dirs compressed
+		if s.IsDir() {
+			// -----> Folder <-----
+			uploadResponse, bar = cData.uploadCompressedFolder(uploadRequest, uploadData, uri)
+		} else {
+			// -----> Upload file/stdin <-----
+			uploadResponse, bar = cData.uploadSingleItem(uploadRequest, uploadData, uri)
+		}
+
+		// Return on error
 		if uploadResponse == nil {
 			return
 		}
@@ -258,14 +342,17 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 }
 
 func (cData *CommandData) setClipboard(publicName string) bool {
+	// Check if writing clipboard is supported
 	if clipboard.Unsupported {
 		fmt.Println("Clipboard not supported on this OS")
 		return false
 	}
-	err := clipboard.WriteAll(cData.Config.GetPreviewURL(publicName))
-	if err != nil {
+
+	// Write to clipboard
+	if err := clipboard.WriteAll(cData.Config.GetPreviewURL(publicName)); err != nil {
 		printError("setting clipboard", err.Error())
 		return false
 	}
+
 	return true
 }

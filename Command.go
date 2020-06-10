@@ -39,7 +39,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			DeleteInvalid: *fileUploadDeletInvaid,
 			FromStdIn:     *fileUploadFromStdin,
 			Public:        *fileUploadPublic,
-			Publicname:    *fileUploadPublicName,
+			PublicName:    *fileUploadPublicName,
 			ReplaceFile:   *fileUploadReplace,
 			SetClip:       *fileUploadSetClipboard,
 			NoCompress:    *fileUploadNoCompress,

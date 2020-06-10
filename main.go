@@ -122,7 +122,7 @@ var (
 	fileUploadParallelism  = appUpload.Flag("parallelism", "Upload n files at the same time").Default("1").Uint()
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
-	fileUploadNoCompress   = appUpload.Flag("no-compress", "Don't compress folders while upload").Bool()
+	fileUploadNoCompress   = appUpload.Flag("no-compress", "Don't upload folders compressed").Bool()
 
 	// -- List
 	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
