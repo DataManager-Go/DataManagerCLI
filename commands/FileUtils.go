@@ -127,8 +127,7 @@ func editFile(file string) bool {
 func parseURIArgUploadCommand(uris []string) []string {
 	var newURIList []string
 	for i := range uris {
-		// TODO resolve ~/ - dir
-		uriPath := filepath.Clean(uris[i])
+		uriPath := gaw.ResolveFullPath(uris[i])
 
 		// Skip urls
 		if u, err := url.Parse(uris[i]); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
