@@ -26,6 +26,7 @@ type UploadData struct {
 	DeleteInvalid bool
 	TotalFiles    int
 	Progress      *uiprogress.Progress
+	NoCompress    bool
 }
 
 // UploadFile uploads the given file to the server and set's its affiliations
@@ -87,8 +88,8 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 
 			go func(uri string) {
 				cData.upload(uploadData, uri)
-
 				wg.Done()
+
 				c <- 1
 			}(uris[pos])
 

@@ -7,12 +7,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/DataManager-Go/DataManagerCLI/commands"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
-
-	"github.com/DataManager-Go/DataManagerCLI/commands"
 	_ "github.com/mattn/go-sqlite3"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
@@ -123,6 +122,7 @@ var (
 	fileUploadParallelism  = appUpload.Flag("parallelism", "Upload n files at the same time").Default("1").Uint()
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
+	fileUploadNoCompress   = appUpload.Flag("no-compress", "Don't compress folders while upload").Bool()
 
 	// -- List
 	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")
