@@ -1,16 +1,24 @@
 # DataManagerClient
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
-# Screenshot
-![File List](https://very.highly.illegal-dark-web-server.xyz/preview/raw/5eFeAZ5HRIxuUMIxx4SzUbYwZ)
+# Screenshots
+## Listview
+![Listview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
+
+## Treeview
+![Treeview](https://very.highly.illegal-dark-web-server.xyz/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
 
 # Installation
-Use the newest binary from the [releases](https://github.com/DataManager-Go/DataManagerCLI/releases) or compile it by yourself:
 
-Go 1.11+ is required
+### Arch linux
+You can find the datamanager cli client in the AUR: `datamanager-cli-git`.
+
+### Compiling
+
 ```go
-go mod download && go build -o main && sudo mv main /usr/local/bin/manager
+go build -o main && sudo mv main /usr/local/bin/manager
 ```
+(Go 1.11+ is required)
 
 # Setup
 Run `manager setup <host>` to create a configuration file and login.<br>

@@ -143,7 +143,11 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			}
 		}
 
-		table.AddRow(header...)
+		// don't add the head row
+		// on quiet mode
+		if !cData.Quiet {
+			table.AddRow(header...)
+		}
 
 		for _, file := range refFiles {
 			// Colorize private pubNames if not public

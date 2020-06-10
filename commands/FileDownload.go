@@ -99,7 +99,7 @@ func (cData *CommandData) ViewFile(data *DownloadData, progress *uiprogress.Prog
 		}
 
 		// Preview tempfile
-		previewFile(tmpFile)
+		cData.previewFile(tmpFile)
 	} else {
 		// Display file in os.Stdout (cli)
 		err = resp.SaveTo(os.Stdout, nil)

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -88,7 +90,7 @@ func GetTempFile(fileName string) string {
 }
 
 // previewFile opens a locally stored file
-func previewFile(filepath string) {
+func (cData *CommandData) previewFile(filepath string) {
 	// Windows
 	if runtime.GOOS == "windows" {
 		fmt.Println("Filepath: " + filepath)
@@ -104,11 +106,61 @@ func previewFile(filepath string) {
 		cmd := exec.Command("xdg-open", filepath)
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
-		err := cmd.Run()
 
-		if err != nil {
+		start := time.Now().Unix()
+
+		if err := cmd.Run(); err != nil {
 			fmt.Println("Error: ", err)
+			return
 		}
+
+		if time.Now().Unix()-start <= 2 {
+			// Wait
+			if !cData.Quiet {
+				fmt.Println("Application exited too fast. Trying to wait for its PID to exit")
+			}
+
+			// Get all PIDs in current terminal
+			pids, err := getTerminalPIDs()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+
+			// Only wait for programs launched AFTER xdg-open
+			for _, pid := range pids {
+				if pid >= cmd.Process.Pid {
+					waitForPID(pid)
+				}
+			}
+		}
+	}
+}
+
+// Get all PIDs in current terminal
+func getTerminalPIDs() ([]int, error) {
+	var nums []int
+
+	// Get current terminals processes
+	out, err := exec.Command("sh", "-c", "ps --no-headers | grep -vE 'sh$' | grep -vE 'ps|grep' | cut -d ' ' -f2").Output()
+	if err != nil {
+		return nil, err
+	}
+
+	// Go for each line
+	for _, snum := range strings.Split(string(out), "\n") {
+		num, err := strconv.Atoi(snum)
+		if err == nil {
+			nums = append(nums, num)
+		}
+	}
+
+	return nums, nil
+}
+
+func waitForPID(pid int) {
+	if err := exec.Command("tail", fmt.Sprintf("--pid=%d", pid), "-f", "/dev/null").Run(); err != nil {
+		fmt.Println(err)
 	}
 }
 
@@ -377,4 +429,9 @@ func fileHasTag(file *libdatamanager.FileResponseItem, tag string) bool {
 	}
 
 	return false
+}
+
+// Return amount of figures of nr
+func getFigureAmount(nr uint) int {
+	return int(math.Log10(float64(nr))) + 1
 }
