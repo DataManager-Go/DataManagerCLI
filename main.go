@@ -168,7 +168,7 @@ var (
 	fileUpdateAddGroups    = fileUpdateCmd.Flag("add-groups", "Add groups to a file").Strings()
 	fileUpdateRemoveGroups = fileUpdateCmd.Flag("remove-groups", "Remove groups from a file").Strings()
 	// -- Download
-	fileDownloadCmd     = appFileCmd.Command("download", "Download a file from the server").Alias("dl")
+	fileDownloadCmd     = app.Command("download", "Download a file from the server").Alias("dl")
 	fileDownloadName    = fileDownloadCmd.Arg("fileName", "Download files with this name").String()
 	fileDownloadID      = fileDownloadCmd.Arg("fileId", "Specify the fileID").Uint()
 	fileDownloadPath    = fileDownloadCmd.Flag("output", "Where to store the file").Default("./").Short('o').String()
