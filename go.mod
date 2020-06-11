@@ -5,8 +5,8 @@ go 1.14
 replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.5
 
 require (
-	github.com/DataManager-Go/libdatamanager v1.2.8
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200610220414-2fdcf7d5a2e4
+	github.com/DataManager-Go/libdatamanager v1.2.9
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200611131517-1999a3912fa5
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.6
 	github.com/JojiiOfficial/shred v1.2.1
