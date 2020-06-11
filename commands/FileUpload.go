@@ -30,10 +30,17 @@ type UploadData struct {
 
 // UploadItems to the server and set's its affiliations
 func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *UploadData) {
+	// Stdin can only be used
+	// without additional files
+	if uploadData.FromStdIn {
+		cData.uploadEntity(*uploadData, "")
+		return
+	}
+
 	// Build new slice containing the
 	// correct file/uri order
 	uris = parseURIArgUploadCommand(uris, uploadData.NoArchiving)
-	if uris == nil && !uploadData.FromStdIn {
+	if uris == nil {
 		return
 	}
 
@@ -43,18 +50,13 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	uploadData.Progress.Start()
 
 	// Check source(s)
-	if uploadData.TotalFiles == 0 && !uploadData.FromStdIn {
+	if uploadData.TotalFiles == 0 {
 		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
 		return
 	}
 
 	// Verify combinations
 	if uploadData.TotalFiles > 1 {
-		if uploadData.FromStdIn {
-			fmt.Println("Can't upload from stdin and files at the same time")
-			return
-		}
-
 		if uploadData.SetClip {
 			fmt.Println("You can't set clipboard while uploading multiple files")
 			return
@@ -158,7 +160,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 			// -----> Folder <-----
 			uploadResponse, bar = execUploader.uploadArchivedFolder()
 		} else {
-			// -----> Upload file/stdin <-----
+			// -----> File <-----
 			// Open file
 			f, err := os.Open(uri)
 			if err != nil {

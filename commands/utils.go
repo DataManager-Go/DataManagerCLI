@@ -1,13 +1,10 @@
 package commands
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
-	"math"
 	"net/url"
 	"os"
 	"os/exec"
@@ -354,25 +351,8 @@ func awaitOrInterrupt(Ch chan string, onInterrupt func(os.Signal), onChan func(s
 	}
 }
 
-func hashFileMd5(filePath string) (string, error) {
-	var returnMD5String string
-	file, err := os.Open(filePath)
-	if err != nil {
-		return returnMD5String, err
-	}
-	defer file.Close()
-	hash := md5.New()
-	if _, err := io.Copy(hash, file); err != nil {
-		return returnMD5String, err
-	}
-	hashInBytes := hash.Sum(nil)[:16]
-	returnMD5String = hex.EncodeToString(hashInBytes)
-	return returnMD5String, nil
-
-}
-
 func fileMd5(file string) string {
-	md5, err := hashFileMd5(file)
+	md5, err := gaw.GetFileMD5(file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -430,11 +410,6 @@ func fileHasTag(file *libdatamanager.FileResponseItem, tag string) bool {
 	}
 
 	return false
-}
-
-// Return amount of figures of nr
-func getFigureAmount(nr uint) int {
-	return int(math.Log10(float64(nr))) + 1
 }
 
 func (cData *CommandData) setClipboard(publicName string) bool {

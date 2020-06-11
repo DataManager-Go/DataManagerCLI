@@ -62,6 +62,7 @@ func (cData *CommandData) Init() bool {
 	return true
 }
 
+// Delete a keyfile
 func (cData *CommandData) deleteKeyfile() {
 	if len(cData.Keyfile) > 0 {
 		ShredderFile(cData.Keyfile, -1)
@@ -119,6 +120,7 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
 func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *uiprogress.Bar) {
+	// Short uses only one line to print the upload data
 	if short {
 		var text string
 		if len(ur.PublicFilename) > 0 {
@@ -128,21 +130,22 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 		}
 
 		printBar(text, bar)
-
 		return
 	}
 
+	// Bulid table
 	table := clitable.New()
 	table.ColSeparator = " "
 	table.Padding = 4
 
+	// Fill table with data
 	table.AddRow([]interface{}{color.HiGreenString("FileID:"), ur.FileID}...)
+
 	if len(ur.PublicFilename) > 0 {
 		table.AddRow([]interface{}{color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename)}...)
 	}
 
 	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
-
 	table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
@@ -150,6 +153,7 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	printBar(table.String(), bar)
 }
 
+// Check if a custom namespace is provided via cli flags
 func namespaceOverwritten() bool {
 	if len(os.Args) < 2 {
 		return false
@@ -159,7 +163,8 @@ func namespaceOverwritten() bool {
 	return (strings.Contains(cmdj, "--namespace,") || strings.Contains(cmdj, "-n,"))
 }
 
-// Get real set namespace. If no --namespace was provided "" will be returned
+// Get passed namespace. If no --namespace or -n is provided,
+// an empty string will be returned
 func (cData *CommandData) getRealNamespace() string {
 	if !namespaceOverwritten() {
 		return ""

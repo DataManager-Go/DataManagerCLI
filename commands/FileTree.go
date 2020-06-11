@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
 )
 
@@ -24,7 +25,7 @@ func (cData *CommandData) renderTree(files []libdm.FileResponseItem, sOrder stri
 	// Loop namespaces and render each
 	for _, namespace := range namespaces {
 		renderNamespace(namespace)
-		fileMap[namespace].renderNamespaceBranch(cData, sOrder, getFigureAmount(maxFileID(files))+1)
+		fileMap[namespace].renderNamespaceBranch(cData, sOrder, gaw.GetFigureCountUint(maxFileID(files))+1)
 	}
 }
 
@@ -129,7 +130,7 @@ func (treeList *treeList) getNamespaces() []string {
 // Render file
 func (cData *CommandData) renderTreeFile(file *libdm.FileResponseItem, last bool, indentSize int) {
 	// Calc amount of characters of fileid
-	reqIndent := getFigureAmount(file.ID)
+	reqIndent := gaw.GetFigureCountUint(file.ID)
 	// Render Branch
 	renderTreeFileBranch(fmt.Sprintf("[%d]%s%s", file.ID, strings.Repeat(" ", indentSize-reqIndent), formatFilename(file, 0, cData)), last)
 }

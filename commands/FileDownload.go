@@ -180,8 +180,7 @@ func (cData *CommandData) DownloadFile(data *DownloadData, progress *uiprogress.
 
 func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string, cancel chan bool, bar *uiprogress.Bar) error {
 	// Save file to tempFile
-	err := resp.WriteToFile(file, 0600, cancel)
-	if err != nil {
+	if err := resp.WriteToFile(file, 0600, cancel); err != nil {
 		if err == libdm.ErrChecksumNotMatch {
 			printBar(cData.getChecksumError(resp), bar)
 		} else {
@@ -189,9 +188,10 @@ func writeFile(cData *CommandData, resp *libdm.FileDownloadResponse, file string
 		}
 	}
 
-	return err
+	return nil
 }
 
+// Download multiple files into a folder
 func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir string, parallelism uint, getSubDirName func(file libdm.FileResponseItem) string) {
 	if len(files) == 0 {
 		fmt.Println("No files found")
@@ -213,7 +213,8 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 		outDir = files[0].Attributes.Namespace
 	}
 
-	rootDir := filepath.Clean(outDir)
+	// Resolve path
+	rootDir := gaw.ResolveFullPath(outDir)
 
 	// Overwrite files
 	cData.Force = true
@@ -232,7 +233,7 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 
 	totalfiles := len(files)
 
-	// Start Uploader pool
+	// Start Downloader pool
 	for pos < totalfiles {
 		read := <-c
 		for i := 0; i < int(read) && pos < totalfiles; i++ {

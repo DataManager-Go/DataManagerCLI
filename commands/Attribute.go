@@ -18,7 +18,7 @@ func UpdateAttribute(cData *CommandData, attribute libdm.Attribute, name, newNam
 	fmt.Printf("The attribute has been %s\n", color.HiGreenString("successfully updated"))
 }
 
-// DeleteAttribute update an attribute
+// DeleteAttribute delete an attribute
 func DeleteAttribute(cData *CommandData, attribute libdm.Attribute, name string) {
 	_, err := cData.LibDM.DeleteAttribute(attribute, cData.FileAttributes.Namespace, name)
 	if err != nil {

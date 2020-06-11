@@ -39,6 +39,8 @@ github.com/JojiiOfficial/gaw v1.2.4 h1:8K7Q7nwDJaWKCUAp68OWMy5wkBu//lnApfjqp3JQ5
 github.com/JojiiOfficial/gaw v1.2.4/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/gaw v1.2.5 h1:wbguzCqNaCBMYH1a9D6EHW2aIG21uo6CS6qaHLi5I3s=
 github.com/JojiiOfficial/gaw v1.2.5/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
+github.com/JojiiOfficial/gaw v1.2.6 h1:JU8GDvykk2IG6Kevw5aVqTuRO+kbpZXZ8yBfVgTU0t0=
+github.com/JojiiOfficial/gaw v1.2.6/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
 github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
 github.com/JojiiOfficial/uiprogress v1.0.5 h1:aDvOcDRwXfDk6tsx6TmnjK3IAsbhzjJ3hZ4BpBZtotE=
