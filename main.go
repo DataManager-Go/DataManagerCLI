@@ -56,7 +56,7 @@ var (
 	appNoDecrypt          = app.Flag("no-decrypt", "Don't decrypt files").Bool()
 	appForce              = app.Flag("force", "Forces an action").Short('f').Bool()
 	appFileEncryption     = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(libdm.EncryptionCiphers...).String()
-	appDisableCompression = appUpload.Flag("no-compression", "Don't upload folders compressed").Bool()
+	appDisableCompression = appUpload.Flag("compressed", "Compress files while uploading").Bool()
 
 	// Output related flags
 	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()

@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -26,6 +27,9 @@ type UploadData struct {
 	TotalFiles    int
 	Progress      *uiprogress.Progress
 	NoArchiving   bool
+
+	customName      bool
+	uploadAsArchive bool
 }
 
 // UploadItems to the server and set's its affiliations
@@ -123,6 +127,22 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 	if len(uploadData.Name) == 0 {
 		_, fileName := filepath.Split(uri)
 		uploadData.Name = fileName
+	} else {
+		uploadData.customName = true
+	}
+
+	// Determine if uri is an http url
+	isURL := isHTTPURL(uri)
+
+	// Get uri info
+	if !isURL {
+		s, err := os.Stat(uri)
+		if err != nil {
+			printError(err, "reading file")
+			return
+		}
+
+		uploadData.uploadAsArchive = s.IsDir()
 	}
 
 	// Create uploadRequest
@@ -132,7 +152,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 	execUploader := cData.newUploader(&uploadData, uri, uploadRequest, (!cData.Quiet && !uploadData.FromStdIn))
 
 	// Do upload request
-	if isHTTPURL(uri) {
+	if isURL {
 		// -----> Upload URL <------
 
 		// We checked if url.Parse is
@@ -146,17 +166,8 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 
 		printSuccess("uploaded URL: %s", uri)
 	} else if !uploadData.FromStdIn {
-		// Get uri info
-		s, err := os.Stat(uri)
-		if err != nil {
-			printError(err, "reading file")
-			return
-		}
-
 		// Call required lib func.
-		// Since we replaced all dir-uris which shouldn't be uploaded
-		// archived, we can safely upload all dirs as archive
-		if s.IsDir() {
+		if uploadData.uploadAsArchive {
 			// -----> Folder <-----
 			uploadResponse, bar = execUploader.uploadArchivedFolder()
 		} else {
@@ -192,6 +203,22 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 		uploadData.Public = true
 	}
 
+	// Add correct ending if name is not set
+	if !uploadData.customName {
+		// Handle archiving
+		if uploadData.uploadAsArchive {
+			// Append .tar ending
+			if !strings.HasSuffix(uploadData.Name, ".tar") && !strings.HasSuffix(uploadData.Name, ".tar.gz") {
+				uploadData.Name += ".tar"
+			}
+		}
+
+		// Append .gz ending
+		if cData.Compression && !strings.HasSuffix(uploadData.Name, ".gz") {
+			uploadData.Name += ".gz"
+		}
+	}
+
 	// Create upload request
 	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
 	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
@@ -204,6 +231,11 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 	// Publish file
 	if uploadData.Public {
 		uploadRequest.MakePublic(uploadData.PublicName)
+	}
+
+	// Set compression
+	if cData.Compression {
+		uploadRequest.Compress()
 	}
 
 	return uploadRequest
@@ -268,7 +300,12 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 	done := make(chan string, 1)
 
 	if uploader.showProgress {
-		prefix := "Uploading " + uploader.uploadData.Name
+		name := uploader.uploadData.Name
+		if len(name) > 20 {
+			name = name[:10] + "..." + name[10:]
+		}
+
+		prefix := "Uploading " + name
 		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
 
 		// Setup proxy
@@ -351,8 +388,7 @@ func (uploader uploader) uploadFromStdin() (*libdm.UploadResponse, *uiprogress.B
 
 // Upload archived folder
 func (uploader uploader) uploadArchivedFolder() (*libdm.UploadResponse, *uiprogress.Bar) {
-	uploader.uploadData.Name += ".tar.gz"
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
-		return uploader.uploadRequest.UploadCompressedFolder(uri, done, nil)
+		return uploader.uploadRequest.UploadArchivedFolder(uri, done, nil)
 	})
 }

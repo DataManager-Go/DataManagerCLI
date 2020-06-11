@@ -40,7 +40,7 @@ func buildCData(parsed string, appTrimName int) *commands.CommandData {
 		Quiet:               *appQuiet,
 		VerifyFile:          *appVerify,
 		UnmodifiedNamespace: unmodifiedNS,
-		NoCompression:       *appDisableCompression,
+		Compression:         *appDisableCompression,
 	}
 
 	// Init cdata
