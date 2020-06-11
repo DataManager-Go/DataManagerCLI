@@ -102,6 +102,88 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	wg.Wait()
 }
 
+// Upload upload an URI
+func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ bool) {
+	var uploadResponse *libdm.UploadResponse
+	var err error
+	var bar *uiprogress.Bar
+
+	// Set name to filename if not set
+	if len(uploadData.Name) == 0 {
+		_, fileName := filepath.Split(uri)
+		uploadData.Name = fileName
+	}
+
+	// Create uploadRequest
+	uploadRequest := uploadData.toUploadRequest(cData)
+
+	// Do upload request
+	if isHTTPURL(uri) {
+		// -----> Upload URL <------
+
+		// We checked if url.Parse is
+		// successful in isHTTPURL
+		u, _ := url.Parse(uri)
+		uploadResponse, err = uploadRequest.UploadURL(u)
+		if err != nil {
+			printResponseError(err, "uploading url")
+			return
+		}
+
+		printSuccess("uploaded URL: %s", uri)
+	} else {
+		// Get uri info
+		s, err := os.Stat(uri)
+		if err != nil {
+			printError(err, "reading file")
+			return
+		}
+
+		// Call required lib func.
+		// Since we replaced all dir-uris which shouldn't be uploaded
+		// compressed, we can safely upload all dirs compressed
+		if s.IsDir() {
+			// -----> Folder <-----
+			uploadResponse, bar = cData.uploadCompressedFolder(uploadRequest, uploadData, uri)
+		} else {
+			// -----> Upload file/stdin <-----
+			uploadResponse, bar = cData.uploadSingleItem(uploadRequest, uploadData, uri)
+		}
+
+		// Return on error
+		if uploadResponse == nil {
+			return
+		}
+	}
+
+	// Return result of postUpload
+	return cData.runPostUpload(uploadData, uploadResponse, bar)
+}
+
+// Build UploadRequest from UploadData
+func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanager.UploadRequest {
+	// Make public if public name was specified
+	if len(uploadData.PublicName) > 0 {
+		uploadData.Public = true
+	}
+
+	// Create upload request
+	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
+	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
+
+	// Encrypt file
+	if len(cData.Encryption) > 0 {
+		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
+	}
+
+	// Publish file
+	if uploadData.Public {
+		uploadRequest.MakePublic(uploadData.PublicName)
+	}
+
+	return uploadRequest
+}
+
 // Upload a folder
 func (cData *CommandData) uploadCompressedFolder(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
 	var chsum string
@@ -249,88 +331,6 @@ func (cData *CommandData) uploadSingleItem(uploadRequest *libdm.UploadRequest, u
 	}
 
 	return uploadResponse, bar
-}
-
-// Upload uploads a file or a url
-func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ bool) {
-	var uploadResponse *libdm.UploadResponse
-	var err error
-	var bar *uiprogress.Bar
-
-	// Set name to filename if not set
-	if len(uploadData.Name) == 0 {
-		_, fileName := filepath.Split(uri)
-		uploadData.Name = fileName
-	}
-
-	// Create uploadRequest
-	uploadRequest := uploadData.toUploadRequest(cData)
-
-	// Do upload request
-	if isHTTPURL(uri) {
-		// -----> Upload URL <------
-
-		// We checked if url.Parse is
-		// successful in isHTTPURL
-		u, _ := url.Parse(uri)
-		uploadResponse, err = uploadRequest.UploadURL(u)
-		if err != nil {
-			printResponseError(err, "uploading url")
-			return
-		}
-
-		printSuccess("uploaded URL: %s", uri)
-	} else {
-		// Get uri info
-		s, err := os.Stat(uri)
-		if err != nil {
-			printError(err, "reading file")
-			return
-		}
-
-		// Call required lib func.
-		// Since we replaced all dir-uris which shouldn't be uploaded
-		// compressed, we can safely upload all dirs compressed
-		if s.IsDir() {
-			// -----> Folder <-----
-			uploadResponse, bar = cData.uploadCompressedFolder(uploadRequest, uploadData, uri)
-		} else {
-			// -----> Upload file/stdin <-----
-			uploadResponse, bar = cData.uploadSingleItem(uploadRequest, uploadData, uri)
-		}
-
-		// Return on error
-		if uploadResponse == nil {
-			return
-		}
-	}
-
-	// Return result of postUpload
-	return cData.runPostUpload(uploadData, uploadResponse, bar)
-}
-
-// Build UploadRequest from UploadData
-func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanager.UploadRequest {
-	// Make public if public name was specified
-	if len(uploadData.PublicName) > 0 {
-		uploadData.Public = true
-	}
-
-	// Create upload request
-	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
-	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
-
-	// Encrypt file
-	if len(cData.Encryption) > 0 {
-		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
-	}
-
-	// Publish file
-	if uploadData.Public {
-		uploadRequest.MakePublic(uploadData.PublicName)
-	}
-
-	return uploadRequest
 }
 
 // Hit clipboard, keystore and output trigger

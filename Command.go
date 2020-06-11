@@ -34,7 +34,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Upload
 	case appUpload.FullCommand():
-		commandData.UploaedItems(*fileUploadPaths, *fileUploadParallelism, &commands.UploadData{
+		commandData.UploadItems(*fileUploadPaths, *fileUploadParallelism, &commands.UploadData{
 			Name:          *fileUploadName,
 			DeleteInvalid: *fileUploadDeletInvaid,
 			FromStdIn:     *fileUploadFromStdin,

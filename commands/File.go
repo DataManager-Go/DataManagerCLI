@@ -323,7 +323,7 @@ func (cData *CommandData) EditFile(id uint) {
 	cData.Encryption = resp.Encryption
 
 	// Replace file on server with new file
-	cData.UploaedItems([]string{filePath}, 1, &UploadData{
+	cData.UploadItems([]string{filePath}, 1, &UploadData{
 		ReplaceFile: resp.FileID,
 		Progress:    uiprogress.New(),
 	})
