@@ -23,6 +23,7 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/JojiiOfficial/shred"
+	"github.com/atotto/clipboard"
 	"github.com/fatih/color"
 	"github.com/kyokomi/emoji"
 	"golang.org/x/crypto/ssh/terminal"
@@ -434,4 +435,29 @@ func fileHasTag(file *libdatamanager.FileResponseItem, tag string) bool {
 // Return amount of figures of nr
 func getFigureAmount(nr uint) int {
 	return int(math.Log10(float64(nr))) + 1
+}
+
+func (cData *CommandData) setClipboard(publicName string) bool {
+	// Check if writing clipboard is supported
+	if clipboard.Unsupported {
+		fmt.Println("Clipboard not supported on this OS")
+		return false
+	}
+
+	// Write to clipboard
+	if err := clipboard.WriteAll(cData.Config.GetPreviewURL(publicName)); err != nil {
+		printError("setting clipboard", err.Error())
+		return false
+	}
+
+	return true
+}
+
+// Check if uri is a http url
+func isHTTPURL(uri string) bool {
+	if u, err := url.Parse(uri); err == nil {
+		return gaw.IsInStringArray(u.Scheme, []string{"http", "https"})
+	}
+
+	return false
 }

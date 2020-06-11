@@ -9,9 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/JojiiOfficial/gaw"
-	"github.com/atotto/clipboard"
 	"github.com/gosuri/uiprogress"
 )
 
@@ -29,8 +28,8 @@ type UploadData struct {
 	NoArchiving   bool
 }
 
-// UploadFile uploads the given file to the server and set's its affiliations
-func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *UploadData) {
+// UploadItems uploads the given Itcem to the server and set's its affiliations
+func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *UploadData) {
 	// Extract directories
 	uris = parseURIArgUploadCommand(uris, uploadData.NoArchiving)
 	if uris == nil {
@@ -42,6 +41,7 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 	uploadData.Progress = uiprogress.New()
 	uploadData.Progress.Start()
 
+	// Check source(s)
 	if uploadData.TotalFiles == 0 && !uploadData.FromStdIn {
 		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
 		return
@@ -87,7 +87,7 @@ func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *Up
 			wg.Add(1)
 
 			go func(uri string) {
-				cData.upload(uploadData, uri)
+				cData.uploadEntity(uploadData, uri)
 				wg.Done()
 
 				c <- 1
@@ -252,37 +252,27 @@ func (cData *CommandData) uploadSingleItem(uploadRequest *libdm.UploadRequest, u
 }
 
 // Upload uploads a file or a url
-func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool) {
-	_, fileName := filepath.Split(uri)
-	if len(uploadData.Name) != 0 {
-		fileName = uploadData.Name
-	}
-
-	// Make public if public name was specified
-	if len(uploadData.PublicName) > 0 {
-		uploadData.Public = true
-	}
-
-	// Create upload request
-	uploadRequest := cData.LibDM.NewUploadRequest(fileName, cData.FileAttributes)
-	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
-
-	// Encrypt file
-	if len(cData.Encryption) > 0 {
-		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
-	}
-
-	// Publish file
-	if uploadData.Public {
-		uploadRequest.MakePublic(uploadData.PublicName)
-	}
-
+func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ bool) {
 	var uploadResponse *libdm.UploadResponse
+	var err error
 	var bar *uiprogress.Bar
 
+	// Set name to filename if not set
+	if len(uploadData.Name) == 0 {
+		_, fileName := filepath.Split(uri)
+		uploadData.Name = fileName
+	}
+
+	// Create uploadRequest
+	uploadRequest := uploadData.toUploadRequest(cData)
+
 	// Do upload request
-	if u, err := url.Parse(uri); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
+	if isHTTPURL(uri) {
 		// -----> Upload URL <------
+
+		// We checked if url.Parse is
+		// successful in isHTTPURL
+		u, _ := url.Parse(uri)
 		uploadResponse, err = uploadRequest.UploadURL(u)
 		if err != nil {
 			printResponseError(err, "uploading url")
@@ -315,6 +305,36 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 		}
 	}
 
+	// Return result of postUpload
+	return cData.runPostUpload(uploadData, uploadResponse, bar)
+}
+
+// Build UploadRequest from UploadData
+func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanager.UploadRequest {
+	// Make public if public name was specified
+	if len(uploadData.PublicName) > 0 {
+		uploadData.Public = true
+	}
+
+	// Create upload request
+	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
+	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
+
+	// Encrypt file
+	if len(cData.Encryption) > 0 {
+		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
+	}
+
+	// Publish file
+	if uploadData.Public {
+		uploadRequest.MakePublic(uploadData.PublicName)
+	}
+
+	return uploadRequest
+}
+
+// Hit clipboard, keystore and output trigger
+func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *libdatamanager.UploadResponse, bar *uiprogress.Bar) bool {
 	// Set clipboard to public file if required
 	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
 		cData.setClipboard(uploadResponse.PublicFilename)
@@ -338,21 +358,5 @@ func (cData *CommandData) upload(uploadData *UploadData, uri string) (succ bool)
 
 	// Render table with informations
 	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
-	return true
-}
-
-func (cData *CommandData) setClipboard(publicName string) bool {
-	// Check if writing clipboard is supported
-	if clipboard.Unsupported {
-		fmt.Println("Clipboard not supported on this OS")
-		return false
-	}
-
-	// Write to clipboard
-	if err := clipboard.WriteAll(cData.Config.GetPreviewURL(publicName)); err != nil {
-		printError("setting clipboard", err.Error())
-		return false
-	}
-
 	return true
 }
