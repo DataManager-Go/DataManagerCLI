@@ -47,15 +47,16 @@ var (
 	appCfgFile = app.Flag("config", "the configuration file for the app").Envar(getEnVar(EnVarConfigFile)).Short('c').String()
 
 	// File related flags
-	appTags           = app.Flag("tag", "Specify tags to use").Short('t').Strings()
-	appGroups         = app.Flag("group", "Specify groups to use").Short('g').Strings()
-	appNamespace      = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
-	appAllNamespaces  = app.Flag("all-namespaces", "Do action for all found files").Bool()
-	appAll            = app.Flag("all", "Do action for all found files").Short('a').Bool()
-	appVerify         = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
-	appNoDecrypt      = app.Flag("no-decrypt", "Don't decrypt files").Bool()
-	appForce          = app.Flag("force", "Forces an action").Short('f').Bool()
-	appFileEncryption = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(libdm.EncryptionCiphers...).String()
+	appTags               = app.Flag("tag", "Specify tags to use").Short('t').Strings()
+	appGroups             = app.Flag("group", "Specify groups to use").Short('g').Strings()
+	appNamespace          = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
+	appAllNamespaces      = app.Flag("all-namespaces", "Do action for all found files").Bool()
+	appAll                = app.Flag("all", "Do action for all found files").Short('a').Bool()
+	appVerify             = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
+	appNoDecrypt          = app.Flag("no-decrypt", "Don't decrypt files").Bool()
+	appForce              = app.Flag("force", "Forces an action").Short('f').Bool()
+	appFileEncryption     = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(libdm.EncryptionCiphers...).String()
+	appDisableCompression = appUpload.Flag("no-compression", "Don't upload folders compressed").Bool()
 
 	// Output related flags
 	appDetails     = app.Flag("details", "Print more details of something").Short('d').Counter()
@@ -122,7 +123,7 @@ var (
 	fileUploadParallelism  = appUpload.Flag("parallelism", "Upload n files at the same time").Default("1").Uint()
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
-	fileUploadNoCompress   = appUpload.Flag("no-compress", "Don't upload folders compressed").Bool()
+	fileUploadNoArchiving  = app.Flag("no-archvie", "Don't archive folder, upload all files in a given folder separately").Bool()
 
 	// -- List
 	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")

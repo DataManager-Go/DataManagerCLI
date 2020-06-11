@@ -36,6 +36,7 @@ type CommandData struct {
 	Yes, Force, Quiet       bool
 	NoDecrypt, NoEmojis     bool
 	VerifyFile              bool
+	NoCompression           bool
 }
 
 // Init init CommandData

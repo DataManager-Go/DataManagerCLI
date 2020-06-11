@@ -42,7 +42,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			PublicName:    *fileUploadPublicName,
 			ReplaceFile:   *fileUploadReplace,
 			SetClip:       *fileUploadSetClipboard,
-			NoCompress:    *fileUploadNoCompress,
+			NoArchiving:   *fileUploadNoArchiving,
 		})
 
 	case fileCreateCmd.FullCommand():

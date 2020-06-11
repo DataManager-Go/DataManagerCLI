@@ -26,13 +26,13 @@ type UploadData struct {
 	DeleteInvalid bool
 	TotalFiles    int
 	Progress      *uiprogress.Progress
-	NoCompress    bool
+	NoArchiving   bool
 }
 
 // UploadFile uploads the given file to the server and set's its affiliations
 func (cData *CommandData) UploadFile(uris []string, threads uint, uploadData *UploadData) {
 	// Extract directories
-	uris = parseURIArgUploadCommand(uris, uploadData.NoCompress)
+	uris = parseURIArgUploadCommand(uris, uploadData.NoArchiving)
 	if uris == nil {
 		return
 	}
