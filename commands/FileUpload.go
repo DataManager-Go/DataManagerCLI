@@ -33,7 +33,7 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	// Build new slice containing the
 	// correct file/uri order
 	uris = parseURIArgUploadCommand(uris, uploadData.NoArchiving)
-	if uris == nil {
+	if uris == nil && !uploadData.FromStdIn {
 		return
 	}
 
@@ -48,25 +48,33 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 		return
 	}
 
-	// In case a user is dumb,
-	// correct him
-	if threads == 0 {
-		threads = 1
-	}
-
 	// Verify combinations
 	if uploadData.TotalFiles > 1 {
 		if uploadData.FromStdIn {
 			fmt.Println("Can't upload from stdin and files at the same time")
 			return
 		}
+
 		if uploadData.SetClip {
 			fmt.Println("You can't set clipboard while uploading multiple files")
 			return
 		}
+
 		if len(uploadData.PublicName) > 0 {
 			fmt.Println("You can't upload multiple files with the same public name")
 		}
+	}
+
+	// Upload Files
+	cData.runUploadPool(uploadData, uris, threads)
+}
+
+// Run parallel Uploads
+func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads uint) {
+	// In case a user is dumb,
+	// correct him
+	if threads == 0 {
+		threads = 1
 	}
 
 	// Waitgroup to wait for all "threads" to be done
@@ -88,7 +96,7 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 			wg.Add(1)
 
 			go func(uri string) {
-				cData.uploadEntity(uploadData, uri)
+				cData.uploadEntity(*uploadData, uri)
 				wg.Done()
 
 				c <- 1
@@ -104,7 +112,7 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 }
 
 // Upload upload a URI
-func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ bool) {
+func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ bool) {
 	var uploadResponse *libdm.UploadResponse
 	var err error
 	var bar *uiprogress.Bar
@@ -117,6 +125,9 @@ func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ
 
 	// Create uploadRequest
 	uploadRequest := uploadData.toUploadRequest(cData)
+
+	// Create Uploader
+	execUploader := cData.newUploader(&uploadData, uri, uploadRequest, (!cData.Quiet && !uploadData.FromStdIn))
 
 	// Do upload request
 	if isHTTPURL(uri) {
@@ -132,7 +143,7 @@ func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ
 		}
 
 		printSuccess("uploaded URL: %s", uri)
-	} else {
+	} else if !uploadData.FromStdIn {
 		// Get uri info
 		s, err := os.Stat(uri)
 		if err != nil {
@@ -142,23 +153,34 @@ func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ
 
 		// Call required lib func.
 		// Since we replaced all dir-uris which shouldn't be uploaded
-		// compressed, we can safely upload all dirs compressed
+		// archived, we can safely upload all dirs as archive
 		if s.IsDir() {
 			// -----> Folder <-----
-			uploadResponse, bar = cData.uploadCompressedFolder(uploadRequest, uploadData, uri)
+			uploadResponse, bar = execUploader.uploadArchivedFolder()
 		} else {
 			// -----> Upload file/stdin <-----
-			uploadResponse, bar = cData.uploadSingleItem(uploadRequest, uploadData, uri)
-		}
+			// Open file
+			f, err := os.Open(uri)
+			if err != nil {
+				printError("opening file", err.Error())
+				return
+			}
 
-		// Return on error
-		if uploadResponse == nil {
-			return
+			// Upload file
+			uploadResponse, bar = execUploader.uploadFile(f)
 		}
+	} else {
+		// -----> StdIn <-----
+		uploadResponse, bar = execUploader.uploadFromStdin()
+	}
+
+	// Return on error
+	if uploadResponse == nil {
+		return
 	}
 
 	// Return result of postUpload
-	return cData.runPostUpload(uploadData, uploadResponse, bar)
+	return cData.runPostUpload(&uploadData, uploadResponse, bar)
 }
 
 // Build UploadRequest from UploadData
@@ -183,155 +205,6 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 	}
 
 	return uploadRequest
-}
-
-// Upload an archived folder
-func (cData *CommandData) uploadCompressedFolder(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
-	var chsum string
-	var err error
-	var proxy libdm.WriterProxy
-	done := make(chan string, 1)
-
-	if !cData.Quiet {
-		prefix := "Uploading " + uploadData.Name
-		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
-
-		// Setup proxy
-		uploadRequest.ProxyWriter = proxy
-		uploadRequest.SetFileSizeCallback(func(size int64) {
-			bar.Total = int(size)
-		})
-	}
-
-	go func() {
-		c := make(chan string, 1)
-		uploadResponse, err = uploadRequest.UploadCompressedFolder(uri, c, nil)
-		done <- <-c
-	}()
-
-	if bar != nil {
-		// Show bar after 500ms if upload
-		// is not done by then
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-done:
-			default:
-				uploadData.Progress.AddBar(bar)
-			}
-		})()
-	}
-
-	// Delete keyfile if upload was canceled
-	awaitOrInterrupt(done, func(s os.Signal) {
-		if !cData.Quiet {
-			fmt.Println(s)
-		}
-		cData.deleteKeyfile()
-		os.Exit(1)
-	}, func(checksum string) {
-		// On file upload done set chsum to received checksum
-		chsum = checksum
-	})
-
-	// Handle upload errors
-	if err != nil {
-		printResponseError(err, "uploading file")
-		return
-	}
-
-	// Verify checksum
-	if !cData.verifyChecksum(chsum, uploadResponse.Checksum) {
-		return
-	}
-
-	return uploadResponse, bar
-}
-
-// Upload file uploads a file
-func (cData *CommandData) uploadSingleItem(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
-	var r io.Reader
-	var size int64
-	var chsum string
-	var err error
-	var proxy libdm.WriterProxy
-	done := make(chan string, 1)
-
-	// Select upload source reader
-	if !uploadData.FromStdIn {
-		// Open file
-		var f *os.File
-		f, size = getFile(uri)
-		defer f.Close()
-
-		r = f
-	} else {
-		r = os.Stdin
-	}
-
-	// Progressbar setup
-	if !cData.Quiet && !uploadData.FromStdIn {
-		prefix := "Uploading " + uploadData.Name
-		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
-
-		// Setup proxy
-		uploadRequest.ProxyWriter = proxy
-		uploadRequest.SetFileSizeCallback(func(size int64) {
-			bar.Total = int(size)
-		})
-	}
-
-	// Start uploading
-	go func() {
-		c := make(chan string, 1)
-		uploadResponse, err = uploadRequest.UploadFromReader(r, size, c, nil)
-		done <- <-c
-	}()
-
-	if bar != nil {
-		// Show bar after 500ms if upload
-		// is not done by then
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-done:
-			default:
-				uploadData.Progress.AddBar(bar)
-			}
-		})()
-	}
-
-	// Delete keyfile if upload was canceled
-	awaitOrInterrupt(done, func(s os.Signal) {
-		if !cData.Quiet {
-			fmt.Println(s)
-		}
-		cData.deleteKeyfile()
-		os.Exit(1)
-	}, func(checksum string) {
-		// On file upload done set chsum to received checksum
-		chsum = checksum
-	})
-
-	// Handle upload errors
-	if err != nil {
-		printResponseError(err, "uploading file")
-		return
-	}
-
-	// Checksum is not supposed to be empty If any known error
-	// were thrown, this part wouldn't be executed
-	if len(chsum) == 0 {
-		fmt.Println("Unexpected error occured")
-		return
-	}
-
-	// Verify checksum
-	if !cData.verifyChecksum(chsum, uploadResponse.Checksum) {
-		return
-	}
-
-	return uploadResponse, bar
 }
 
 // Hit clipboard, keystore and output trigger
@@ -360,4 +233,123 @@ func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *
 	// Render table with informations
 	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
 	return true
+}
+
+// Upload helper
+type uploader struct {
+	cData         *CommandData         // CLI informations
+	uploadRequest *libdm.UploadRequest // Prepared uploadrequest
+	uri           string               // URI to be uploaded
+	uploadData    *UploadData          // Data containing information for the uploaded fil
+	showProgress  bool                 // Use a progressbar
+}
+
+// Hook func
+type uploadFunc func(done chan string, uri string) (*libdm.UploadResponse, error)
+
+// Create new uploader
+func (cData *CommandData) newUploader(uploadData *UploadData, uri string, uploadRequest *libdatamanager.UploadRequest, useProgressbar bool) *uploader {
+	return &uploader{
+		cData:         cData,
+		uploadData:    uploadData,
+		uploadRequest: uploadRequest,
+		uri:           uri,
+		showProgress:  useProgressbar,
+	}
+}
+
+// Upload the uri
+func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
+	var chsum string
+	var err error
+	var proxy libdm.WriterProxy
+	done := make(chan string, 1)
+
+	if uploader.showProgress {
+		prefix := "Uploading " + uploader.uploadData.Name
+		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
+
+		// Setup proxy
+		uploader.uploadRequest.ProxyWriter = proxy
+		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
+			bar.Total = int(size)
+		})
+	}
+
+	// Call upload hook in background
+	go func() {
+		c := make(chan string, 1)
+		uploadResponse, err = uploadFunc(c, uploader.uri)
+		done <- <-c
+	}()
+
+	if bar != nil {
+		// Show bar after 500ms if upload
+		// is not done by then
+		go (func() {
+			time.Sleep(500 * time.Millisecond)
+			select {
+			case <-done:
+			default:
+				uploader.uploadData.Progress.AddBar(bar)
+			}
+		})()
+	}
+
+	// Delete keyfile if upload was canceled
+	awaitOrInterrupt(done, func(s os.Signal) {
+		if !uploader.cData.Quiet {
+			fmt.Println(s)
+		}
+		uploader.cData.deleteKeyfile()
+		os.Exit(1)
+	}, func(checksum string) {
+		// On file upload done set chsum to received checksum
+		chsum = checksum
+	})
+
+	// Handle upload errors
+	if err != nil {
+		printResponseError(err, "uploading file")
+		return
+	}
+
+	// Verify checksum
+	if !uploader.cData.verifyChecksum(chsum, uploadResponse.Checksum) {
+		return
+	}
+
+	return uploadResponse, bar
+}
+
+// Upload from reader
+func (uploader uploader) uploadFromReader(r io.Reader, size int64) (*libdm.UploadResponse, *uiprogress.Bar) {
+	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
+		return uploader.uploadRequest.UploadFromReader(r, size, done, nil)
+	})
+}
+
+// Upload a file
+func (uploader uploader) uploadFile(file *os.File) (*libdm.UploadResponse, *uiprogress.Bar) {
+	// Get fileinfo
+	s, err := file.Stat()
+	if err != nil {
+		return nil, nil
+	}
+	defer file.Close()
+
+	// Upload from file reader
+	return uploader.uploadFromReader(file, s.Size())
+}
+
+// Upload from stdin
+func (uploader uploader) uploadFromStdin() (*libdm.UploadResponse, *uiprogress.Bar) {
+	return uploader.uploadFromReader(os.Stdin, 0)
+}
+
+// Upload archived folder
+func (uploader uploader) uploadArchivedFolder() (*libdm.UploadResponse, *uiprogress.Bar) {
+	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
+		return uploader.uploadRequest.UploadCompressedFolder(uri, done, nil)
+	})
 }
