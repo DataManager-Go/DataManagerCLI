@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -129,8 +128,8 @@ func parseURIArgUploadCommand(uris []string, noCompress bool) []string {
 		uriPath := gaw.ResolveFullPath(uris[i])
 
 		// Skip urls
-		if u, err := url.Parse(uris[i]); err == nil && gaw.IsInStringArray(u.Scheme, []string{"http", "https"}) {
-			newURIList = append(newURIList, uriPath)
+		if isHTTPURL(uris[i]) {
+			newURIList = append(newURIList, uris[i])
 			continue
 		}
 

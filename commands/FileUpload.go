@@ -28,9 +28,10 @@ type UploadData struct {
 	NoArchiving   bool
 }
 
-// UploadItems uploads the given Itcem to the server and set's its affiliations
+// UploadItems to the server and set's its affiliations
 func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *UploadData) {
-	// Extract directories
+	// Build new slice containing the
+	// correct file/uri order
 	uris = parseURIArgUploadCommand(uris, uploadData.NoArchiving)
 	if uris == nil {
 		return
@@ -102,7 +103,7 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	wg.Wait()
 }
 
-// Upload upload an URI
+// Upload upload a URI
 func (cData *CommandData) uploadEntity(uploadData *UploadData, uri string) (succ bool) {
 	var uploadResponse *libdm.UploadResponse
 	var err error
@@ -184,7 +185,7 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 	return uploadRequest
 }
 
-// Upload a folder
+// Upload an archived folder
 func (cData *CommandData) uploadCompressedFolder(uploadRequest *libdm.UploadRequest, uploadData *UploadData, uri string) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
 	var chsum string
 	var err error
