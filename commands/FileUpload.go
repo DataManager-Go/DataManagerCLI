@@ -351,6 +351,7 @@ func (uploader uploader) uploadFromStdin() (*libdm.UploadResponse, *uiprogress.B
 
 // Upload archived folder
 func (uploader uploader) uploadArchivedFolder() (*libdm.UploadResponse, *uiprogress.Bar) {
+	uploader.uploadData.Name += ".tar.gz"
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadCompressedFolder(uri, done, nil)
 	})

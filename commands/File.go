@@ -34,12 +34,14 @@ func DeleteFile(cData *CommandData, name string, id uint) {
 		}
 	}
 
+	// Do delete request
 	resp, err := cData.LibDM.DeleteFile(name, id, cData.All, cData.FileAttributes)
 	if err != nil {
 		printResponseError(err, "deleting file")
 		return
 	}
 
+	// Print correct success message
 	if len(resp.IDs) > 1 {
 		fmt.Printf("Deleted %d files %s\n", len(resp.IDs), color.HiGreenString("successfully"))
 	} else {
@@ -58,15 +60,16 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 	// Convert input
 	name, id = GetFileCommandData(name, id)
 
+	// Do ListFile request
 	resp, err := cData.LibDM.ListFiles(name, id, cData.AllNamespaces, cData.FileAttributes, cData.Details)
 	if err != nil {
 		printResponseError(err, "listing files")
 		return
 	}
 
+	// Request user confirmation if files are too much
 	if uint16(len(resp.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
-		y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin))
-		if !y {
+		if y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin)); !y {
 			return
 		}
 	}

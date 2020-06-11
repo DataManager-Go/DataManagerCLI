@@ -64,14 +64,14 @@ func createDownloadBar(progress *uiprogress.Progress, fileName string, fileSize 
 }
 
 func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool, progress *uiprogress.Progress) (*libdm.FileDownloadResponse, error) {
+	// Create new filerequest
 	resp, err := cData.LibDM.NewFileRequest(downloadData.FileID, downloadData.FileName, cData.FileAttributes.Namespace).Do()
 	if err != nil {
 		return nil, err
 	}
 
-	bar := buildRequest(cData, resp, showBar, progress)
-
-	if bar != nil {
+	// Build request and set bar if desired
+	if bar := buildRequest(cData, resp, showBar, progress); bar != nil {
 		downloadData.bar = bar
 	}
 
@@ -82,7 +82,7 @@ func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool, pr
 func (cData *CommandData) ViewFile(data *DownloadData, progress *uiprogress.Progress) {
 	resp, err := data.doRequest(cData, data.needPreview(), progress)
 	if err != nil {
-		printError("viewing file", err.Error())
+		printResponseError(err, "viewing file")
 		return
 	}
 
@@ -101,10 +101,9 @@ func (cData *CommandData) ViewFile(data *DownloadData, progress *uiprogress.Prog
 		// Preview tempfile
 		cData.previewFile(tmpFile)
 	} else {
-		// Display file in os.Stdout (cli)
-		err = resp.SaveTo(os.Stdout, nil)
-		if err != nil {
-			printResponseError(err, "downloading file")
+		// Display file in os.Stdout (terminal)
+		if err = resp.SaveTo(os.Stdout, nil); err != nil {
+			printError("downloading file", err.Error())
 			return
 		}
 
