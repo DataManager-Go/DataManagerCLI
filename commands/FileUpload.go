@@ -48,8 +48,10 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 		return
 	}
 
-	// Setup uploadData
+	// Setup Total files
 	uploadData.TotalFiles = len(uris)
+
+	// Setup Progressbar
 	uploadData.Progress = uiprogress.New()
 	uploadData.Progress.Start()
 
