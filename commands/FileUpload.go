@@ -12,7 +12,6 @@ import (
 
 	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/vbauerster/mpb/v5"
 )
 
 // UploadData data for uploads
@@ -296,9 +295,9 @@ func (cData *CommandData) newUploader(uploadData *UploadData, uri string, upload
 func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse) {
 	var chsum string
 	var err error
+	var bar *Bar
 	done := make(chan string, 1)
 
-	var bar *mpb.Bar
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
 		if len(name) > 20 {
@@ -306,15 +305,18 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 		}
 
 		// Create progressbar
-		bar = uploader.uploadData.ProgressView.AddBar(0, name)
+		bar = NewBar(0, name)
 
 		// Setup proxy
 		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {
-			// TODO implement proxy
-			return w
+			if bar.ow == nil {
+				bar.ow = w
+			}
+
+			return bar
 		}
 		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
-			bar.SetTotal(size, false)
+			bar.total = size
 		})
 	}
 
@@ -333,7 +335,7 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 			select {
 			case <-done:
 			default:
-				// TODO display bar after 500ms
+				uploader.uploadData.ProgressView.AddBar(bar)
 			}
 		})()
 	}
