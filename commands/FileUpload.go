@@ -305,7 +305,7 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 		}
 
 		// Create progressbar
-		bar = NewBar(0, name)
+		bar = NewBar(UploaTask, 0, name)
 
 		// Setup proxy
 		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {

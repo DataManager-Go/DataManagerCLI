@@ -9,12 +9,7 @@ import (
 	"github.com/vbauerster/mpb/v5/decor"
 )
 
-// ProgressView holds info for progress
-type ProgressView struct {
-	ProgressContainer *mpb.Progress
-	Bars              []*mpb.Bar
-}
-
+// Data for the bar proxy
 type barData struct {
 	// Offset represents n bytes which
 	// are written to the server but not
@@ -22,8 +17,35 @@ type barData struct {
 	offset int
 }
 
+// BarTask for the bar to do
+type BarTask uint8
+
+// ...
+const (
+	UploadTask BarTask = iota
+	DownloadTask
+)
+
+// Implement string
+func (bt BarTask) String() string {
+	switch bt {
+	case UploadTask:
+		return "Upload"
+	case DownloadTask:
+		return "Download"
+	}
+
+	return ""
+}
+
+// Verb return task as verb
+func (bt BarTask) Verb() string {
+	return bt.String() + "ing"
+}
+
 // Bar a porgressbar
 type Bar struct {
+	task    BarTask
 	total   int64
 	options []mpb.BarOption
 	style   string
@@ -37,6 +59,28 @@ type Bar struct {
 	barData *barData
 }
 
+// NewBar create a new bar
+func NewBar(task BarTask, total int64, name string) *Bar {
+	// Create bar instance
+	bar := &Bar{
+		task:    task,
+		total:   total,
+		style:   mpb.DefaultBarStyle,
+		barData: &barData{},
+	}
+
+	// Add Bar options
+	bar.options = []mpb.BarOption{
+		mpb.PrependDecorators(
+			decor.Name(name),
+			decor.Elapsed(decor.ET_STYLE_GO, decor.WCSyncSpace),
+		),
+	}
+
+	return bar
+}
+
+// Implement the io.Writer for the bar proxy
 func (bar Bar) Write(b []byte) (int, error) {
 	n, err := bar.ow.Write(b)
 
@@ -59,36 +103,10 @@ func (bar Bar) Write(b []byte) (int, error) {
 	return n, err
 }
 
-// NewProgressView create new progressview
-func NewProgressView() *ProgressView {
-	return &ProgressView{
-		Bars: []*mpb.Bar{},
-		ProgressContainer: mpb.New(
-			mpb.WithWaitGroup(&sync.WaitGroup{}),
-			mpb.WithRefreshRate(50*time.Millisecond),
-			mpb.WithWidth(100),
-		),
-	}
-}
-
-// NewBar create a new bar
-func NewBar(total int64, name string) *Bar {
-	// Create bar instance
-	bar := &Bar{
-		total:   total,
-		style:   mpb.DefaultBarStyle,
-		barData: &barData{},
-	}
-
-	// Add Bar options
-	bar.options = []mpb.BarOption{
-		mpb.PrependDecorators(
-			decor.Name(name),
-			decor.Elapsed(decor.ET_STYLE_GO, decor.WCSyncSpace),
-		),
-	}
-
-	return bar
+// ProgressView holds info for progress
+type ProgressView struct {
+	ProgressContainer *mpb.Progress
+	Bars              []*mpb.Bar
 }
 
 // AddBar to ProgressView
@@ -107,8 +125,14 @@ func (pv *ProgressView) AddBar(bbar *Bar) *mpb.Bar {
 	return bar
 }
 
-// ProgressBarProxy a proxywriter for progressbars
-type ProgressBarProxy struct {
-	bar *mpb.Bar
-	w   io.Writer
+// NewProgressView create new progressview
+func NewProgressView() *ProgressView {
+	return &ProgressView{
+		Bars: []*mpb.Bar{},
+		ProgressContainer: mpb.New(
+			mpb.WithWaitGroup(&sync.WaitGroup{}),
+			mpb.WithRefreshRate(50*time.Millisecond),
+			mpb.WithWidth(100),
+		),
+	}
 }
