@@ -59,44 +59,35 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 		doneTextChan: make(chan string, 1),
 	}
 
-	// Trim name
-	if len(name) > 40 {
-		name = name[:20] + "..." + name[len(name)-20:]
-	}
+	// Trim text if its too long
+	name = trimName(name, 40)
 
 	// Add Bar options
 	bar.options = []mpb.BarOption{
 		mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
 			return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
-				if bar.done {
-					io.WriteString(w, bar.doneText)
-					return
-				}
-
-				// Check if there is text in the doneText channel
-				select {
-				case text := <-bar.doneTextChan:
-					bar.doneText = text
-					bar.done = true
+				if st.Current > st.Total-30 || st.Completed {
+					text := <-bar.doneTextChan
+					bar.doneTextChan <- text
 					io.WriteString(w, text)
-					return
-				default:
+					bar.done = true
+				} else {
+					base.Fill(w, reqWidth, st)
 				}
-
-				base.Fill(w, reqWidth, st)
 			})
 		}),
 	}
 
+	// Decorate Bar
 	bar.options = append(bar.options, []mpb.BarOption{
 		mpb.PrependDecorators(
-			decor.OnComplete(decor.Spinner(nil, decor.WCSyncSpace), "done"),
-			decor.Name(task.Verb(), decor.WCSyncSpace),
-			decor.Name(" '"+name+"'", decor.WCSyncSpaceR),
-			decor.Percentage(decor.WCSyncSpace),
+			// decor.OnComplete(decor.Spinner(nil, decor.WCSyncWidthR), ""),
+			decor.OnComplete(decor.Name(task.Verb(), decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.Name(" '"+name+"'", decor.WCSyncWidth), "Done!"),
 		),
 		mpb.AppendDecorators(
-			decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth),
+			decor.OnComplete(decor.Percentage(decor.WCSyncSpaceR), ""),
+			decor.OnComplete(decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth), ""),
 		),
 	}...)
 

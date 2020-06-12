@@ -120,7 +120,7 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 // If total files is > 1 only a summary is shown
 func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *Bar) {
 	// Short uses only one line to print the upload data
-	if short || true {
+	if short {
 		var text string
 		if len(ur.PublicFilename) > 0 {
 			text = fmt.Sprintf("%s %d; %s %s;\t%s %s", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))

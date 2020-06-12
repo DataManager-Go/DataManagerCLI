@@ -72,17 +72,25 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	}
 
 	// Upload Files
-	cData.runUploadPool(uploadData, uris, threads)
-	uploadData.ProgressView.ProgressContainer.Wait()
-	for i := range uploadData.ProgressView.Bars {
-		for !uploadData.ProgressView.RawBars[i].done {
-			time.Sleep(100 * time.Millisecond)
+	if cData.runUploadPool(uploadData, uris, threads) {
+		uploadData.ProgressView.ProgressContainer.Wait()
+
+		for i := range uploadData.ProgressView.Bars {
+			for !uploadData.ProgressView.RawBars[i].done {
+				time.Sleep(100 * time.Millisecond)
+			}
 		}
+
+		time.Sleep(100 * time.Millisecond)
+	} else {
+		fmt.Println("NO success")
+		fmt.Println("NO success")
+		fmt.Println("NO success")
 	}
 }
 
 // Run parallel Uploads
-func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads uint) {
+func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads uint) bool {
 	// In case a user is dumb,
 	// correct him
 	if threads == 0 {
@@ -101,6 +109,8 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 	c <- threads
 	var pos int
 
+	success := true
+
 	// Start Uploader pool
 	for pos < uploadData.TotalFiles {
 		read := <-c
@@ -108,7 +118,9 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 			wg.Add(1)
 
 			go func(uri string) {
-				cData.uploadEntity(*uploadData, uri)
+				if !cData.uploadEntity(*uploadData, uri) {
+					success = false
+				}
 				wg.Done()
 
 				c <- 1
@@ -121,6 +133,7 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 	// Wait for all
 	// threads to be done
 	wg.Wait()
+	return success
 }
 
 // Upload upload a URI
@@ -319,10 +332,6 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
 			uploader.bar.bar.SetTotal(size, false)
 		})
-
-		time.AfterFunc(3*time.Second, func() {
-			uploader.bar.doneTextChan <- "test"
-		})
 	}
 
 	// Call upload hook in background
@@ -347,11 +356,13 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 	// Handle upload errors
 	if err != nil {
 		printResponseError(err, "uploading file")
+		uploader.bar.bar.SetTotal(uploader.bar.total, true)
 		return
 	}
 
 	// Verify checksum
 	if !uploader.cData.verifyChecksum(chsum, uploadResponse.Checksum) {
+		uploader.bar.bar.SetTotal(uploader.bar.total, true)
 		return
 	}
 

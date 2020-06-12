@@ -436,3 +436,11 @@ func isHTTPURL(uri string) bool {
 
 	return false
 }
+
+func trimName(text string, tlen int) string {
+	if len(text) > tlen {
+		return text[:tlen/2] + "..." + text[len(text)-tlen/2:]
+	}
+
+	return text
+}
