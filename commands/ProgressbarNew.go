@@ -82,12 +82,12 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	bar.options = append(bar.options, []mpb.BarOption{
 		mpb.PrependDecorators(
 			// decor.OnComplete(decor.Spinner(nil, decor.WCSyncWidthR), ""),
-			decor.OnComplete(decor.Name(task.Verb(), decor.WCSyncWidth), ""),
-			decor.OnComplete(decor.Name(" '"+name+"'", decor.WCSyncWidth), "Done!"),
+			decor.OnComplete(decor.Name(task.Verb()), ""),
+			decor.OnComplete(decor.Name(" '"+name+"'", decor.WCSyncSpace), "Done!"),
 		),
 		mpb.AppendDecorators(
-			decor.OnComplete(decor.Percentage(decor.WCSyncSpaceR), ""),
-			decor.OnComplete(decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.Percentage(), ""),
+			decor.OnComplete(decor.CountersKiloByte("[%d / %d]"), ""),
 		),
 	}...)
 
