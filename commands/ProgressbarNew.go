@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -57,16 +58,21 @@ type Bar struct {
 
 	// Data required for the proxy
 	barData *barData
+
+	doneTextChan chan string
+	doneText     string
+	done         bool
 }
 
 // NewBar create a new bar
 func NewBar(task BarTask, total int64, name string) *Bar {
 	// Create bar instance
 	bar := &Bar{
-		task:    task,
-		total:   total,
-		style:   "(=>_)",
-		barData: &barData{},
+		task:         task,
+		total:        total,
+		style:        "(=>_)",
+		barData:      &barData{},
+		doneTextChan: make(chan string, 1),
 	}
 
 	// Trim name
@@ -75,7 +81,30 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	}
 
 	// Add Bar options
-	bar.options = []mpb.BarOption{
+	bar.options = append([]mpb.BarOption{}, mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
+		return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
+			if bar.done {
+				io.WriteString(w, bar.doneText)
+				return
+			}
+
+			// Check if there is text in the doneText channel
+			select {
+			case text := <-bar.doneTextChan:
+				bar.doneText = text
+				bar.done = true
+				io.WriteString(w, text)
+				fmt.Println(bar.bar.Completed())
+				return
+			default:
+			}
+
+			base.Fill(w, reqWidth, st)
+		})
+	}))
+
+	bar.options = append(bar.options, []mpb.BarOption{
+		mpb.BarFillerClearOnComplete(),
 		mpb.PrependDecorators(
 			decor.OnComplete(decor.Spinner(nil, decor.WCSyncSpace), "done"),
 			decor.Name(task.Verb(), decor.WCSyncSpace),
@@ -85,7 +114,7 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 		mpb.AppendDecorators(
 			decor.CountersKiloByte("[%d / %d]", decor.WCSyncSpace),
 		),
-	}
+	}...)
 
 	return bar
 }

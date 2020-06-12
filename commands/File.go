@@ -393,8 +393,10 @@ func (cData *CommandData) CreateFile(name string) {
 		return
 	}
 
+	_ = resp
 	success = len(<-chDone) > 0
-	cData.printUploadResponse(resp, cData.Quiet)
+	// TODO
+	// cData.printUploadResponse(resp, cData.Quiet)
 }
 
 // FileTree shows a unix tree like view of files

@@ -118,9 +118,9 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool) {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *Bar) {
 	// Short uses only one line to print the upload data
-	if short {
+	if short || true {
 		var text string
 		if len(ur.PublicFilename) > 0 {
 			text = fmt.Sprintf("%s %d; %s %s;\t%s %s", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
@@ -128,9 +128,8 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 			text = fmt.Sprintf("%s %d; %s %s", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
 		}
 
-		// TODO
 		_ = text
-		// printBar(text, bar)
+		bar.doneTextChan <- text
 		return
 	}
 
@@ -151,7 +150,7 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
-	// printBar(table.String(), bar)
+	bar.doneTextChan <- table.String()
 }
 
 // Check if a custom namespace is provided via cli flags

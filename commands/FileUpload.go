@@ -192,7 +192,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 	}
 
 	// Return result of postUpload
-	return cData.runPostUpload(&uploadData, uploadResponse)
+	return cData.runPostUpload(&uploadData, uploadResponse, execUploader)
 }
 
 // Build UploadRequest from UploadData
@@ -241,7 +241,7 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 }
 
 // Hit clipboard, keystore and output trigger
-func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *libdatamanager.UploadResponse) bool {
+func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *libdatamanager.UploadResponse, uploader *uploader) bool {
 	// Set clipboard to public file if required
 	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
 		cData.setClipboard(uploadResponse.PublicFilename)
@@ -264,7 +264,7 @@ func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *
 	}
 
 	// Render table with informations
-	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1))
+	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), uploader.bar)
 	return true
 }
 
@@ -293,27 +293,26 @@ func (cData *CommandData) newUploader(uploadData *UploadData, uri string, upload
 }
 
 // Upload the uri
-func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse) {
+func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse) {
 	var chsum string
 	var err error
-	var bar *Bar
 	done := make(chan string, 1)
 
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
 		// Create progressbar
-		bar = NewBar(UploadTask, 0, name)
+		uploader.bar = NewBar(UploadTask, 0, name)
 
 		// Setup proxy
 		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {
-			if bar.ow == nil {
-				bar.ow = w
+			if uploader.bar.ow == nil {
+				uploader.bar.ow = w
 			}
 
-			return bar
+			return uploader.bar
 		}
 		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
-			bar.total = size
+			uploader.bar.total = size
 		})
 	}
 
@@ -324,7 +323,7 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 		done <- <-c
 	}()
 
-	if bar != nil {
+	if uploader.bar != nil {
 		// Show bar after 500ms if upload
 		// is not done by then
 		go (func() {
@@ -332,7 +331,7 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 			select {
 			case <-done:
 			default:
-				uploader.uploadData.ProgressView.AddBar(bar)
+				uploader.uploadData.ProgressView.AddBar(uploader.bar)
 			}
 		})()
 	}
@@ -364,14 +363,14 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 }
 
 // Upload from reader
-func (uploader uploader) uploadFromReader(r io.Reader, size int64) *libdm.UploadResponse {
+func (uploader *uploader) uploadFromReader(r io.Reader, size int64) *libdm.UploadResponse {
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadFromReader(r, size, done, nil)
 	})
 }
 
 // Upload a file
-func (uploader uploader) uploadFile(file *os.File) *libdm.UploadResponse {
+func (uploader *uploader) uploadFile(file *os.File) *libdm.UploadResponse {
 	// Get fileinfo
 	s, err := file.Stat()
 	if err != nil {
@@ -384,12 +383,12 @@ func (uploader uploader) uploadFile(file *os.File) *libdm.UploadResponse {
 }
 
 // Upload from stdin
-func (uploader uploader) uploadFromStdin() *libdm.UploadResponse {
+func (uploader *uploader) uploadFromStdin() *libdm.UploadResponse {
 	return uploader.uploadFromReader(os.Stdin, 0)
 }
 
 // Upload archived folder
-func (uploader uploader) uploadArchivedFolder() *libdm.UploadResponse {
+func (uploader *uploader) uploadArchivedFolder() *libdm.UploadResponse {
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadArchivedFolder(uri, done, nil)
 	})
