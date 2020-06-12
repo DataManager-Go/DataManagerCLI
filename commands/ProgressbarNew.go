@@ -65,15 +65,25 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	bar := &Bar{
 		task:    task,
 		total:   total,
-		style:   mpb.DefaultBarStyle,
+		style:   "(=>_)",
 		barData: &barData{},
+	}
+
+	// Trim name
+	if len(name) > 40 {
+		name = name[:20] + "..." + name[len(name)-20:]
 	}
 
 	// Add Bar options
 	bar.options = []mpb.BarOption{
 		mpb.PrependDecorators(
-			decor.Name(name),
-			decor.Elapsed(decor.ET_STYLE_GO, decor.WCSyncSpace),
+			decor.OnComplete(decor.Spinner(nil, decor.WCSyncSpace), "done"),
+			decor.Name(task.Verb(), decor.WCSyncSpace),
+			decor.Name(" '"+name+"'", decor.WCSyncSpaceR),
+			decor.Percentage(decor.WCSyncSpace),
+		),
+		mpb.AppendDecorators(
+			decor.CountersKiloByte("[%d / %d]", decor.WCSyncSpace),
 		),
 	}
 
@@ -132,7 +142,7 @@ func NewProgressView() *ProgressView {
 		ProgressContainer: mpb.New(
 			mpb.WithWaitGroup(&sync.WaitGroup{}),
 			mpb.WithRefreshRate(50*time.Millisecond),
-			mpb.WithWidth(100),
+			mpb.WithWidth(130),
 		),
 	}
 }

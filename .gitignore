@@ -23,6 +23,7 @@ manager
 data/
 test
 input
+inputWithALongName
 compileAll.sh
 manager.exe
 manager_*

@@ -275,6 +275,7 @@ type uploader struct {
 	uri           string               // URI to be uploaded
 	uploadData    *UploadData          // Data containing information for the uploaded fil
 	showProgress  bool                 // Use a progressbar
+	bar           *Bar                 // Progressbar generated if desired
 }
 
 // Hook func
@@ -300,12 +301,8 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
-		if len(name) > 20 {
-			name = name[:10] + "..." + name[10:]
-		}
-
 		// Create progressbar
-		bar = NewBar(UploaTask, 0, name)
+		bar = NewBar(UploadTask, 0, name)
 
 		// Setup proxy
 		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {
