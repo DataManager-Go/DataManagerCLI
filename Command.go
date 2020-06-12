@@ -83,6 +83,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case fileEditCmd.FullCommand():
 		commandData.EditFile(*fileEditID)
 
+	// Move file
+	case fileMoveCmd.FullCommand():
+		commands.UpdateFile(commandData, *fileMoveFile, 0, "", *fileMoveNewNs, nil, nil, nil, nil, false, false)
+
 	// -- Attributes commands
 	// List Tags
 	case tagListCmd.FullCommand():

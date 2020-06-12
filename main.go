@@ -164,11 +164,15 @@ var (
 	fileUpdateSetPublic    = fileUpdateCmd.Flag("set-public", "Sets a file public").Bool()
 	fileUpdateSetPrivate   = fileUpdateCmd.Flag("set-private", "Sets a file private").Bool()
 	fileUpdateNewName      = fileUpdateCmd.Flag("new-name", "Change the name of a file").String()
-	fileUpdateNewNamespace = fileUpdateCmd.Flag("new-namespace", "Change the namespace of a file").String()
+	fileUpdateNewNamespace = fileUpdateCmd.Flag("new-namespace", "Change the namespace of a file").HintAction(hintListNamespaces).String()
 	fileUpdateAddTags      = fileUpdateCmd.Flag("add-tags", "Add tags to a file").Strings()
 	fileUpdateRemoveTags   = fileUpdateCmd.Flag("remove-tags", "Remove tags from a file").Strings()
 	fileUpdateAddGroups    = fileUpdateCmd.Flag("add-groups", "Add groups to a file").Strings()
 	fileUpdateRemoveGroups = fileUpdateCmd.Flag("remove-groups", "Remove groups from a file").Strings()
+	// -- Move
+	fileMoveCmd   = app.Command("mv", "Move a file into a new namespace")
+	fileMoveFile  = fileMoveCmd.Arg("file", "The file to move").Required().String()
+	fileMoveNewNs = fileMoveCmd.Arg("newNamespace", "The namespace to move the given file to").Required().HintAction(hintListNamespaces).String()
 	// -- Download
 	fileDownloadCmd     = app.Command("download", "Download a file from the server").Alias("dl")
 	fileDownloadName    = fileDownloadCmd.Arg("fileName", "Download files with this name").String()
