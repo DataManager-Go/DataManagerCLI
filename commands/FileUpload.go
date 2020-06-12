@@ -73,6 +73,12 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 
 	// Upload Files
 	cData.runUploadPool(uploadData, uris, threads)
+	uploadData.ProgressView.ProgressContainer.Wait()
+	for i := range uploadData.ProgressView.Bars {
+		for !uploadData.ProgressView.RawBars[i].done {
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
 }
 
 // Run parallel Uploads
@@ -302,17 +308,20 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 		name := uploader.uploadData.Name
 		// Create progressbar
 		uploader.bar = NewBar(UploadTask, 0, name)
+		uploader.uploadData.ProgressView.AddBar(uploader.bar)
 
 		// Setup proxy
-		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {
-			if uploader.bar.ow == nil {
-				uploader.bar.ow = w
-			}
-
-			return uploader.bar
+		uploader.uploadRequest.ProxyReader = func(r io.Reader) io.Reader {
+			return uploader.bar.bar.ProxyReader(r)
 		}
+
+		// Callback if filesize is known
 		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
-			uploader.bar.total = size
+			uploader.bar.bar.SetTotal(size, false)
+		})
+
+		time.AfterFunc(3*time.Second, func() {
+			uploader.bar.doneTextChan <- "test"
 		})
 	}
 
@@ -322,19 +331,6 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 		uploadResponse, err = uploadFunc(c, uploader.uri)
 		done <- <-c
 	}()
-
-	if uploader.bar != nil {
-		// Show bar after 500ms if upload
-		// is not done by then
-		go (func() {
-			time.Sleep(500 * time.Millisecond)
-			select {
-			case <-done:
-			default:
-				uploader.uploadData.ProgressView.AddBar(uploader.bar)
-			}
-		})()
-	}
 
 	// Delete keyfile if upload was canceled
 	awaitOrInterrupt(done, func(s os.Signal) {

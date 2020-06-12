@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -9,14 +8,6 @@ import (
 	"github.com/vbauerster/mpb/v5"
 	"github.com/vbauerster/mpb/v5/decor"
 )
-
-// Data for the bar proxy
-type barData struct {
-	// Offset represents n bytes which
-	// are written to the server but not
-	// to the progressbar
-	offset int
-}
 
 // BarTask for the bar to do
 type BarTask uint8
@@ -53,12 +44,6 @@ type Bar struct {
 
 	bar *mpb.Bar
 
-	// Original writer for the proxy
-	ow io.Writer
-
-	// Data required for the proxy
-	barData *barData
-
 	doneTextChan chan string
 	doneText     string
 	done         bool
@@ -71,7 +56,6 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 		task:         task,
 		total:        total,
 		style:        "(=>_)",
-		barData:      &barData{},
 		doneTextChan: make(chan string, 1),
 	}
 
@@ -81,30 +65,30 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	}
 
 	// Add Bar options
-	bar.options = append([]mpb.BarOption{}, mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
-		return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
-			if bar.done {
-				io.WriteString(w, bar.doneText)
-				return
-			}
+	bar.options = []mpb.BarOption{
+		mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
+			return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
+				if bar.done {
+					io.WriteString(w, bar.doneText)
+					return
+				}
 
-			// Check if there is text in the doneText channel
-			select {
-			case text := <-bar.doneTextChan:
-				bar.doneText = text
-				bar.done = true
-				io.WriteString(w, text)
-				fmt.Println(bar.bar.Completed())
-				return
-			default:
-			}
+				// Check if there is text in the doneText channel
+				select {
+				case text := <-bar.doneTextChan:
+					bar.doneText = text
+					bar.done = true
+					io.WriteString(w, text)
+					return
+				default:
+				}
 
-			base.Fill(w, reqWidth, st)
-		})
-	}))
+				base.Fill(w, reqWidth, st)
+			})
+		}),
+	}
 
 	bar.options = append(bar.options, []mpb.BarOption{
-		mpb.BarFillerClearOnComplete(),
 		mpb.PrependDecorators(
 			decor.OnComplete(decor.Spinner(nil, decor.WCSyncSpace), "done"),
 			decor.Name(task.Verb(), decor.WCSyncSpace),
@@ -112,40 +96,18 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 			decor.Percentage(decor.WCSyncSpace),
 		),
 		mpb.AppendDecorators(
-			decor.CountersKiloByte("[%d / %d]", decor.WCSyncSpace),
+			decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth),
 		),
 	}...)
 
 	return bar
 }
 
-// Implement the io.Writer for the bar proxy
-func (bar Bar) Write(b []byte) (int, error) {
-	n, err := bar.ow.Write(b)
-
-	// if bar is set, write to it
-	if bar.bar != nil {
-		// If cached writtenBytes are
-		// not restored yet, restore them
-		if bar.barData.offset > 0 {
-			bar.bar.IncrBy(bar.barData.offset)
-			bar.barData.offset = 0
-		}
-
-		bar.bar.IncrBy(n)
-	} else {
-		// If bar is not visible yet,
-		// cache written bytes
-		bar.barData.offset += n
-	}
-
-	return n, err
-}
-
 // ProgressView holds info for progress
 type ProgressView struct {
 	ProgressContainer *mpb.Progress
 	Bars              []*mpb.Bar
+	RawBars           []*Bar
 }
 
 // AddBar to ProgressView
@@ -159,6 +121,7 @@ func (pv *ProgressView) AddBar(bbar *Bar) *mpb.Bar {
 
 	// Append bar to pv bars
 	pv.Bars = append(pv.Bars, bar)
+	pv.RawBars = append(pv.RawBars, bbar)
 
 	// Return prepared proxy func
 	return bar

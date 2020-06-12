@@ -3,6 +3,8 @@ module github.com/DataManager-Go/DataManagerCLI
 go 1.14
 
 replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.5
+replace github.com/DataManager-Go/libdatamanager v1.2.9 => /home/jojii/programming/go/src/libdatamanager
+
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.2.9
@@ -19,7 +21,6 @@ require (
 	github.com/gosuri/uiprogress v0.0.1
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
-	github.com/mattn/go-runewidth v0.0.9
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
