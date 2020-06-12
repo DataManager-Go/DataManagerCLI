@@ -9,7 +9,6 @@ import (
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
-	"github.com/gosuri/uiprogress"
 	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
@@ -119,7 +118,7 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *uiprogress.Bar) {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool) {
 	// Short uses only one line to print the upload data
 	if short {
 		var text string
@@ -129,7 +128,9 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 			text = fmt.Sprintf("%s %d; %s %s", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
 		}
 
-		printBar(text, bar)
+		// TODO
+		_ = text
+		// printBar(text, bar)
 		return
 	}
 
@@ -150,7 +151,7 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
-	printBar(table.String(), bar)
+	// printBar(table.String(), bar)
 }
 
 // Check if a custom namespace is provided via cli flags

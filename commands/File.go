@@ -7,13 +7,11 @@ import (
 	"strings"
 	"time"
 
+	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
-	"github.com/gosuri/uiprogress"
-	"github.com/sbani/go-humanizer/units"
-
-	libdm "github.com/DataManager-Go/libdatamanager"
 	humanTime "github.com/sbani/go-humanizer/time"
+	"github.com/sbani/go-humanizer/units"
 	clitable "gopkg.in/benweidig/cli-table.v2"
 )
 
@@ -328,7 +326,7 @@ func (cData *CommandData) EditFile(id uint) {
 	// Replace file on server with new file
 	cData.UploadItems([]string{filePath}, 1, &UploadData{
 		ReplaceFile: resp.FileID,
-		Progress:    uiprogress.New(),
+		// Progress:    uiprogress.New(),
 	})
 }
 
@@ -396,7 +394,7 @@ func (cData *CommandData) CreateFile(name string) {
 	}
 
 	success = len(<-chDone) > 0
-	cData.printUploadResponse(resp, cData.Quiet, nil)
+	cData.printUploadResponse(resp, cData.Quiet)
 }
 
 // FileTree shows a unix tree like view of files

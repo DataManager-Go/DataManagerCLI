@@ -12,7 +12,7 @@ import (
 
 	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/gosuri/uiprogress"
+	"github.com/vbauerster/mpb/v5"
 )
 
 // UploadData data for uploads
@@ -25,7 +25,7 @@ type UploadData struct {
 	ReplaceFile   uint
 	DeleteInvalid bool
 	TotalFiles    int
-	Progress      *uiprogress.Progress
+	ProgressView  *ProgressView
 	NoArchiving   bool
 
 	customName      bool
@@ -51,9 +51,8 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 	// Setup Total files
 	uploadData.TotalFiles = len(uris)
 
-	// Setup Progressbar
-	uploadData.Progress = uiprogress.New()
-	uploadData.Progress.Start()
+	// Create ProgressView
+	uploadData.ProgressView = NewProgressView()
 
 	// Check source(s)
 	if uploadData.TotalFiles == 0 {
@@ -123,7 +122,6 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ bool) {
 	var uploadResponse *libdm.UploadResponse
 	var err error
-	var bar *uiprogress.Bar
 
 	// Set name to filename if not set
 	if len(uploadData.Name) == 0 {
@@ -171,7 +169,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 		// Call required lib func.
 		if uploadData.uploadAsArchive {
 			// -----> Folder <-----
-			uploadResponse, bar = execUploader.uploadArchivedFolder()
+			uploadResponse = execUploader.uploadArchivedFolder()
 		} else {
 			// -----> File <-----
 			// Open file
@@ -182,11 +180,11 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 			}
 
 			// Upload file
-			uploadResponse, bar = execUploader.uploadFile(f)
+			uploadResponse = execUploader.uploadFile(f)
 		}
 	} else {
 		// -----> StdIn <-----
-		uploadResponse, bar = execUploader.uploadFromStdin()
+		uploadResponse = execUploader.uploadFromStdin()
 	}
 
 	// Return on error
@@ -195,7 +193,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 	}
 
 	// Return result of postUpload
-	return cData.runPostUpload(&uploadData, uploadResponse, bar)
+	return cData.runPostUpload(&uploadData, uploadResponse)
 }
 
 // Build UploadRequest from UploadData
@@ -244,7 +242,7 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 }
 
 // Hit clipboard, keystore and output trigger
-func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *libdatamanager.UploadResponse, bar *uiprogress.Bar) bool {
+func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *libdatamanager.UploadResponse) bool {
 	// Set clipboard to public file if required
 	if uploadData.SetClip && len(uploadResponse.PublicFilename) > 0 {
 		cData.setClipboard(uploadResponse.PublicFilename)
@@ -267,7 +265,7 @@ func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *
 	}
 
 	// Render table with informations
-	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), bar)
+	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1))
 	return true
 }
 
@@ -295,25 +293,28 @@ func (cData *CommandData) newUploader(uploadData *UploadData, uri string, upload
 }
 
 // Upload the uri
-func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse, bar *uiprogress.Bar) {
+func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.UploadResponse) {
 	var chsum string
 	var err error
-	var proxy libdm.WriterProxy
 	done := make(chan string, 1)
 
+	var bar *mpb.Bar
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
 		if len(name) > 20 {
 			name = name[:10] + "..." + name[10:]
 		}
 
-		prefix := "Uploading " + name
-		bar, proxy = buildProgressbar(prefix, uint(len(prefix)))
+		// Create progressbar
+		bar = uploader.uploadData.ProgressView.AddBar(0, name)
 
 		// Setup proxy
-		uploader.uploadRequest.ProxyWriter = proxy
+		uploader.uploadRequest.ProxyWriter = func(w io.Writer) io.Writer {
+			// TODO implement proxy
+			return w
+		}
 		uploader.uploadRequest.SetFileSizeCallback(func(size int64) {
-			bar.Total = int(size)
+			bar.SetTotal(size, false)
 		})
 	}
 
@@ -332,7 +333,7 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 			select {
 			case <-done:
 			default:
-				uploader.uploadData.Progress.AddBar(bar)
+				// TODO display bar after 500ms
 			}
 		})()
 	}
@@ -360,22 +361,22 @@ func (uploader uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.Up
 		return
 	}
 
-	return uploadResponse, bar
+	return uploadResponse
 }
 
 // Upload from reader
-func (uploader uploader) uploadFromReader(r io.Reader, size int64) (*libdm.UploadResponse, *uiprogress.Bar) {
+func (uploader uploader) uploadFromReader(r io.Reader, size int64) *libdm.UploadResponse {
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadFromReader(r, size, done, nil)
 	})
 }
 
 // Upload a file
-func (uploader uploader) uploadFile(file *os.File) (*libdm.UploadResponse, *uiprogress.Bar) {
+func (uploader uploader) uploadFile(file *os.File) *libdm.UploadResponse {
 	// Get fileinfo
 	s, err := file.Stat()
 	if err != nil {
-		return nil, nil
+		return nil
 	}
 	defer file.Close()
 
@@ -384,12 +385,12 @@ func (uploader uploader) uploadFile(file *os.File) (*libdm.UploadResponse, *uipr
 }
 
 // Upload from stdin
-func (uploader uploader) uploadFromStdin() (*libdm.UploadResponse, *uiprogress.Bar) {
+func (uploader uploader) uploadFromStdin() *libdm.UploadResponse {
 	return uploader.uploadFromReader(os.Stdin, 0)
 }
 
 // Upload archived folder
-func (uploader uploader) uploadArchivedFolder() (*libdm.UploadResponse, *uiprogress.Bar) {
+func (uploader uploader) uploadArchivedFolder() *libdm.UploadResponse {
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadArchivedFolder(uri, done, nil)
 	})
