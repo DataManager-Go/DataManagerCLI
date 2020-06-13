@@ -17,20 +17,18 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 		commandData.DownloadFile(&commands.DownloadData{
 			FileName:  filename,
 			FileID:    id,
-			Preview:   *viewPreview,
-			NoPreview: *viewNoPreview,
+			Preview:   *viewPreview && !*viewNoPreview,
 			LocalPath: *fileDownloadPath,
-		}, nil)
+		})
 
 	// View file
 	case viewCmd.FullCommand():
 		filename, id := commands.GetFileCommandData(*viewFileName, *viewFileID)
 		commandData.ViewFile(&commands.DownloadData{
-			FileName:  filename,
-			FileID:    id,
-			Preview:   *viewPreview,
-			NoPreview: *viewNoPreview,
-		}, nil)
+			FileName: filename,
+			FileID:   id,
+			Preview:  *viewPreview && !*viewNoPreview,
+		})
 
 	// Upload
 	case appUpload.FullCommand():

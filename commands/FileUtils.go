@@ -12,7 +12,6 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
 	"github.com/fatih/color"
-	"github.com/gosuri/uiprogress"
 )
 
 // determineDecryptionKey  gets the correct decryption key from either the arguments of
@@ -158,31 +157,25 @@ func parseURIArgUploadCommand(uris []string, noCompress bool) []string {
 	return newURIList
 }
 
-// If bar is set, use it to print text
-// Otherwise print a new line
-func printBar(text string, bar *uiprogress.Bar) {
-	if bar.IsValid() {
-		bar.SetText(text)
-	} else {
-		fmt.Println(text)
-	}
-}
+func resolveOutputFile(fileName, outputFile string) string {
+	localFile := gaw.ResolveFullPath(outputFile)
 
-func determineLocalOutputfile(serverFilename, outputFile string) string {
-	outFile := outputFile
-	serverFilename = strings.ReplaceAll(serverFilename, string(filepath.Separator), "-")
+	// Replace fileSeparators to prevent writing file to an other directory
+	fileName = strings.ReplaceAll(fileName, string(filepath.Separator), "-")
 
+	// Append original filename to
+	// specified local path
 	if strings.HasSuffix(outputFile, "/") {
 		// If no special file was choosen
-		outFile = filepath.Join(outputFile, serverFilename)
+		localFile = filepath.Join(outputFile, fileName)
 	} else {
-		stat, err := os.Stat(outFile)
+		stat, err := os.Stat(localFile)
 		if err == nil && stat.IsDir() {
-			outFile = filepath.Join(outFile, serverFilename)
+			localFile = filepath.Join(localFile, fileName)
 		}
 	}
 
-	return outFile
+	return localFile
 }
 
 func sortFiles(sOrder string, files []*libdm.FileResponseItem) bool {

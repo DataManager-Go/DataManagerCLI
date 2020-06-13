@@ -3,75 +3,173 @@ package commands
 import (
 	"fmt"
 	"io"
+	"sync"
+	"time"
 
-	libdm "github.com/DataManager-Go/libdatamanager"
-	"github.com/gosuri/uiprogress"
-	"github.com/sbani/go-humanizer/units"
+	"github.com/vbauerster/mpb/v5"
+	"github.com/vbauerster/mpb/v5/decor"
 )
 
-type barProxyData struct {
-	bytesWritten int
-}
+// BarTask for the bar to do
+type BarTask uint8
 
-// Bar proxy a proxywriter for progressbars
-type barProxy struct {
-	data *barProxyData
-	bar  *uiprogress.Bar
-	w    io.Writer
-	r    io.Reader
-}
+// ...
+const (
+	UploadTask BarTask = iota
+	DownloadTask
+)
 
-// Implement io.Writer to barProxy
-func (p barProxy) Write(b []byte) (int, error) {
-	size := len(b)
-	p.bar.Incr(size)
-	p.data.bytesWritten += size
-	return p.w.Write(b)
-}
-
-// Create a proxy for bar
-func barProxyFromBar(bar *uiprogress.Bar, w io.Writer) *barProxy {
-	proxy := &barProxy{
-		data: &barProxyData{},
-		bar:  bar,
-		w:    w,
+// Implement string
+func (bt BarTask) String() string {
+	switch bt {
+	case UploadTask:
+		return "Upload"
+	case DownloadTask:
+		return "Download"
 	}
 
-	bar.Data = proxy
-	return proxy
+	return ""
 }
 
-// Build a progressbar and a proxy for it
-func buildProgressbar(prefix string, len uint) (*uiprogress.Bar, libdm.WriterProxy) {
-	// Create bar
-	bar := uiprogress.NewBar(0).PrependCompleted()
+// Verb return task as verb
+func (bt BarTask) Verb() string {
+	return bt.String() + "ing"
+}
 
-	// Prepend prefix
-	if prefix != "" && len > 0 {
-		bar.PrependFunc(func(b *uiprogress.Bar) string {
-			return uiprogress.Resize(prefix, len)
+// Bar a porgressbar
+type Bar struct {
+	task    BarTask
+	total   int64
+	options []mpb.BarOption
+	style   string
+
+	bar *mpb.Bar
+
+	doneTextChan chan string
+	doneText     string
+	done         bool
+}
+
+// NewBar create a new bar
+func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
+	// Create bar instance
+	bar := &Bar{
+		task:         task,
+		total:        total,
+		style:        "(=>_)",
+		doneTextChan: make(chan string, 1),
+	}
+
+	// Trim text if its too long
+	name = trimName(name, 40)
+
+	bar.options = make([]mpb.BarOption, 1)
+
+	// Singlemode true => Only one file was/is uploaded/uploading
+	if singleMode {
+		// Print fileinfo over multiple lines after uploading
+		bar.options[0] = mpb.BarExtender(mpb.BarFillerFunc(func(w io.Writer, reqWidth int, stat decor.Statistics) {
+			if stat.Completed {
+				if bar.done {
+					// Restore doneText to prevent blocking
+					// from doneTextChan
+					fmt.Fprint(w, bar.doneText)
+					return
+				}
+
+				// Wait for file informations
+				bar.doneText = <-bar.doneTextChan
+
+				// Print file informations
+				fmt.Fprint(w, bar.doneText)
+
+				bar.done = true
+			}
+		}))
+		bar.options = append(bar.options, mpb.BarFillerClearOnComplete())
+	} else {
+		// Middleware for printing singlelined file info
+		bar.options[0] = mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
+			return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
+				if st.Completed {
+					text := <-bar.doneTextChan
+					bar.doneTextChan <- text
+					io.WriteString(w, text)
+					bar.done = true
+				} else {
+					base.Fill(w, reqWidth, st)
+				}
+			})
 		})
 	}
 
-	// Append amount
-	bar.AppendFunc(func(b *uiprogress.Bar) string {
-		if proxy, ok := (b.Data).(*barProxy); ok {
-			_ = proxy
-			return fmt.Sprintf("[%s/%s]", units.BinarySuffix(float64(proxy.data.bytesWritten)), units.BinarySuffix(float64(b.Total)))
-		}
+	// Decorate Bar
+	bar.options = append(bar.options, []mpb.BarOption{
+		mpb.PrependDecorators(
+			// decor.OnComplete(decor.Spinner(nil, decor.WCSyncWidthR), ""),
+			decor.OnComplete(decor.Name(task.Verb()), "Done!"),
+			decor.OnComplete(decor.Name(" '"+name+"'"), ""),
+		),
+		mpb.AppendDecorators(
+			decor.OnComplete(decor.Percentage(decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth), ""),
+		),
+	}...)
 
-		return ""
-	})
+	return bar
+}
 
-	// Set custom bar style
-	bar.LeftEnd = '('
-	bar.RightEnd = ')'
-	bar.Empty = '_'
-
-	// Create proxy
-	proxy := func(w io.Writer) io.Writer {
-		return barProxyFromBar(bar, w)
+// Stop the bar
+func (bar *Bar) stop() {
+	if bar == nil {
+		return
 	}
 
-	return bar, proxy
+	// Write into the textChan to prevent
+	// it from blocking
+	if bar.doneTextChan != nil {
+		go func() {
+			bar.doneTextChan <- "stopped"
+		}()
+	}
+
+	// Set the bar to a finished state
+	// to ensure it won't block anything
+	bar.bar.SetTotal(bar.total, true)
+}
+
+// ProgressView holds info for progress
+type ProgressView struct {
+	ProgressContainer *mpb.Progress
+	Bars              []*mpb.Bar
+	RawBars           []*Bar
+}
+
+// AddBar to ProgressView
+func (pv *ProgressView) AddBar(bbar *Bar) *mpb.Bar {
+	// Add bar to render queue
+	bar := pv.ProgressContainer.Add(bbar.total, mpb.NewBarFiller(bbar.style, false), bbar.options...)
+
+	// Set Bars mpb.Bar to allow it
+	// to increase
+	bbar.bar = bar
+
+	// Append bar to pv bars
+	pv.Bars = append(pv.Bars, bar)
+	pv.RawBars = append(pv.RawBars, bbar)
+
+	// Return prepared proxy func
+	return bar
+}
+
+// NewProgressView create new progressview
+func NewProgressView() *ProgressView {
+	return &ProgressView{
+		Bars: []*mpb.Bar{},
+		ProgressContainer: mpb.New(
+			mpb.WithWaitGroup(&sync.WaitGroup{}),
+			mpb.WithRefreshRate(50*time.Millisecond),
+			mpb.WithWidth(130),
+		),
+	}
 }
