@@ -12,6 +12,7 @@ import (
 
 	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
+	"github.com/JojiiOfficial/gopool"
 )
 
 // UploadData data for uploads
@@ -76,75 +77,45 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 		uploadData.ProgressView.ProgressContainer.Wait()
 
 		for i := range uploadData.ProgressView.Bars {
+			if i >= len(uploadData.ProgressView.RawBars) {
+				continue
+			}
+
 			for !uploadData.ProgressView.RawBars[i].done {
 				time.Sleep(100 * time.Millisecond)
 			}
 		}
-
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 
 // Run parallel Uploads
 func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads uint) bool {
-	// In case a user is dumb,
-	// correct him
-	if threads == 0 {
-		threads = 1
-	}
-
-	// Waitgroup to wait for all "threads" to be done
-	wg := sync.WaitGroup{}
-	// Channel for managing amount of parallel upload processes
-	c := make(chan uint, 1)
-
-	if threads > uint(uploadData.TotalFiles) {
-		threads = uint(uploadData.TotalFiles)
-	}
-
 	// Set max connections to amouth of threads
 	cData.LibDM.MaxConnectionsPerHost = int(threads)
 
-	c <- threads
-	var pos int
+	// Write all results into resultChan
+	resultChan := make(chan interface{}, uploadData.TotalFiles)
 
-	success := true
-	var errorCount uint
+	// Create pool
+	pool := gopool.New(uploadData.TotalFiles, int(threads), func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
+		return cData.uploadEntity(*uploadData, uris[pos])
+	})
 
-	// Start Uploader pool
-	for pos < uploadData.TotalFiles {
-		read := <-c
-		for i := 0; i < int(read) && pos < uploadData.TotalFiles; i++ {
-			if errorCount > 10 {
-				fmt.Println("Too many errors")
-				os.Exit(1)
-				break
-			}
+	// use custom result channel
+	pool.WithResultChan(resultChan)
 
-			wg.Add(1)
+	// Start pool and wait for it to complete
+	pool.Run().Wait()
 
-			go func(uri string) {
-				if !cData.uploadEntity(*uploadData, uri) {
-					success = false
-					errorCount++
-				} else {
-					// Reset counter on success
-					errorCount = 0
-				}
-
-				wg.Done()
-
-				c <- 1
-			}(uris[pos])
-
-			pos++
+	for i := 0; i < uploadData.TotalFiles; i++ {
+		b := (<-resultChan).(bool)
+		if !b {
+			close(resultChan)
+			return false
 		}
 	}
 
-	// Wait for all
-	// threads to be done
-	wg.Wait()
-	return success
+	return true
 }
 
 // Upload upload a URI
@@ -295,7 +266,14 @@ func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *
 	}
 
 	// Render table with informations
-	cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), uploader.bar)
+	text := cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), uploader.bar)
+
+	// On quietMode (no bar is shown)
+	// just print the output
+	if cData.Quiet {
+		fmt.Println(text)
+	}
+
 	return true
 }
 

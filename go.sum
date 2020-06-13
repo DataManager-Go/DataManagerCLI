@@ -5,6 +5,8 @@ github.com/DataManager-Go/libdatamanager v1.3.0 h1:0WvHBwPgzX5GFsKYvMoF8WRgQJfr0
 github.com/DataManager-Go/libdatamanager v1.3.0/go.mod h1:8QzTM9YaJte35gQJ6xZNgQdoyYwBKK6KUtdibrqDXiM=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200613094402-cb25bedb549e h1:9ymMjLvQlbeJbIY/Q0wnUH0PD75bjs1EFSdol1GRYe0=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200613094402-cb25bedb549e/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200613115211-63f6f5fcc802 h1:U85PlgKmbNT/2PotwG0ixfQoxS6yltPJanPbO/KOjZA=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200613115211-63f6f5fcc802/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
@@ -12,6 +14,10 @@ github.com/JojiiOfficial/gaw v1.2.0/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKki
 github.com/JojiiOfficial/gaw v1.2.6/go.mod h1:Y0hrpN0iX0L5bBf/8+kIER7R/m4GTNuKkifXisMG4S4=
 github.com/JojiiOfficial/gaw v1.2.8 h1:crLd2hrRvTlCClZDtwqnr8AoVKs3uQAk8B2AdOfUCsg=
 github.com/JojiiOfficial/gaw v1.2.8/go.mod h1:fPm2wG1z8xSCmfkqq9V5iHdlgLUpkRx73tSO9efhJP0=
+github.com/JojiiOfficial/gopool v0.0.1 h1:WOp2kIelMYlZN2vNJfFaBhr4LZyZFg+xkpSaT3bXu4Y=
+github.com/JojiiOfficial/gopool v0.0.1/go.mod h1:viHLHvE2nsz0ClIuaPveYpDBj8Nu+ayFFNjMDhurDt0=
+github.com/JojiiOfficial/gopool v0.0.2 h1:P1IigNO778HA5pu2JhJace0F8GAwPVGSPsu10N+dak8=
+github.com/JojiiOfficial/gopool v0.0.2/go.mod h1:viHLHvE2nsz0ClIuaPveYpDBj8Nu+ayFFNjMDhurDt0=
 github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
 github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
 github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=
