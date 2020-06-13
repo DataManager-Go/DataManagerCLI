@@ -112,7 +112,7 @@ func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
 		),
 		mpb.AppendDecorators(
 			decor.OnComplete(decor.Percentage(decor.WCSyncWidth), ""),
-			decor.OnComplete(decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.CountersKiloByte(" [%d / %d]", decor.WCSyncWidth), ""),
 		),
 	}...)
 
