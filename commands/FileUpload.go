@@ -82,10 +82,6 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 		}
 
 		time.Sleep(100 * time.Millisecond)
-	} else {
-		fmt.Println("NO success")
-		fmt.Println("NO success")
-		fmt.Println("NO success")
 	}
 }
 
@@ -106,21 +102,36 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 		threads = uint(uploadData.TotalFiles)
 	}
 
+	// Set max connections to amouth of threads
+	cData.LibDM.MaxConnectionsPerHost = int(threads)
+
 	c <- threads
 	var pos int
 
 	success := true
+	var errorCount uint
 
 	// Start Uploader pool
 	for pos < uploadData.TotalFiles {
 		read := <-c
 		for i := 0; i < int(read) && pos < uploadData.TotalFiles; i++ {
+			if errorCount > 10 {
+				fmt.Println("Too many errors")
+				os.Exit(1)
+				break
+			}
+
 			wg.Add(1)
 
 			go func(uri string) {
 				if !cData.uploadEntity(*uploadData, uri) {
 					success = false
+					errorCount++
+				} else {
+					// Reset counter on success
+					errorCount = 0
 				}
+
 				wg.Done()
 
 				c <- 1
@@ -199,6 +210,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 
 			// Upload file
 			uploadResponse = execUploader.uploadFile(f)
+			f.Close()
 		}
 	} else {
 		// -----> StdIn <-----
@@ -356,13 +368,13 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 	// Handle upload errors
 	if err != nil {
 		printResponseError(err, "uploading file")
-		uploader.bar.bar.SetTotal(uploader.bar.total, true)
+		uploader.bar.stop()
 		return
 	}
 
 	// Verify checksum
 	if !uploader.cData.verifyChecksum(chsum, uploadResponse.Checksum) {
-		uploader.bar.bar.SetTotal(uploader.bar.total, true)
+		uploader.bar.stop()
 		return
 	}
 
@@ -383,7 +395,6 @@ func (uploader *uploader) uploadFile(file *os.File) *libdm.UploadResponse {
 	if err != nil {
 		return nil
 	}
-	defer file.Close()
 
 	// Upload from file reader
 	return uploader.uploadFromReader(file, s.Size())

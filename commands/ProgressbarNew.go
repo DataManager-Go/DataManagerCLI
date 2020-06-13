@@ -82,8 +82,8 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	bar.options = append(bar.options, []mpb.BarOption{
 		mpb.PrependDecorators(
 			// decor.OnComplete(decor.Spinner(nil, decor.WCSyncWidthR), ""),
-			decor.OnComplete(decor.Name(task.Verb()), ""),
-			decor.OnComplete(decor.Name(" '"+name+"'", decor.WCSyncSpace), "Done!"),
+			decor.OnComplete(decor.Name(task.Verb()), "Done!"),
+			decor.OnComplete(decor.Name(" '"+name+"'"), ""),
 		),
 		mpb.AppendDecorators(
 			decor.OnComplete(decor.Percentage(), ""),
@@ -92,6 +92,25 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	}...)
 
 	return bar
+}
+
+// Stop the bar
+func (bar *Bar) stop() {
+	if bar == nil {
+		return
+	}
+
+	// Write into the textChan to prevent
+	// it from blocking
+	if bar.doneTextChan != nil {
+		go func() {
+			bar.doneTextChan <- "stopped"
+		}()
+	}
+
+	// Set the bar to a finished state
+	// to ensure it won't block anything
+	bar.bar.SetTotal(bar.total, true)
 }
 
 // ProgressView holds info for progress
