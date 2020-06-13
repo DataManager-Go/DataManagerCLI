@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -50,7 +51,7 @@ type Bar struct {
 }
 
 // NewBar create a new bar
-func NewBar(task BarTask, total int64, name string) *Bar {
+func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
 	// Create bar instance
 	bar := &Bar{
 		task:         task,
@@ -62,11 +63,35 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 	// Trim text if its too long
 	name = trimName(name, 40)
 
-	// Add Bar options
-	bar.options = []mpb.BarOption{
-		mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
+	bar.options = make([]mpb.BarOption, 1)
+
+	// Singlemode true => Only one file was/is uploaded/uploading
+	if singleMode {
+		// Print fileinfo over multiple lines after uploading
+		bar.options[0] = mpb.BarExtender(mpb.BarFillerFunc(func(w io.Writer, reqWidth int, stat decor.Statistics) {
+			if stat.Completed {
+				if bar.done {
+					// Restore doneText to prevent blocking
+					// from doneTextChan
+					fmt.Fprint(w, bar.doneText)
+					return
+				}
+
+				// Wait for file informations
+				bar.doneText = <-bar.doneTextChan
+
+				// Print file informations
+				fmt.Fprint(w, bar.doneText)
+
+				bar.done = true
+			}
+		}))
+		bar.options = append(bar.options, mpb.BarFillerClearOnComplete())
+	} else {
+		// Middleware for printing singlelined file info
+		bar.options[0] = mpb.BarFillerMiddleware(func(base mpb.BarFiller) mpb.BarFiller {
 			return mpb.BarFillerFunc(func(w io.Writer, reqWidth int, st decor.Statistics) {
-				if st.Current > st.Total-30 || st.Completed {
+				if st.Completed {
 					text := <-bar.doneTextChan
 					bar.doneTextChan <- text
 					io.WriteString(w, text)
@@ -75,7 +100,7 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 					base.Fill(w, reqWidth, st)
 				}
 			})
-		}),
+		})
 	}
 
 	// Decorate Bar
@@ -86,8 +111,8 @@ func NewBar(task BarTask, total int64, name string) *Bar {
 			decor.OnComplete(decor.Name(" '"+name+"'"), ""),
 		),
 		mpb.AppendDecorators(
-			decor.OnComplete(decor.Percentage(), ""),
-			decor.OnComplete(decor.CountersKiloByte("[%d / %d]"), ""),
+			decor.OnComplete(decor.Percentage(decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.CountersKiloByte("[%d / %d]", decor.WCSyncWidth), ""),
 		),
 	}...)
 

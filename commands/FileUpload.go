@@ -332,7 +332,7 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
 		// Create progressbar
-		uploader.bar = NewBar(UploadTask, 0, name)
+		uploader.bar = NewBar(UploadTask, 0, name, (uploader.uploadData.TotalFiles == 1))
 		uploader.uploadData.ProgressView.AddBar(uploader.bar)
 
 		// Setup proxy
