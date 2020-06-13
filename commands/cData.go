@@ -118,7 +118,7 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *Bar) {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *Bar) string {
 	// Short uses only one line to print the upload data
 	if short {
 		var text string
@@ -128,9 +128,11 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 			text = fmt.Sprintf("%s %d; %s %s", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
 		}
 
-		_ = text
-		bar.doneTextChan <- text
-		return
+		if bar != nil {
+			bar.doneTextChan <- text
+		}
+
+		return text
 	}
 
 	// Bulid table
@@ -150,7 +152,14 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
-	bar.doneTextChan <- table.String()
+	// Render table
+	ts := table.String()
+
+	if bar != nil {
+		bar.doneTextChan <- ts
+	}
+
+	return ts
 }
 
 // Check if a custom namespace is provided via cli flags
