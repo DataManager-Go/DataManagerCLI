@@ -2,15 +2,11 @@ module github.com/DataManager-Go/DataManagerCLI
 
 go 1.14
 
-replace github.com/gosuri/uiprogress v0.0.1 => github.com/JojiiOfficial/uiprogress v1.0.5
-replace github.com/DataManager-Go/libdatamanager v1.2.9 => /home/jojii/programming/go/src/libdatamanager
-
-
 require (
-	github.com/DataManager-Go/libdatamanager v1.2.9
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200612113134-ee3f6f2242b7
+	github.com/DataManager-Go/libdatamanager v1.3.0
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200613094402-cb25bedb549e
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
-	github.com/JojiiOfficial/gaw v1.2.6
+	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/shred v1.2.1
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d // indirect
@@ -18,7 +14,6 @@ require (
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
-	github.com/gosuri/uiprogress v0.0.1
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
