@@ -106,7 +106,7 @@ func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
 	// Decorate Bar
 	bar.options = append(bar.options, []mpb.BarOption{
 		mpb.PrependDecorators(
-			// decor.OnComplete(decor.Spinner(nil, decor.WCSyncWidthR), ""),
+			decor.OnComplete(decor.Spinner([]string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}), ""),
 			decor.OnComplete(decor.Name(task.Verb()), "Done!"),
 			decor.OnComplete(decor.Name(" '"+name+"'"), ""),
 		),
@@ -120,7 +120,7 @@ func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
 }
 
 // Stop the bar
-func (bar *Bar) stop() {
+func (bar *Bar) stop(text ...string) {
 	if bar == nil {
 		return
 	}
@@ -129,7 +129,11 @@ func (bar *Bar) stop() {
 	// it from blocking
 	if bar.doneTextChan != nil {
 		go func() {
-			bar.doneTextChan <- "stopped"
+			if len(text) > 0 {
+				bar.doneTextChan <- text[0]
+			} else {
+				bar.doneTextChan <- "stopped"
+			}
 		}()
 	}
 
