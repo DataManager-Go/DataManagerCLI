@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DataManager-Go/libdatamanager"
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
+	"github.com/JojiiOfficial/gopool"
 	"github.com/fatih/color"
 )
 
@@ -218,16 +218,6 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 		return
 	}
 
-	// Prevent user stupidity
-	if parallelism == 0 {
-		parallelism = 1
-	}
-
-	// Reduce threads if files are less than threads
-	if uint(len(files)) < parallelism {
-		parallelism = uint(len(files))
-	}
-
 	// Use first files namespace as destination dir
 	if len(outDir) == 0 {
 		outDir = files[0].Attributes.Namespace
@@ -236,63 +226,41 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 	// Resolve path
 	rootDir := gaw.ResolveFullPath(outDir)
 
-	// Overwrite files
-	cData.Force = true
-
-	// Waitgroup to wait for all "threads" to be done
-	wg := sync.WaitGroup{}
-	// Channel for managing amount of parallel upload processes
-	c := make(chan uint, 1)
-
-	c <- parallelism
-	var pos int
-
-	totalfiles := len(files)
-
 	// Use this context for progressview
 	progressView := NewProgressView()
 
-	// Start Downloader pool
-	for pos < totalfiles {
-		read := <-c
-		for i := 0; i < int(read) && pos < totalfiles; i++ {
-			wg.Add(1)
+	// Overwrite files
+	cData.Force = true
 
-			go func(file libdatamanager.FileResponseItem) {
-				// Build dest group dir name
-				dir := getSubDirName(file)
+	// Create and execute a new pool
+	gopool.New(len(files), int(parallelism), func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
+		file := files[pos]
 
-				// Create dir if not exists
-				path := filepath.Clean(filepath.Join(rootDir, dir))
-				if _, err := os.Stat(path); err != nil {
-					err := os.MkdirAll(path, 0750)
-					if err != nil {
-						printError("Creating dir", err.Error())
-						os.Exit(1)
-					}
-				}
+		// Build dest group dir name
+		dir := getSubDirName(file)
 
-				// Download file
-				err := cData.DownloadFile(&DownloadData{
-					FileName:     file.Name,
-					FileID:       file.ID,
-					LocalPath:    filepath.Join(rootDir, dir),
-					ProgressView: progressView,
-				})
-
-				if err != nil {
-					os.Exit(1)
-				}
-
-				wg.Done()
-				c <- 1
-			}(files[pos])
-
-			pos++
+		// Create dir if not exists
+		path := filepath.Clean(filepath.Join(rootDir, dir))
+		if _, err := os.Stat(path); err != nil {
+			err := os.MkdirAll(path, 0750)
+			if err != nil {
+				printError("Creating dir", err.Error())
+				os.Exit(1)
+			}
 		}
-	}
 
-	// Wait for all threads
-	// to be done
-	wg.Wait()
+		// Download file
+		err := cData.DownloadFile(&DownloadData{
+			FileName:     file.Name,
+			FileID:       file.ID,
+			LocalPath:    filepath.Join(rootDir, dir),
+			ProgressView: progressView,
+		})
+
+		if err != nil {
+			os.Exit(1)
+		}
+
+		return nil
+	}).Run().Wait()
 }
