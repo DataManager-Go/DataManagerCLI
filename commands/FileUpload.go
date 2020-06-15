@@ -33,7 +33,7 @@ type UploadData struct {
 }
 
 // UploadItems to the server and set's its affiliations
-func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *UploadData) {
+func (cData *CommandData) UploadItems(uris []string, threads int, uploadData *UploadData) {
 	// Stdin can only be used
 	// without additional files
 	if uploadData.FromStdIn {
@@ -89,15 +89,15 @@ func (cData *CommandData) UploadItems(uris []string, threads uint, uploadData *U
 }
 
 // Run parallel Uploads
-func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads uint) bool {
+func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, threads int) bool {
 	// Set max connections to amouth of threads
-	cData.LibDM.MaxConnectionsPerHost = int(threads)
+	cData.LibDM.MaxConnectionsPerHost = threads
 
 	// Write all results into resultChan
 	resultChan := make(chan interface{}, uploadData.TotalFiles)
 
 	// Create pool
-	pool := gopool.New(uploadData.TotalFiles, int(threads), func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
+	pool := gopool.New(uploadData.TotalFiles, threads, func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
 		return cData.uploadEntity(*uploadData, uris[pos])
 	})
 

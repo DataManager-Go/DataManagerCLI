@@ -212,7 +212,9 @@ func (cData *CommandData) writeFile(resp *libdm.FileDownloadResponse, file strin
 }
 
 // Download multiple files into a folder
-func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir string, parallelism uint, getSubDirName func(file libdm.FileResponseItem) string) {
+func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir string, threads int, getSubDirName func(file libdm.FileResponseItem) string) {
+	cData.LibDM.MaxConnectionsPerHost = threads
+
 	if len(files) == 0 {
 		fmt.Println("No files found")
 		return
@@ -233,7 +235,7 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 	cData.Force = true
 
 	// Create and execute a new pool
-	gopool.New(len(files), int(parallelism), func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
+	gopool.New(len(files), threads, func(wg *sync.WaitGroup, pos, total, workerID int) interface{} {
 		file := files[pos]
 
 		// Build dest group dir name
@@ -250,14 +252,13 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 		}
 
 		// Download file
-		err := cData.DownloadFile(&DownloadData{
+		if err := cData.DownloadFile(&DownloadData{
 			FileName:     file.Name,
 			FileID:       file.ID,
 			LocalPath:    filepath.Join(rootDir, dir),
 			ProgressView: progressView,
-		})
-
-		if err != nil {
+		}); err != nil {
+			printError("downloading namespace", err.Error())
 			os.Exit(1)
 		}
 

@@ -72,6 +72,7 @@ var (
 	appFileEncrPassKey      = app.Flag("read-key", "Read encryption/decryption key as password").Short('p').Bool()
 	appFileEncrKeyFromStdin = app.Flag("key-from-stdin", "Read encryption/decryption key from stdin").Bool()
 	appFileEncrKeyFile      = app.Flag("keyfile", "File containing a Encryption/Decryption key").HintAction(hintListKeyFiles).String()
+	appParallelism          = app.Flag("parallelism", "Upload/Download n files at the same time").Default("1").Int()
 
 	//
 	// ---------> Ping --------------------------------------
@@ -120,7 +121,6 @@ var (
 	fileUploadPublic       = appUpload.Flag("public", "Make uploaded file publci").Bool()
 	fileUploadPublicName   = appUpload.Flag("public-name", "Specify the public filename").String()
 	fileUploadReplace      = appUpload.Flag("replace-file", "Replace a file").Uint()
-	fileUploadParallelism  = appUpload.Flag("parallelism", "Upload n files at the same time").Default("1").Uint()
 	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
 	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
 	fileUploadNoArchiving  = app.Flag("no-archive", "Don't archive folder, upload all files in a given folder separately").Bool()
@@ -243,7 +243,6 @@ var (
 	namespaceDownloadExcludeGroups = namespaceDownloadCmd.Flag("exclude-groups", "Exclude files in specified group(s) from getting downloaded").Strings()
 	namespaceDownloadExcludeTags   = namespaceDownloadCmd.Flag("exclude-tags", "Exclude files having specified tags(s) from getting downloaded").Strings()
 	namespaceDownloadExcludeFiles  = namespaceDownloadCmd.Flag("exclude-files", "Exclude files by ID").Strings()
-	namespaceDownloadParallelism   = namespaceDownloadCmd.Flag("parallelism", "Download multiple files at the same time").Default("1").Uint()
 	namespaceDownloadOutputDir     = namespaceDownloadCmd.Flag("output", "Save namespace in a custom directory than the namespacename").Short('o').Default("./").String()
 
 	//

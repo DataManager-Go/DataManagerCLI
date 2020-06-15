@@ -32,7 +32,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Upload
 	case appUpload.FullCommand():
-		commandData.UploadItems(*fileUploadPaths, *fileUploadParallelism, &commands.UploadData{
+		commandData.UploadItems(*fileUploadPaths, *appParallelism, &commands.UploadData{
 			Name:          *fileUploadName,
 			DeleteInvalid: *fileUploadDeletInvaid,
 			FromStdIn:     *fileUploadFromStdin,
@@ -130,7 +130,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// Download files in namespace
 	case namespaceDownloadCmd.FullCommand():
 		commandData.FileAttributes.Namespace = *namespaceDownloadNs
-		commandData.DownloadNamespace(*namespaceDownloadExcludeGroups, *namespaceDownloadExcludeTags, *namespaceDownloadExcludeFiles, *namespaceDownloadParallelism, *namespaceDownloadOutputDir)
+		commandData.DownloadNamespace(*namespaceDownloadExcludeGroups, *namespaceDownloadExcludeTags, *namespaceDownloadExcludeFiles, *appParallelism, *namespaceDownloadOutputDir)
 
 	// -- Ping command
 	case appPing.FullCommand():

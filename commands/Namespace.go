@@ -77,7 +77,7 @@ func ListNamespace(cData *CommandData) {
 }
 
 // DownloadNamespace download files from  namespace
-func (cData *CommandData) DownloadNamespace(exGroups, exTags, exFiles []string, parallelism uint, outDir string) {
+func (cData *CommandData) DownloadNamespace(exGroups, exTags, exFiles []string, parallelism int, outDir string) {
 	ProcesStrSliceParams(&exTags, &exGroups, &exFiles)
 
 	// Get files in namespace from server
