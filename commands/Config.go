@@ -124,6 +124,13 @@ func SetupClient(cData *CommandData, host, configFile string, ignoreCert, server
 		return
 	}
 
+	// Do the Benchmark in background
+	benchChan := make(chan int, 1)
+	hashTest := NewHashBench()
+	go func() {
+		benchChan <- hashTest.DoTest()
+	}()
+
 	// Confirm creating a config anyway
 	if cData.Config != nil && !cData.Config.IsDefault() && !cData.Yes {
 		y, _ := gaw.ConfirmInput("There is already a config. Do you want to overwrite it? [y/n]> ", bufio.NewReader(os.Stdin))
@@ -155,6 +162,12 @@ func SetupClient(cData *CommandData, host, configFile string, ignoreCert, server
 	// Set new config values
 	cData.Config.Server.URL = u.String()
 	cData.Config.Server.IgnoreCert = ignoreCert
+
+	// Save the benchresult in the config
+	benchresult := <-benchChan
+	if benchresult > 0 {
+		cData.Config.Client.BenchResult = benchresult
+	}
 
 	err := configService.Save(cData.Config, cData.Config.File)
 	if err != nil {

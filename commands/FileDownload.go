@@ -66,9 +66,22 @@ func (cData *CommandData) ViewFile(downloadData *DownloadData) {
 
 // DownloadFile download a file specified by data
 func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
+	doBench := cData.Config.Client.BenchResult == 0
+	var benchChan chan int
+
+	// Run the bench in background
+	if doBench {
+		benchChan = make(chan int, 1)
+		hashTest := NewHashBench()
+		go func() {
+			benchChan <- hashTest.DoTest()
+		}()
+	}
+
 	// Check output file
 	if len(downloadData.LocalPath) == 0 {
 		fmt.Println("You have to pass a local file")
+		return nil
 	}
 
 	// Do request but don't read the body yet
@@ -76,6 +89,20 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 	if err != nil {
 		printResponseError(err, "requesting file")
 		return err
+	}
+
+	// Determine where the file should be stored in
+	outFile := resolveOutputFile(resp.ServerFileName, downloadData.LocalPath)
+
+	// Wait for bench result
+	// and save it to config
+	if doBench {
+		res := <-benchChan
+		cData.Config.Client.BenchResult = res
+		if err := cData.Config.Save(); err != nil {
+			printError("Saving config", err.Error())
+			return err
+		}
 	}
 
 	var bar *Bar
@@ -89,9 +116,6 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 		bar = NewBar(DownloadTask, resp.Size, resp.ServerFileName, false)
 		downloadData.ProgressView.AddBar(bar)
 	}
-
-	// Determine where the file should be stored in
-	outFile := resolveOutputFile(resp.ServerFileName, downloadData.LocalPath)
 
 	// Prevent accidentally overwriting the file
 	// TODO add chechksum validation
