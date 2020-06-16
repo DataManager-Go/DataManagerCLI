@@ -3,10 +3,10 @@ This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/
 
 # Screenshots
 ## Listview
-![Listview](https://jojii.de/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
+![Listview](https://files.jojii.de/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
 
 ## Treeview
-![Treeview](https://jojii.de/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
+![Treeview](https://files.jojii.de/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
 
 # Installation
 
