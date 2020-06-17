@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.3.1
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200615213921-35430f2a0787
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617133450-fc17eb2c15fd
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/gopool v0.0.2
@@ -15,6 +15,7 @@ require (
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
+	github.com/klauspost/compress v1.10.9 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
