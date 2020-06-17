@@ -3,8 +3,8 @@ module github.com/DataManager-Go/DataManagerCLI
 go 1.14
 
 require (
-	github.com/DataManager-Go/libdatamanager v1.3.1
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617133450-fc17eb2c15fd
+	github.com/DataManager-Go/libdatamanager v1.3.2
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617141617-1e2724d6a8f8
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/gopool v0.0.2

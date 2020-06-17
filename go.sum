@@ -3,12 +3,16 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
 github.com/DataManager-Go/libdatamanager v1.3.1 h1:LIv3nVE7uaDovmHHMcbjTTEiBEkUWnN44IrleYKi2cc=
 github.com/DataManager-Go/libdatamanager v1.3.1/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
+github.com/DataManager-Go/libdatamanager v1.3.2 h1:WMQfi9Uq412G/n1ZaoRjAMvd5lXFhDdspyyxRf8RCV8=
+github.com/DataManager-Go/libdatamanager v1.3.2/go.mod h1:OwF4DArBjLIwqLGZ9L1OA5sYJ1y1ijiYnIZSiACmIgA=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200615083848-8f968998a885 h1:EyA99wRhULurSpLUe+i9H4kmO0+4FayYTUgX5r0Mxqk=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200615083848-8f968998a885/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200615213921-35430f2a0787 h1:lBzXEJ/M+gOTOTqi3y2ODKdZWwJhuXyzhLMAeJmKh3U=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200615213921-35430f2a0787/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617133450-fc17eb2c15fd h1:WZCmwb1PS7lF65lV8NmEArMBKjjE9oVWGasI9fE/5VM=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617133450-fc17eb2c15fd/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617141617-1e2724d6a8f8 h1:Lk5CjcOzODEPNTU/u2jLy4aS7yO7pifWiRH9XXZnT3w=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200617141617-1e2724d6a8f8/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
