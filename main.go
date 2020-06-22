@@ -136,8 +136,9 @@ var (
 	filecreateCmdName = fileCreateCmd.Arg("name", "The name of file to create").String()
 
 	// -- Edit
-	fileEditCmd = appFileCmd.Command("edit", "Edit a file").Alias("e")
-	fileEditID  = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
+	fileEditCmd    = appFileCmd.Command("edit", "Edit a file").Alias("e")
+	fileEditID     = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
+	fileEditEditor = fileEditCmd.Flag("editor", "Use a custom editor to edit the given file").HintOptions("libreoffice", "vim", "nano", "").String()
 
 	// -- Tree
 	appFileTree          = app.Command("tree", "Show your files like the unix file tree")

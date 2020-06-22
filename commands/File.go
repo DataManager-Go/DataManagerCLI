@@ -277,71 +277,6 @@ func UpdateFile(cData *CommandData, name string, id uint, newName string, newNam
 	}
 }
 
-// EditFile edits a file
-func (cData *CommandData) EditFile(id uint) {
-	// Do file Request
-	resp, err := cData.LibDM.NewFileRequestByID(id).Do()
-	if err != nil {
-		printError("downloading file", err.Error())
-		return
-	}
-
-	// Generate temp-filePath
-	filePath := GetTempFile(resp.ServerFileName)
-	fmt.Println(resp.ServerFileName)
-
-	cData.handleDecryption(resp)
-
-	if resp.FileID == 0 {
-		fmt.Println("Unexpected error occured, received File Id is invalid")
-		return
-	}
-
-	// Save File
-	err = resp.WriteToFile(filePath, 0600, nil)
-	if err != nil {
-		printError("downloading file", err.Error())
-		return
-	}
-
-	// Shredder temp file at the end
-	defer func() {
-		ShredderFile(filePath, -1)
-	}()
-
-	// Generate md5 of original file
-	fileOldMd5 := fileMd5(filePath)
-
-	// Edit file. Return on error
-	if !editFile(filePath) {
-		return
-	}
-
-	// Generate md5 of original file
-	fileNewMd5 := fileMd5(filePath)
-
-	// Check for file changes
-	if fileNewMd5 == fileOldMd5 {
-		fmt.Println("Nothing changed")
-		return
-	}
-
-	// Set encryption to keep its encrypted state
-	if len(resp.Encryption) != 0 {
-		cData.Encryption = resp.Encryption
-	}
-
-	// Set key and encryption to use for upload
-	cData.EncryptionKey = resp.DownloadRequest.Key
-	cData.Encryption = resp.Encryption
-
-	// Replace file on server with new file
-	cData.UploadItems([]string{filePath}, 1, &UploadData{
-		ReplaceFile: resp.FileID,
-		// Progress:    uiprogress.New(),
-	})
-}
-
 // CreateFile create a file and upload it
 func (cData *CommandData) CreateFile(name string) {
 	// Create tempfile
@@ -371,7 +306,7 @@ func (cData *CommandData) CreateFile(name string) {
 	}()
 
 	// Open file for user "editing"
-	if !editFile(file) {
+	if !editFile(file, "") {
 		return
 	}
 

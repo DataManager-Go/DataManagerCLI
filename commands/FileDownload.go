@@ -3,8 +3,10 @@ package commands
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -289,4 +291,51 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 
 		return nil
 	}).Run().Wait()
+}
+
+func resolveOutputFile(fileName, outputFile string) string {
+	localFile := gaw.ResolveFullPath(outputFile)
+
+	// Replace fileSeparators to prevent writing file to an other directory
+	fileName = strings.ReplaceAll(fileName, string(filepath.Separator), "-")
+
+	// Append original filename to
+	// specified local path
+	if strings.HasSuffix(outputFile, "/") {
+		// If no special file was choosen
+		localFile = filepath.Join(outputFile, fileName)
+	} else {
+		stat, err := os.Stat(localFile)
+		if err == nil && stat.IsDir() {
+			localFile = filepath.Join(localFile, fileName)
+		}
+	}
+
+	return localFile
+}
+
+// determineDecryptionKey  gets the correct decryption key from either the arguments of
+// the command or from the keystore
+func (cData *CommandData) determineDecryptionKey(resp *http.Response) []byte {
+	key := []byte(cData.EncryptionKey)
+
+	// If keystore is enabled and no key was passed, try
+	// search in keystore for matching key and use it
+	if cData.HasKeystoreSupport() && len(key) == 0 {
+		keystore, _ := cData.GetKeystore()
+		// Get fileID from header
+		fileid, err := strconv.ParseUint(resp.Header.Get(libdm.HeaderFileID), 10, 32)
+		if err == nil {
+			// Search Key in keystore
+			k, err := keystore.GetKey(uint(fileid))
+			if err == nil {
+				return k
+			}
+			if strings.HasSuffix(err.Error(), "no such file or directory") {
+				fmt.Println("-> Key is in keystore but file was not found!")
+			}
+		}
+	}
+
+	return key
 }
