@@ -1,10 +1,6 @@
 # DataManagerClient
 This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
 
-```
-Note: I just discovered a bug in 'uploading as archive'. Don't use it. I'am going to fix it ASAP
-```
-
 # Screenshots
 ## Listview
 ![Listview](https://files.jojii.de/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
