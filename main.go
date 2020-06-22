@@ -11,9 +11,9 @@ import (
 	libdm "github.com/DataManager-Go/libdatamanager"
 	dmConfig "github.com/DataManager-Go/libdatamanager/config"
 	"github.com/JojiiOfficial/gaw"
+	kingpin "github.com/alecthomas/kingpin"
 	"github.com/fatih/color"
 	_ "github.com/mattn/go-sqlite3"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 )
 
 const (
