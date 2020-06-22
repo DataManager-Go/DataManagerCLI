@@ -85,7 +85,7 @@ func editFile(file, editor string) bool {
 		}
 	case "windows":
 		{
-			// TODO
+			return editWindows(file)
 		}
 	default:
 		fmt.Printf("No support for %s at the moment\n", runtime.GOOS)
@@ -118,6 +118,20 @@ func editLinux(file, editor string) bool {
 	// Wait for it to finish
 	err := cmd.Run()
 
+	if err != nil {
+		fmt.Println(err)
+		return false
+	}
+
+	return true
+}
+
+// Edit a file in windows
+func editWindows(file string) bool {
+	cmd := exec.Command("start", "/B", "/wait", file)
+	cmd.Stdout = os.Stdout
+
+	err := cmd.Run()
 	if err != nil {
 		fmt.Println(err)
 		return false
