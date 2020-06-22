@@ -74,23 +74,30 @@ To use it run "manager keystore create <path>". Your keys will be saved in this 
 ### Examples
 
 #### User
-- Setup `manager setup <serverURL>` // create a new config and login
+- Setup `manager setup <serverURL>` // create a new config and login. Use --register if you want to create an account instead of logging in
 - Register `manager register`
 - Login `manager login`
 
 #### Files
 - Upload and share your .bashrc `manager upload -t dotfile -g myLinuxGroup --public ~/.bashrc`
-- Upload and encrypt your .bashrc `manager upload ~/.bashrc --encrypt aes -r`
-- List files `manager files`
-- List files having the a tag called 'dotfile' `manager files -t dotfile`
+- Upload and encrypt your .bashrc `manager upload ~/.bashrc --encrypt aes -r 32/24/16`
+- Upload and your home directory compressed `manager upload ~/ --compress`
+- List files `manager ls`
+- List files having the a tag called 'dotfile' `manager ls -t dotfile`
 - Delete file by ID `manager file rm 123`
 - Delete file by Name  `manager file rm aUniqueName.go`
 - Delete all files in namespace `manager file rm % -ay`
 - Edit a file `manager file edit 123`
-- Add tags to a file `manager file update --ad-tags t1,t2`
+- Add tags to a file `manager file update --add-tags t1,t2`
 - Publish a file `manager file publish <fileID>`
 
 #### Namespace
 - List all your namespaces `manager namespaces`
 - Create a namespace `manager namespace create <name>`
 - Delete a namespace `manager namespace delete <name>`
+- Download all files insisde a namespace `manager namespace download <name>`
+
+# Nice to have
+Here a list with useful facts abouth this system:
+- All file mods (encryption/decryption,compression,archiving) are hooked while streaming, so there is no extra time waiting for them
+- You can upload all files in a directory without archiving using `--no-archive`
