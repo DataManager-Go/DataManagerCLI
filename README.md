@@ -97,7 +97,11 @@ To use it run "manager keystore create <path>". Your keys will be saved in this 
 - Delete a namespace `manager namespace delete <name>`
 - Download all files insisde a namespace `manager namespace download <name>`
 
-# Nice to have
-Here a list with useful facts abouth this system:
-- All file mods (encryption/decryption,compression,archiving) are hooked while streaming, so there is no extra time waiting for them
+### Nice to have
+Here is a list with useful facts abouth this system:
+- All file mods (encryption/decryption, compression, archiving) are hooked while streaming, so there is no extra time waiting for them
+- Filenames can be wildcarded using `%`
 - You can upload all files in a directory without archiving using `--no-archive`
+- If you didn't install the client from a repository, you can view the manpage using `manager --help-man | /usr/bin/man -l -`
+- Many subcommands have aliases. For instance `file -> f`, `download -> dl`, `edit -> e`, `update -> u`
+- Use `--set-clip` to copy the URL of a published file directly into your clipboard
