@@ -163,11 +163,12 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 		}
 
 		// Print text
-		if bar == nil {
-			fmt.Println(text)
-		} else {
-			bar.doneTextChan <- text
+		if bar != nil {
+			bar.done = true
+			bar.doneText = "Stopped"
 		}
+
+		fmt.Println(text)
 	})
 
 	if downloadData.ProgressView != nil {
