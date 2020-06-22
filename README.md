@@ -89,7 +89,8 @@ To use it run "manager keystore create <path>". Your keys will be saved in this 
 - Delete all files in namespace `manager file rm % -ay`
 - Edit a file `manager file edit 123`
 - Add tags to a file `manager file update --add-tags t1,t2`
-- Publish a file `manager file publish <fileID>`
+- Publish a file `manager publish <fileID>`
+- UnPublish a file `manager unpublish <fileID>`
 
 #### Namespace
 - List all your namespaces `manager namespaces`

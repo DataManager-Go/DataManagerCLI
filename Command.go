@@ -77,6 +77,10 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case filePublishCmd.FullCommand():
 		commands.PublishFile(commandData, *filePublishName, *filePublishID, *publishPublicName, *fileUploadSetClipboard)
 
+	// UnPublish file
+	case fileUnPublishCmd.FullCommand():
+		commands.UnPublishFile(commandData, *fileUnPublishName, *fileUnPublishID)
+
 	// Edit file
 	case fileEditCmd.FullCommand():
 		commandData.EditFile(*fileEditID)

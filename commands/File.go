@@ -233,6 +233,13 @@ func PublishFile(cData *CommandData, name string, id uint, publicName string, se
 	}
 }
 
+// UnPublishFile makes a public file private
+func UnPublishFile(cData *CommandData, name string, id uint) {
+	// Convert input
+	name, id = GetFileCommandData(name, id)
+	UpdateFile(cData, name, id, "", "", []string{}, []string{}, []string{}, []string{}, false, true)
+}
+
 // UpdateFile updates a file on the server
 func UpdateFile(cData *CommandData, name string, id uint, newName string, newNamespace string, addTags []string, removeTags []string, addGroups []string, removeGroups []string, setPublic, setPrivate bool) {
 	// Process params: make t1,t2 -> [t1 t2]
