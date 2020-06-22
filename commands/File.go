@@ -77,7 +77,12 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 		fmt.Println(toJSON(resp.Files))
 	} else {
 		if len(resp.Files) == 0 {
-			fmt.Printf("No files in namespace %s\n", cData.Namespace)
+			if cData.isFilterUsed() {
+				fmt.Println("No files found using given filter")
+			} else {
+				fmt.Printf("No files in namespace %s\n", cData.FileAttributes.Namespace)
+			}
+
 			return
 		}
 

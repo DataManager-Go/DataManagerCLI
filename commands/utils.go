@@ -444,3 +444,7 @@ func trimName(text string, tlen int) string {
 
 	return text
 }
+
+func (cData *CommandData) isFilterUsed() bool {
+	return len(cData.FileAttributes.Groups) > 0 || len(cData.FileAttributes.Tags) > 0
+}
