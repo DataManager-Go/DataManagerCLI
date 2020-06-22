@@ -83,7 +83,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// Edit file
 	case fileEditCmd.FullCommand():
-		commandData.EditFile(*fileEditID, *fileEditEditor)
+		commandData.EditFile(*fileEditName, *fileEditID, *fileEditEditor)
 
 	// Move file
 	case fileMoveCmd.FullCommand():

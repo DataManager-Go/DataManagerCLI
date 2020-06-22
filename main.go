@@ -137,8 +137,9 @@ var (
 
 	// -- Edit
 	fileEditCmd    = appFileCmd.Command("edit", "Edit a file").Alias("e")
-	fileEditID     = fileEditCmd.Arg("ID", "The fileID").Required().Uint()
-	fileEditEditor = fileEditCmd.Flag("editor", "Use a custom editor to edit the given file").HintOptions("libreoffice", "vim", "nano", "").String()
+	fileEditName   = fileEditCmd.Arg("name", "The file name").Required().String()
+	fileEditID     = fileEditCmd.Arg("ID", "The file ID").Uint()
+	fileEditEditor = fileEditCmd.Flag("editor", "Use a custom editor to edit the given file").HintOptions("libreoffice", "vim", "nano", "emacs", "vi").String()
 
 	// -- Tree
 	appFileTree          = app.Command("tree", "Show your files like the unix file tree")

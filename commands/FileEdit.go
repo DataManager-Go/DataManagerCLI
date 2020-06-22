@@ -10,17 +10,20 @@ import (
 )
 
 // EditFile edits a file
-func (cData *CommandData) EditFile(id uint, editor string) {
+func (cData *CommandData) EditFile(name string, id uint, editor string) {
 	if !checkEditor(editor) {
 		fmt.Printf("Can't find editor %s\n", editor)
 		return
 	}
+
+	name, id = GetFileCommandData(name, id)
 
 	// Use force to overwrite a local version
 	// If the checksums match, the file won't be
 	// downloaded again
 	cData.Force = true
 	resp, err := cData.DownloadFile(&DownloadData{
+		FileName:  name,
 		FileID:    id,
 		LocalPath: os.TempDir(),
 	})
