@@ -344,7 +344,7 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 	})
 
 	// Handle upload errors
-	if err != nil {
+	if err != nil || uploadResponse == nil {
 		printResponseError(err, "uploading file")
 		uploader.bar.stop()
 		return
