@@ -374,9 +374,7 @@ func hintListFiles() []string {
 
 	var files []string
 	for _, fi := range fileInfos {
-		if !fi.IsDir() {
-			files = append(files, fi.Name())
-		}
+		files = append(files, fi.Name())
 	}
 
 	return files
