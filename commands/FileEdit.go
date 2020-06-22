@@ -4,36 +4,35 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
 
 // EditFile edits a file
 func (cData *CommandData) EditFile(id uint, editor string) {
-	// Do file Request
-	resp, err := cData.LibDM.NewFileRequestByID(id).Do()
+	if !checkEditor(editor) {
+		fmt.Printf("Can't find editor %s\n", editor)
+		return
+	}
+
+	// Use force to overwrite a local version
+	// If the checksums match, the file won't be
+	// downloaded again
+	cData.Force = true
+	resp, err := cData.DownloadFile(&DownloadData{
+		FileID:    id,
+		LocalPath: os.TempDir(),
+	})
+
 	if err != nil {
-		printError("downloading file", err.Error())
+		// We already printed an error
+		// in the cData.DlFile func
 		return
 	}
 
-	// Generate temp-filePath
-	filePath := GetTempFile(resp.ServerFileName)
-	fmt.Println(resp.ServerFileName)
-
-	cData.handleDecryption(resp)
-
-	if resp.FileID == 0 {
-		fmt.Println("Unexpected error occured, received File Id is invalid")
-		return
-	}
-
-	// Save File
-	err = resp.WriteToFile(filePath, 0600, nil)
-	if err != nil {
-		printError("downloading file", err.Error())
-		return
-	}
+	// Get output file
+	filePath := resolveOutputFile(resp.ServerFileName, os.TempDir())
 
 	// Shredder temp file at the end
 	defer func() {
@@ -66,13 +65,16 @@ func (cData *CommandData) EditFile(id uint, editor string) {
 	cData.EncryptionKey = resp.DownloadRequest.Key
 	cData.Encryption = resp.Encryption
 
-	// Replace file on server with new file
+	// Replace file on server with new version
 	cData.UploadItems([]string{filePath}, 1, &UploadData{
 		ReplaceFile: resp.FileID,
+		Name:        resp.ServerFileName,
 	})
 }
 
+// Edit file in some way
 func editFile(file, editor string) bool {
+	// Different OS may handle file editing different
 	switch runtime.GOOS {
 	case "linux", "darwin", "freebsd", "openbsd":
 		{
@@ -80,7 +82,7 @@ func editFile(file, editor string) bool {
 		}
 	case "windows":
 		{
-
+			// TODO
 		}
 	default:
 		fmt.Printf("No support for %s at the moment\n", runtime.GOOS)
@@ -89,6 +91,7 @@ func editFile(file, editor string) bool {
 	return false
 }
 
+// Edit a given file on a linux based os
 func editLinux(file, editor string) bool {
 	if len(editor) == 0 {
 		editor = os.Getenv("EDITOR")
@@ -98,7 +101,8 @@ func editLinux(file, editor string) bool {
 	}
 
 	// Check editor
-	if _, err := os.Stat(editor); err != nil {
+	editor, found := findEditor(editor)
+	if !found {
 		fmtError("finding editor. Either install nano or set $EDITOR to your desired editor")
 		return false
 	}
@@ -121,6 +125,9 @@ func editLinux(file, editor string) bool {
 
 var tuiEditors = []string{"vim", "vi", "emacs", "nano"}
 
+// Were gonna need this if there is a
+// problem with the progressbar and a
+// tui based text editor
 func isTUIeditor(editor string) bool {
 	editor = strings.ToLower(editor)
 
@@ -138,4 +145,45 @@ func isTUIeditor(editor string) bool {
 	}
 
 	return false
+}
+
+// Check if given editor can be found
+func checkEditor(editor string) bool {
+	if runtime.GOOS == "windows" {
+		return true
+	}
+
+	_, ok := findEditor(editor)
+	return ok
+}
+
+// Find editor
+func findEditor(editor string) (string, bool) {
+	// Check if path is already valid
+	if strings.HasPrefix(editor, "/") {
+		if _, err := os.Stat(editor); err == nil {
+			return editor, true
+		}
+	}
+
+	var paths []string
+
+	// Prefer $PATH
+	path, has := os.LookupEnv("PATH")
+	if !has {
+		paths = append(paths, strings.Split(path, ":")...)
+	} else {
+		// Alternatively use a custom $PATH
+		paths = []string{"/usr/bin", "/usr/local/bin", "/usr/sbin", "/sbin", "/bin", "/usr/local/sbin"}
+	}
+
+	// Find editor
+	for _, path := range paths {
+		e := filepath.Join(path, editor)
+		if _, err := os.Stat(e); err == nil {
+			return e, true
+		}
+	}
+
+	return "", false
 }

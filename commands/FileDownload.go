@@ -67,7 +67,7 @@ func (cData *CommandData) ViewFile(downloadData *DownloadData) {
 }
 
 // DownloadFile download a file specified by data
-func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
+func (cData *CommandData) DownloadFile(downloadData *DownloadData) (*libdm.FileDownloadResponse, error) {
 	doBench := cData.Config.Client.BenchResult == 0
 	var benchChan chan int
 
@@ -83,14 +83,14 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 	// Check output file
 	if len(downloadData.LocalPath) == 0 {
 		fmt.Println("You have to pass a local file")
-		return nil
+		return nil, nil
 	}
 
 	// Do request but don't read the body yet
 	resp, err := downloadData.doRequest(cData, true)
 	if err != nil {
 		printResponseError(err, "requesting file")
-		return err
+		return resp, err
 	}
 
 	// Determine where the file should be stored in
@@ -103,7 +103,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 		cData.Config.Client.BenchResult = res
 		if err := cData.Config.Save(); err != nil {
 			printError("Saving config", err.Error())
-			return err
+			return resp, err
 		}
 	}
 
@@ -123,7 +123,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 	// TODO add chechksum validation
 	if gaw.FileExists(outFile) && !cData.Force && !strings.HasPrefix(outFile, "/dev/") {
 		fmt.Printf("File '%s' already exists. Use -f to overwrite it or choose a different outputfile", outFile)
-		return err
+		return resp, err
 	}
 
 	cancel := make(chan bool, 1)
@@ -182,7 +182,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) error {
 		}
 	}
 
-	return nil
+	return resp, nil
 }
 
 func (downloadData *DownloadData) doRequest(cData *CommandData, showBar bool) (*libdm.FileDownloadResponse, error) {
@@ -279,7 +279,7 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 		}
 
 		// Download file
-		if err := cData.DownloadFile(&DownloadData{
+		if _, err := cData.DownloadFile(&DownloadData{
 			FileName:     file.Name,
 			FileID:       file.ID,
 			LocalPath:    filepath.Join(rootDir, dir),
