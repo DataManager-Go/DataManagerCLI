@@ -36,6 +36,7 @@ type CommandData struct {
 	NoDecrypt, NoEmojis     bool
 	VerifyFile              bool
 	Compression             bool
+	Extract                 bool
 }
 
 // Init init CommandData

@@ -209,11 +209,17 @@ func (cData *CommandData) handleDecryption(resp *libdm.FileDownloadResponse) {
 // Write response to a given file
 func (cData *CommandData) writeFile(resp *libdm.FileDownloadResponse, file string, cancel chan bool, bar *Bar) error {
 	if bar != nil {
-		resp.DownloadRequest.ReaderProxy = func(r io.Reader) io.Reader {
-			// Proxy reader through bar
-			return bar.bar.ProxyReader(r)
+		resp.DownloadRequest.WriterProxy = func(r io.Writer) io.Writer {
+			// Prox reader through bar
+			return proxyWriter{
+				bar: bar,
+				w:   r,
+			}
 		}
 	}
+
+	// Set extract
+	resp.Extract = cData.Extract
 
 	// Save file to tempFile
 	if err := resp.WriteToFile(file, 0600, cancel); err != nil {

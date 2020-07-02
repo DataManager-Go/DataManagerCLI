@@ -1,10 +1,10 @@
 module github.com/DataManager-Go/DataManagerCLI
 
-go 1.14
+go 1.14 
 
 require (
-	github.com/DataManager-Go/libdatamanager v1.3.3
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200622140339-391e6073485d
+	github.com/DataManager-Go/libdatamanager v1.3.4
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200628204737-21009f725892
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/gopool v0.0.2
@@ -17,16 +17,15 @@ require (
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
-	github.com/klauspost/compress v1.10.9 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible
-	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/vbauerster/mpb/v5 v5.2.2
 	github.com/zalando/go-keyring v0.0.0-20200121091418-667557018717
-	golang.org/x/crypto v0.0.0-20200604202706-70a84ac30bf9
-	golang.org/x/sys v0.0.0-20200622182413-4b0db7f3f76b // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )

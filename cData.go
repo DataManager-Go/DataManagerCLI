@@ -41,6 +41,7 @@ func buildCData(parsed string, appTrimName int) *commands.CommandData {
 		VerifyFile:          *appVerify,
 		UnmodifiedNamespace: unmodifiedNS,
 		Compression:         *appDisableCompression,
+		Extract:             *appDecompress,
 	}
 
 	// Init cdata

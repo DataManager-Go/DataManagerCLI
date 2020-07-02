@@ -48,6 +48,8 @@ type Bar struct {
 	doneTextChan chan string
 	doneText     string
 	done         bool
+
+	outWriter io.Writer
 }
 
 // NewBar create a new bar
@@ -176,4 +178,17 @@ func NewProgressView() *ProgressView {
 			mpb.WithWidth(130),
 		),
 	}
+}
+
+type proxyWriter struct {
+	bar *Bar
+	w   io.Writer
+}
+
+func (proxy proxyWriter) Write(b []byte) (int, error) {
+	n, err := proxy.w.Write(b)
+
+	go proxy.bar.bar.IncrBy(n)
+
+	return n, err
 }
