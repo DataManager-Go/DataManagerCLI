@@ -1,12 +1,12 @@
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataManager-Go/libdatamanager v1.0.10/go.mod h1:iLQrv9tvUkcx9nA+x51eUR9juV0JgIOnFrhPISxWWUE=
-github.com/DataManager-Go/libdatamanager v1.3.3 h1:mLRWu8j1GdCgdUXJUpqJOowEhsfKQghsA++gNQzPqgs=
-github.com/DataManager-Go/libdatamanager v1.3.3/go.mod h1:IVnf+kpO0W+qkA4xa0bm/7o2RGS7vsTUt4BmTfKqVDY=
-github.com/DataManager-Go/libdatamanager v1.3.4 h1:CeMakPA+ntlWKuqNe6WFimiFG3FKUoNzDsR3Eex6WOM=
-github.com/DataManager-Go/libdatamanager v1.3.4/go.mod h1:DjxzXo2LkUjUWk6ihkRpdnGkm3jmKC31oNO0KqmgrTc=
+github.com/DataManager-Go/libdatamanager v1.3.5 h1:xJv4iAS+FBPHafSkVEzuUVhaS2OA5UyNJ0oAPLFwrQI=
+github.com/DataManager-Go/libdatamanager v1.3.5/go.mod h1:DjxzXo2LkUjUWk6ihkRpdnGkm3jmKC31oNO0KqmgrTc=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200628204737-21009f725892 h1:sF3wPp9bky2czEuGGyaVkmIs/6AprVWT94eq6S1cADo=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200628204737-21009f725892/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200704102408-58e9b818d6d5 h1:3B6kSRRH3KPTeDpMyTtRIeEALKmefW4AtIAqPGbh+vY=
+github.com/DataManager-Go/libdatamanager/config v0.0.0-20200704102408-58e9b818d6d5/go.mod h1:RfoOPe8dQgubuBUmtqEYu1Ny0fT+htZH/ArrEl0dcHQ=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28/go.mod h1:j1kHFoYWAbLRPE5nyAAtODwUc0xwd2+ifPZ3uCAgv/g=
 github.com/JojiiOfficial/gaw v1.2.0 h1:qIu6xVtCvd4yhAfI0MGGr5CPus0hpY+eFUDUGqc/sYQ=
@@ -24,6 +24,7 @@ github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d h1:licZJFw2RwpH
 github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d/go.mod h1:asat636LX7Bqt5lYEZ27JNDcqxfjdBQuJ/MM4CN/Lzo=
 github.com/alecthomas/kingpin v0.0.0-20200323085623-b6657d9477a6 h1:0fwkEPHxb5V+KZZLxWmOknl4oHWo60+TnhmKOi4BIkU=
 github.com/alecthomas/kingpin v0.0.0-20200323085623-b6657d9477a6/go.mod h1:b6br6/pDFSfMkBgC96TbpOji05q5pa+v5rIlS0Y6XtI=
+github.com/alecthomas/kingpin v1.3.7 h1:GLMgiQ5nZb3rg5pozvF7KDbseQ12eNO1p7bB2t5K1fw=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
@@ -63,8 +64,6 @@ github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD
 github.com/jinzhu/inflection v1.0.0/go.mod h1:h+uFLlag+Qp1Va5pdKtLDYj+kHp5pxUVkryuEj+Srlc=
 github.com/jinzhu/now v1.0.1 h1:HjfetcXq097iXP0uoPCdnM4Efp5/9MsM0/M+XOTeR3M=
 github.com/jinzhu/now v1.0.1/go.mod h1:d3SSVoowX0Lcu0IBviAWJpolVfI5UJVZZ7cO71lE/z8=
-github.com/klauspost/compress v1.10.8 h1:eLeJ3dr/Y9+XRfJT4l+8ZjmtB5RPJhucH2HeCV5+IZY=
-github.com/klauspost/compress v1.10.8/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/compress v1.10.10 h1:a/y8CglcM7gLGYmlbP/stPE5sR3hbhFRUjCBfd/0B3I=
 github.com/klauspost/compress v1.10.10/go.mod h1:aoV0uJVorq1K+umq18yTdKaF57EivdYsUV+/s2qKfXs=
 github.com/klauspost/pgzip v1.2.4 h1:TQ7CNpYKovDOmqzRHKxJh0BeaBI7UdQZYc6p7pMQh1A=
