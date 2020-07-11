@@ -131,10 +131,10 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, uploadDat
 		if len(cData.FileAttributes.Namespace) > 0 {
 			sNamespace += color.HiBlackString(" (Updated)")
 		}
-	}
 
-	if len(uploadData.Name) > 0 {
-		sName += color.HiBlackString(" (Updated)")
+		if len(uploadData.Name) > 0 {
+			sName += color.HiBlackString(" (Updated)")
+		}
 	}
 
 	// Short uses only one line to print the upload data
@@ -175,6 +175,8 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, uploadDat
 
 	if bar != nil {
 		bar.doneTextChan <- ts
+	} else {
+		fmt.Println(ts)
 	}
 
 	return ts
