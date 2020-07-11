@@ -125,8 +125,10 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 
 	// Set name to filename if not set
 	if len(uploadData.Name) == 0 {
-		_, fileName := filepath.Split(uri)
-		uploadData.Name = fileName
+		if uploadData.ReplaceFile == 0 {
+			_, fileName := filepath.Split(uri)
+			uploadData.Name = fileName
+		}
 	} else {
 		uploadData.customName = true
 	}
@@ -220,6 +222,12 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 		}
 	}
 
+	// Use empty namespace for upload since we want
+	// to update it if the user specifies one
+	if uploadData.ReplaceFile > 0 {
+		cData.FileAttributes.Namespace = cData.getRealNamespace()
+	}
+
 	// Create upload request
 	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
 	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
@@ -266,7 +274,7 @@ func (cData *CommandData) runPostUpload(uploadData *UploadData, uploadResponse *
 	}
 
 	// Render table with informations
-	text := cData.printUploadResponse(uploadResponse, (cData.Quiet || uploadData.TotalFiles > 1), uploader.bar)
+	text := cData.printUploadResponse(uploadResponse, uploadData, (cData.Quiet || uploadData.TotalFiles > 1), uploader.bar)
 
 	// On quietMode (no bar is shown)
 	// just print the output

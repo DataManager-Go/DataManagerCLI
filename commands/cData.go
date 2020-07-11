@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -119,14 +120,30 @@ func (cData *CommandData) HasKeystoreSupport() bool {
 
 // Print nice output for a file upload
 // If total files is > 1 only a summary is shown
-func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short bool, bar *Bar) string {
+func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, uploadData *UploadData, short bool, bar *Bar) string {
+	sID := strconv.FormatUint(uint64(ur.FileID), 10)
+	sName := ur.Filename
+	sNamespace := ur.Namespace
+
+	if uploadData.ReplaceFile > 0 {
+		sID += color.HiBlackString(" (Replaced)")
+
+		if len(cData.FileAttributes.Namespace) > 0 {
+			sNamespace += color.HiBlackString(" (Updated)")
+		}
+	}
+
+	if len(uploadData.Name) > 0 {
+		sName += color.HiBlackString(" (Updated)")
+	}
+
 	// Short uses only one line to print the upload data
 	if short {
 		var text string
 		if len(ur.PublicFilename) > 0 {
-			text = fmt.Sprintf("%s %d; %s %s;\t%s %s", color.HiGreenString("ID:"), ur.FileID, color.HiGreenString("Name:"), ur.Filename, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
+			text = fmt.Sprintf("%s %s; %s %s;\t%s %s", color.HiGreenString("ID:"), sID, color.HiGreenString("Name:"), sName, color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename))
 		} else {
-			text = fmt.Sprintf("%s %d; %s %s", color.HiGreenString("ID"), ur.FileID, color.HiGreenString("Name:"), ur.Filename)
+			text = fmt.Sprintf("%s %s; %s %s", color.HiGreenString("ID"), sID, color.HiGreenString("Name:"), sName)
 		}
 
 		if bar != nil {
@@ -142,14 +159,14 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, short boo
 	table.Padding = 4
 
 	// Fill table with data
-	table.AddRow([]interface{}{color.HiGreenString("FileID:"), ur.FileID}...)
+	table.AddRow([]interface{}{color.HiGreenString("FileID:"), sID}...)
 
 	if len(ur.PublicFilename) > 0 {
 		table.AddRow([]interface{}{color.HiGreenString("Public url:"), cData.Config.GetPreviewURL(ur.PublicFilename)}...)
 	}
 
-	table.AddRow([]interface{}{color.HiGreenString("File name:"), ur.Filename}...)
-	table.AddRow([]interface{}{color.HiGreenString("Namespace:"), ur.Namespace}...)
+	table.AddRow([]interface{}{color.HiGreenString("File name:"), sName}...)
+	table.AddRow([]interface{}{color.HiGreenString("Namespace:"), sNamespace}...)
 	table.AddRow([]interface{}{color.HiGreenString("Size:"), units.BinarySuffix(float64(ur.FileSize))}...)
 	table.AddRow([]interface{}{color.HiGreenString("Checksum:"), ur.Checksum}...)
 
