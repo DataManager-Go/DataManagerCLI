@@ -94,7 +94,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) (*libdm.FileD
 	}
 
 	// Determine where the file should be stored in
-	outFile := resolveOutputFile(resp.ServerFileName, downloadData.LocalPath)
+	outFile := resolveOutputFile(resp.ServerFileName, downloadData.LocalPath, cData.Extract)
 
 	// Wait for bench result
 	// and save it to config
@@ -115,7 +115,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) (*libdm.FileD
 		}
 
 		// Create and add bar
-		bar = NewBar(DownloadTask, resp.Size, resp.ServerFileName, false)
+		bar = NewBar(DownloadTask, resp.Size, cData.handleFileEnding(resp.ServerFileName), false)
 		downloadData.ProgressView.AddBar(bar)
 	}
 
@@ -209,11 +209,10 @@ func (cData *CommandData) handleDecryption(resp *libdm.FileDownloadResponse) {
 // Write response to a given file
 func (cData *CommandData) writeFile(resp *libdm.FileDownloadResponse, file string, cancel chan bool, bar *Bar) error {
 	if bar != nil {
-		resp.DownloadRequest.WriterProxy = func(r io.Writer) io.Writer {
-			// Prox reader through bar
-			return proxyWriter{
+		resp.DownloadRequest.ReaderProxy = func(r io.Reader) io.Reader {
+			return barProxy{
 				bar: bar,
-				w:   r,
+				r:   r,
 			}
 		}
 	}
@@ -299,8 +298,19 @@ func (cData *CommandData) downloadFiles(files []libdm.FileResponseItem, outDir s
 	}).Run().Wait()
 }
 
-func resolveOutputFile(fileName, outputFile string) string {
+func (cData CommandData) handleFileEnding(fileName string) string {
+	if cData.Extract && strings.HasSuffix(fileName, ".gz") {
+		fileName = fileName[:len(fileName)-3]
+	}
+
+	return fileName
+}
+
+func resolveOutputFile(fileName, outputFile string, extract bool) string {
 	localFile := gaw.ResolveFullPath(outputFile)
+
+	// remove .gz suffix if file gets extracted...
+	fileName = CommandData{Extract: extract}.handleFileEnding(fileName)
 
 	// Replace fileSeparators to prevent writing file to an other directory
 	fileName = strings.ReplaceAll(fileName, string(filepath.Separator), "-")

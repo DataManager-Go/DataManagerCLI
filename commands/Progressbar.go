@@ -180,15 +180,43 @@ func NewProgressView() *ProgressView {
 	}
 }
 
-type proxyWriter struct {
+type barProxy struct {
 	bar *Bar
 	w   io.Writer
+	r   io.Reader
 }
 
-func (proxy proxyWriter) Write(b []byte) (int, error) {
+func (proxy barProxy) Write(b []byte) (int, error) {
 	n, err := proxy.w.Write(b)
 
-	go proxy.bar.bar.IncrBy(n)
+	d := make(chan struct{}, 1)
+	go func() {
+		proxy.bar.bar.IncrBy(n)
+		d <- struct{}{}
+	}()
+
+	select {
+	case <-d:
+	case <-time.After(time.Second * 3):
+	}
 
 	return n, err
+}
+
+func (proxy barProxy) Read(b []byte) (int, error) {
+	n, err := proxy.r.Read(b)
+
+	d := make(chan struct{}, 1)
+	go func() {
+		proxy.bar.bar.IncrBy(n)
+		d <- struct{}{}
+	}()
+
+	select {
+	case <-d:
+	case <-time.After(time.Second * 1):
+	}
+
+	return n, err
+
 }

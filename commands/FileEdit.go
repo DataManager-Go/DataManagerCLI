@@ -35,7 +35,7 @@ func (cData *CommandData) EditFile(name string, id uint, editor string) {
 	}
 
 	// Get output file
-	filePath := resolveOutputFile(resp.ServerFileName, os.TempDir())
+	filePath := resolveOutputFile(resp.ServerFileName, os.TempDir(), false)
 
 	// Shredder temp file at the end
 	defer func() {
