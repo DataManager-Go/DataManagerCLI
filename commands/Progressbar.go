@@ -184,39 +184,21 @@ type barProxy struct {
 	bar *Bar
 	w   io.Writer
 	r   io.Reader
-}
-
-func (proxy barProxy) Write(b []byte) (int, error) {
-	n, err := proxy.w.Write(b)
-
-	d := make(chan struct{}, 1)
-	go func() {
-		proxy.bar.bar.IncrBy(n)
-		d <- struct{}{}
-	}()
-
-	select {
-	case <-d:
-	case <-time.After(time.Second * 3):
-	}
-
-	return n, err
+	d   chan struct{}
 }
 
 func (proxy barProxy) Read(b []byte) (int, error) {
 	n, err := proxy.r.Read(b)
 
-	d := make(chan struct{}, 1)
 	go func() {
 		proxy.bar.bar.IncrBy(n)
-		d <- struct{}{}
+		proxy.d <- struct{}{}
 	}()
 
 	select {
-	case <-d:
-	case <-time.After(time.Second * 1):
+	case <-proxy.d:
+	case <-time.After(time.Millisecond * 100):
 	}
 
 	return n, err
-
 }

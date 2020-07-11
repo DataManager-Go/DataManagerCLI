@@ -161,7 +161,9 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) (*libdm.FileD
 		if len(s) > 0 {
 			text = fmt.Sprintf("%s %s: %s", color.HiRedString("Error"), "downloading file", s)
 		} else {
-			text = fmt.Sprintf("saved '%s'", outFile)
+			if outFile != "/dev/null" {
+				text = fmt.Sprintf("saved '%s'", outFile)
+			}
 		}
 
 		// Print text
@@ -213,6 +215,7 @@ func (cData *CommandData) writeFile(resp *libdm.FileDownloadResponse, file strin
 			return barProxy{
 				bar: bar,
 				r:   r,
+				d:   make(chan struct{}, 1),
 			}
 		}
 	}
