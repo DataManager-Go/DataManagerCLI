@@ -201,5 +201,8 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	case keystoreRemoveKeyCmd.FullCommand():
 		commands.KeystoreRemoveKey(commandData, *keystoreRemoveKeyCmdID)
 
+	case statsCmd:
+		commandData.Stats()
+
 	}
 }

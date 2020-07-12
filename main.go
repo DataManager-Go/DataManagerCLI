@@ -99,6 +99,8 @@ var (
 	setupCmdNoLogin    = setupCmd.Flag("no-login", "Don't login after setting up").Bool()
 	setupCmdToken      = setupCmd.Flag("token", "Use token").String()
 	setupCmdUsername   = setupCmd.Flag("user", "The Username. Required if --token is set").String()
+	// -- Stats
+	statsCmd = app.Command("stats", "Show user statstics").FullCommand()
 
 	//
 	// ---------> Config commands --------------------------------------
