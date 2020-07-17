@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/DataManager-Go/libdatamanager v1.3.7
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200711192018-8ed96a57428c
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20200712163310-329c46171762
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/gopool v0.0.2
