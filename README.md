@@ -15,8 +15,9 @@ You can find the datamanager cli client in the AUR: `datamanager-cli-git`.
 
 ### Compiling
 
-```go
-go build -o main && sudo mv main /usr/local/bin/manager
+Run:
+```bash
+make build && sudo make install
 ```
 (Go 1.11+ is required)
 
