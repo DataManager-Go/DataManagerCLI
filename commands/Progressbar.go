@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
@@ -53,7 +54,7 @@ type Bar struct {
 }
 
 // NewBar create a new bar
-func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
+func NewBar(task BarTask, total int64, name string, singleMode bool, maxItemLen int) *Bar {
 	// Create bar instance
 	bar := &Bar{
 		task:         task,
@@ -111,10 +112,11 @@ func NewBar(task BarTask, total int64, name string, singleMode bool) *Bar {
 			decor.OnComplete(decor.Spinner([]string{" ⠋ ", " ⠙ ", " ⠹ ", " ⠸ ", " ⠼ ", " ⠴ ", " ⠦ ", " ⠧ ", " ⠇ ", " ⠏ "}), ""),
 			decor.OnComplete(decor.Name(task.Verb()), "Done!"),
 			decor.OnComplete(decor.Name(" '"+name+"'"), ""),
+			decor.OnComplete(decor.Name(strings.Repeat(" ", maxItemLen-len(name)+1)), ""),
 		),
 		mpb.AppendDecorators(
-			decor.OnComplete(decor.Percentage(decor.WCSyncWidth), ""),
-			decor.OnComplete(decor.CountersKiloByte(" [%d / %d]", decor.WCSyncWidth), ""),
+			decor.OnComplete(decor.Percentage(decor.WCSyncSpace), ""),
+			decor.OnComplete(decor.CountersKiloByte(" [%d / %d]"), ""),
 		),
 	}...)
 

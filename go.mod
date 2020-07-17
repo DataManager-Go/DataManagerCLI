@@ -17,6 +17,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
 	github.com/kyokomi/emoji v2.2.4+incompatible
+	github.com/mattn/go-runewidth v0.0.9
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1

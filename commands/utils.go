@@ -448,3 +448,14 @@ func trimName(text string, tlen int) string {
 func (cData *CommandData) isFilterUsed() bool {
 	return len(cData.FileAttributes.Groups) > 0 || len(cData.FileAttributes.Tags) > 0
 }
+
+func getLongestItem(sarr []string) int {
+	var max int
+	for i := range sarr {
+		if len(sarr[i]) > max {
+			max = len(sarr[i])
+		}
+	}
+
+	return max
+}

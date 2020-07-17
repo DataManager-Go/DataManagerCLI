@@ -32,6 +32,7 @@ type UploadData struct {
 
 	customName      bool
 	uploadAsArchive bool
+	maxItemLen      int
 }
 
 // UploadItems to the server and set's its affiliations
@@ -49,6 +50,8 @@ func (cData *CommandData) UploadItems(uris []string, threads int, uploadData *Up
 	if uris == nil {
 		return
 	}
+
+	uploadData.maxItemLen = getLongestItem(uris)
 
 	// Setup Total files
 	uploadData.TotalFiles = len(uris)
@@ -334,7 +337,7 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 	if uploader.showProgress {
 		name := uploader.uploadData.Name
 		// Create progressbar
-		uploader.bar = NewBar(UploadTask, 0, name, (uploader.uploadData.TotalFiles == 1))
+		uploader.bar = NewBar(UploadTask, 0, name, (uploader.uploadData.TotalFiles == 1), uploader.uploadData.maxItemLen)
 		uploader.uploadData.ProgressView.AddBar(uploader.bar)
 
 		// Setup proxy
