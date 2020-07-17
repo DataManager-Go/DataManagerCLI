@@ -117,16 +117,17 @@ var (
 	//
 	// ---------> File commands --------------------------------------
 	// -- Upload
-	appUpload              = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
-	fileUploadPaths        = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Strings()
-	fileUploadFromStdin    = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
-	fileUploadName         = appUpload.Flag("name", "Specify the name of the file").String()
-	fileUploadPublic       = appUpload.Flag("public", "Make uploaded file publci").Bool()
-	fileUploadPublicName   = appUpload.Flag("public-name", "Specify the public filename").String()
-	fileUploadReplace      = appUpload.Flag("replace-file", "Replace a file").Uint()
-	fileUploadDeletInvaid  = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
-	fileUploadSetClipboard = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
-	fileUploadNoArchiving  = app.Flag("no-archive", "Don't archive folder, upload all files in a given folder separately").Bool()
+	appUpload                 = app.Command("upload", "Upload the given file").Alias("up").Alias("push")
+	fileUploadPaths           = appUpload.Arg("filePath", "Path to the file you want to upload").HintAction(hintListFiles).Strings()
+	fileUploadFromStdin       = appUpload.Flag("from-stdin", "Read file from stdin and upload it").Bool()
+	fileUploadName            = appUpload.Flag("name", "Specify the name of the file").String()
+	fileUploadPublic          = appUpload.Flag("public", "Make uploaded file publci").Bool()
+	fileUploadPublicName      = appUpload.Flag("public-name", "Specify the public filename").String()
+	fileUploadReplace         = appUpload.Flag("replace-file", "Replace a file").Uint()
+	fileUploadReplaceSameName = appUpload.Flag("replace-same-name", "Replace file with same name in selected namespace").Bool()
+	fileUploadDeletInvaid     = app.Flag("delete-invaid", "Deletes a file if it's checksum is invalid").Bool()
+	fileUploadSetClipboard    = app.Flag("set-clip", "Set clipboard to pubilc url").Bool()
+	fileUploadNoArchiving     = app.Flag("no-archive", "Don't archive folder, upload all files in a given folder separately").Bool()
 
 	// -- List
 	appFileCmd           = app.Command("file", "Do something with a file").Alias("f")

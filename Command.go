@@ -33,14 +33,16 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 	// Upload
 	case appUpload.FullCommand():
 		commandData.UploadItems(*fileUploadPaths, *appParallelism, &commands.UploadData{
-			Name:          *fileUploadName,
-			DeleteInvalid: *fileUploadDeletInvaid,
-			FromStdIn:     *fileUploadFromStdin,
-			Public:        *fileUploadPublic,
-			PublicName:    *fileUploadPublicName,
-			ReplaceFile:   *fileUploadReplace,
-			SetClip:       *fileUploadSetClipboard,
-			NoArchiving:   *fileUploadNoArchiving,
+			Name:            *fileUploadName,
+			DeleteInvalid:   *fileUploadDeletInvaid,
+			FromStdIn:       *fileUploadFromStdin,
+			Public:          *fileUploadPublic,
+			PublicName:      *fileUploadPublicName,
+			ReplaceFileID:   *fileUploadReplace,
+			SetClip:         *fileUploadSetClipboard,
+			NoArchiving:     *fileUploadNoArchiving,
+			All:             *appAll,
+			ReplaceSameName: *fileUploadReplaceSameName,
 		})
 
 	case fileCreateCmd.FullCommand():

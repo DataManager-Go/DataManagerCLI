@@ -70,8 +70,8 @@ func (cData *CommandData) EditFile(name string, id uint, editor string) {
 
 	// Replace file on server with new version
 	cData.UploadItems([]string{filePath}, 1, &UploadData{
-		ReplaceFile: resp.FileID,
-		Name:        resp.ServerFileName,
+		ReplaceFileID: resp.FileID,
+		Name:          resp.ServerFileName,
 	})
 }
 

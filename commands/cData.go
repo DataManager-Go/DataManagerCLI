@@ -125,7 +125,7 @@ func (cData CommandData) printUploadResponse(ur *libdm.UploadResponse, uploadDat
 	sName := ur.Filename
 	sNamespace := ur.Namespace
 
-	if uploadData.ReplaceFile > 0 {
+	if uploadData.ReplaceFileID > 0 {
 		sID += color.HiBlackString(" (Replaced)")
 
 		if len(cData.FileAttributes.Namespace) > 0 {

@@ -17,16 +17,18 @@ import (
 
 // UploadData data for uploads
 type UploadData struct {
-	Name          string
-	PublicName    string
-	FromStdIn     bool
-	SetClip       bool
-	Public        bool
-	ReplaceFile   uint
-	DeleteInvalid bool
-	TotalFiles    int
-	ProgressView  *ProgressView
-	NoArchiving   bool
+	Name            string
+	PublicName      string
+	FromStdIn       bool
+	SetClip         bool
+	Public          bool
+	ReplaceFileID   uint
+	ReplaceSameName bool
+	All             bool
+	DeleteInvalid   bool
+	TotalFiles      int
+	ProgressView    *ProgressView
+	NoArchiving     bool
 
 	customName      bool
 	uploadAsArchive bool
@@ -56,7 +58,13 @@ func (cData *CommandData) UploadItems(uris []string, threads int, uploadData *Up
 
 	// Check source(s)
 	if uploadData.TotalFiles == 0 {
+		// We already handled upload from stdin
 		fmt.Println("Either specify one or more files or use --from-stdin to upload from stdin")
+		return
+	}
+
+	if uploadData.ReplaceFileID > 0 && uploadData.ReplaceSameName {
+		fmt.Println("Can't handle two replace options at once")
 		return
 	}
 
@@ -125,7 +133,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 
 	// Set name to filename if not set
 	if len(uploadData.Name) == 0 {
-		if uploadData.ReplaceFile == 0 {
+		if uploadData.ReplaceFileID == 0 {
 			_, fileName := filepath.Split(uri)
 			uploadData.Name = fileName
 		}
@@ -224,13 +232,21 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 
 	// Use empty namespace for upload since we want
 	// to update it if the user specifies one
-	if uploadData.ReplaceFile > 0 {
+	if uploadData.ReplaceFileID > 0 {
 		cData.FileAttributes.Namespace = cData.getRealNamespace()
 	}
 
 	// Create upload request
 	uploadRequest := cData.LibDM.NewUploadRequest(uploadData.Name, cData.FileAttributes)
-	uploadRequest.ReplaceFileID = uploadData.ReplaceFile
+	uploadRequest.ReplaceFileID = uploadData.ReplaceFileID
+
+	if uploadData.ReplaceSameName {
+		uploadRequest.ReplaceFileWithSameName()
+	}
+
+	if cData.All {
+		uploadRequest.HandleAll()
+	}
 
 	// Encrypt file
 	if len(cData.Encryption) > 0 {

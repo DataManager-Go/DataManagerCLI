@@ -27,7 +27,7 @@ endif
 	cp manager /usr/bin/manager
 	/usr/bin/manager --help-man > manager.1
 	install -Dm644 manager.1 /usr/share/man/man8/manager.8
-	rm manager.1
+	@rm manager.1
 	@echo Installed successfully!
 
 uninstall:
