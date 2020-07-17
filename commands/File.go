@@ -26,7 +26,12 @@ func DeleteFile(cData *CommandData, name string, id uint) {
 	}
 
 	// Confirm 'delete everything'
-	if strings.TrimSpace(name) == "%" && !cData.Yes && cData.All {
+	if strings.TrimSpace(name) == "%" &&
+		!cData.Yes &&
+		cData.All &&
+		len(cData.FileAttributes.Tags) == 0 &&
+		len(cData.FileAttributes.Groups) == 0 {
+
 		if i, _ := gaw.ConfirmInput("Do you really want to delete all files in "+cData.Namespace+"? (y/n)> ", bufio.NewReader(os.Stdin)); !i {
 			return
 		}
