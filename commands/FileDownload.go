@@ -115,7 +115,7 @@ func (cData *CommandData) DownloadFile(downloadData *DownloadData) (*libdm.FileD
 		}
 
 		// Create and add bar
-		bar = NewBar(DownloadTask, resp.Size, cData.handleFileEnding(resp.ServerFileName), false, 0)
+		bar = NewBar(DownloadTask, resp.Size, cData.handleFileEnding(resp.ServerFileName), false, len(resp.ServerFileName))
 		downloadData.ProgressView.AddBar(bar)
 	}
 
