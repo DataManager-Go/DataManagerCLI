@@ -345,10 +345,18 @@ func (cData *CommandData) CreateFile(name string) {
 		return
 	}
 
-	_ = resp
-	success = len(<-chDone) > 0
-	// TODO
-	// cData.printUploadResponse(resp, cData.Quiet)
+	sum := <-chDone
+	localchecksum := fileCrc32(file)
+
+	if len(sum) == 0 || sum != localchecksum {
+		fmt.Println(cData.getChecksumError(localchecksum, sum))
+		return
+	}
+
+	success = true
+	cData.printUploadResponse(resp, &UploadData{
+		Name: name,
+	}, cData.Quiet, nil)
 }
 
 // FileTree shows a unix tree like view of files

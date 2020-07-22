@@ -228,7 +228,7 @@ func (cData *CommandData) writeFile(resp *libdm.FileDownloadResponse, file strin
 		// Make error readable
 		var errText string
 		if err == libdm.ErrChecksumNotMatch {
-			errText = cData.getChecksumError(resp)
+			errText = cData.getChecksumError(resp.LocalChecksum, resp.ServerChecksum)
 		} else {
 			errText = getError("downloading file", err.Error())
 		}

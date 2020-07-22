@@ -28,18 +28,18 @@ func (cData *CommandData) verifyChecksum(localCs, remoteCs string) bool {
 	return true
 }
 
-func (cData *CommandData) getChecksumError(resp *libdm.FileDownloadResponse) string {
+func (cData *CommandData) getChecksumError(localChecksum, remoteChecksum string) string {
 	var s string
 	s += fmt.Sprintf("%s checksums don't match!\n", color.YellowString("Warning"))
 	if !cData.Quiet {
-		s += fmt.Sprintf("Local CS:\t%s\n", resp.LocalChecksum)
-		s += fmt.Sprintf("Rem. CS:\t%s\n", resp.ServerChecksum)
+		s += fmt.Sprintf("Local CS:\t%s\n", localChecksum)
+		s += fmt.Sprintf("Rem. CS:\t%s\n", remoteChecksum)
 	}
 	return s
 }
 
 func (cData *CommandData) printChecksumError(resp *libdm.FileDownloadResponse) {
-	fmt.Println(cData.getChecksumError(resp))
+	fmt.Println(cData.getChecksumError(resp.LocalChecksum, resp.ServerChecksum))
 }
 
 func parseURIArgUploadCommand(uris []string, noCompress bool) []string {

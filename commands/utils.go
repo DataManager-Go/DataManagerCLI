@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"hash/crc32"
 	"io"
 	"log"
 	"net/url"
@@ -349,6 +351,23 @@ func awaitOrInterrupt(Ch chan string, onInterrupt func(os.Signal), onChan func(s
 	case data := <-Ch:
 		onChan(data)
 	}
+}
+
+func fileCrc32(file string) string {
+	crc32 := crc32.NewIEEE()
+	b := make([]byte, 1024*1024)
+
+	f, err := os.Open(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = io.CopyBuffer(crc32, f, b)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return hex.EncodeToString(crc32.Sum(nil))
 }
 
 func fileMd5(file string) string {
