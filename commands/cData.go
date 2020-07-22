@@ -31,7 +31,7 @@ type CommandData struct {
 	FileAttributes          libdm.FileAttributes
 	Details                 uint8
 	NameLen                 int
-	All, AllNamespaces      bool
+	All                     bool
 	NoRedaction, OutputJSON bool
 	Yes, Force, Quiet       bool
 	NoDecrypt, NoEmojis     bool

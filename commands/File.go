@@ -64,7 +64,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 	name, id = GetFileCommandData(name, id)
 
 	// Do ListFile request
-	resp, err := cData.LibDM.ListFiles(name, id, cData.AllNamespaces, cData.FileAttributes, cData.Details)
+	resp, err := cData.LibDM.ListFiles(name, id, cData.All, cData.FileAttributes, cData.Details)
 	if err != nil {
 		printResponseError(err, "listing files")
 		return
@@ -139,7 +139,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 		header = append(header, headingColor.Sprint("Created"))
 
 		// Show namespace on -dd
-		if cData.Details > 2 || cData.AllNamespaces {
+		if cData.Details > 2 || cData.All {
 			header = append(header, headingColor.Sprintf("Namespace"))
 		}
 
@@ -183,7 +183,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			rowItems = append(rowItems, humanTime.Difference(time.Now(), file.CreationDate))
 
 			// Show namespace on -dd
-			if cData.Details > 2 || cData.AllNamespaces {
+			if cData.Details > 2 || cData.All {
 				rowItems = append(rowItems, file.Attributes.Namespace)
 			}
 
@@ -358,10 +358,10 @@ func (cData *CommandData) FileTree(sOrder, namespace string) {
 	if len(cData.FileAttributes.Namespace) == 0 && len(namespace) > 0 {
 		cData.FileAttributes.Namespace = namespace
 	}
-	cData.AllNamespaces = len(cData.FileAttributes.Namespace) == 0
+	cData.All = len(cData.FileAttributes.Namespace) == 0
 
 	// Do file list request
-	resp, err := cData.LibDM.ListFiles("", 0, cData.AllNamespaces, cData.FileAttributes, 3)
+	resp, err := cData.LibDM.ListFiles("", 0, cData.All, cData.FileAttributes, 3)
 	if err != nil {
 		printResponseError(err, "getting files")
 		return

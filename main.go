@@ -50,7 +50,6 @@ var (
 	appTags               = app.Flag("tag", "Specify tags to use").Short('t').Strings()
 	appGroups             = app.Flag("group", "Specify groups to use").Short('g').Strings()
 	appNamespace          = app.Flag("namespace", "Specify the namespace to use").Default("default").Short('n').HintAction(hintListNamespaces).String()
-	appAllNamespaces      = app.Flag("all-namespaces", "Do action for all found files").Bool()
 	appAll                = app.Flag("all", "Do action for all found files").Short('a').Bool()
 	appVerify             = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
 	appNoDecrypt          = app.Flag("no-decrypt", "Don't decrypt files").Bool()

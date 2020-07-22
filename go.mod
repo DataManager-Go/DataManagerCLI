@@ -16,12 +16,14 @@ require (
 	github.com/atotto/clipboard v0.1.2
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/color v1.9.0
+	github.com/jinzhu/gorm v1.9.15 // indirect
 	github.com/kyokomi/emoji v2.2.4+incompatible
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pkg/errors v0.9.1
 	github.com/sbani/go-humanizer v0.3.1
-	github.com/vbauerster/mpb/v5 v5.2.3
+	github.com/vbauerster/mpb/v5 v5.2.4
 	github.com/zalando/go-keyring v0.1.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666 // indirect
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
 )

@@ -62,7 +62,7 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 
 	// List file(s)
 	case appFilesCmd.FullCommand():
-		if len(*appFilesCmdNamespace) > 0 {
+		if len(*appFilesCmdNamespace) > 0 && !*appAll {
 			commandData.FileAttributes.Namespace = *appFilesCmdNamespace
 		}
 		commands.ListFiles(commandData, "", *fileListID, *appFilesOrder)
