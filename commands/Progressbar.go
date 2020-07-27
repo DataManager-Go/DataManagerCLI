@@ -106,6 +106,8 @@ func NewBar(task BarTask, total int64, name string, singleMode bool, maxItemLen 
 		})
 	}
 
+	//repeatCount := maxItemLen - len(name)
+
 	// Decorate Bar
 	bar.options = append(bar.options, []mpb.BarOption{
 		mpb.PrependDecorators(

@@ -224,12 +224,14 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 			// Append .tar ending
 			if !strings.HasSuffix(uploadData.Name, ".tar") && !strings.HasSuffix(uploadData.Name, ".tar.gz") {
 				uploadData.Name += ".tar"
+				uploadData.maxItemLen += 4
 			}
 		}
 
 		// Append .gz ending
 		if cData.Compression && !strings.HasSuffix(uploadData.Name, ".gz") {
 			uploadData.Name += ".gz"
+			uploadData.maxItemLen += 3
 		}
 	}
 
