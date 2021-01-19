@@ -253,7 +253,7 @@ func KeystoreRemoveKey(cData *CommandData, fileID uint) {
 		ShredderFile(path, -1)
 	}
 
-	printSuccess("deletet 1 key from keystore")
+	printSuccess("deleted 1 key from keystore")
 }
 
 func printNoKeystoreFound() {

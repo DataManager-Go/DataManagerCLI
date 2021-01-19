@@ -18,6 +18,7 @@ main
 *.yaml
 data
 DataManagerClient
+DataManagerCLI
 DataManager_Client
 manager
 data/
@@ -29,3 +30,5 @@ manager.exe
 manager_*
 test2
 test3
+*.key
+*.key_private
