@@ -9,6 +9,8 @@ github.com/DataManager-Go/libdatamanager v1.3.8 h1:cWMnJqX+4JISVKBobINbbAvSVmEpn
 github.com/DataManager-Go/libdatamanager v1.3.8/go.mod h1:DjxzXo2LkUjUWk6ihkRpdnGkm3jmKC31oNO0KqmgrTc=
 github.com/DataManager-Go/libdatamanager v1.3.9 h1:RpStV793OutYtaOYqFEtdUxUjr9b60bI4OPQCC/ksO8=
 github.com/DataManager-Go/libdatamanager v1.3.9/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
+github.com/DataManager-Go/libdatamanager v1.4.0 h1:V7PeRYTfoJz91JQuT0sRYafGtPiBUuZdzBmwUAn8TK8=
+github.com/DataManager-Go/libdatamanager v1.4.0/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200905133220-f4e6c1616cfa h1:2PHtyzlUhQT4nSaYea8PTHV/e7OuNofLgeoR+hNI7yk=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20200905133220-f4e6c1616cfa/go.mod h1:YHPA+ryhCc4xY130Az+ScF9zkRNGdHuz09eZXiULhrw=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
