@@ -160,18 +160,27 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			table.AddRow(header...)
 		}
 
-		for _, file := range refFiles {
+		for i, file := range refFiles {
+			// Toggle between two colors with each new line to make it easier to read
+			bgColor := color.New(color.FgHiWhite).Sprintf
+			if i%2 != 0 {
+				//bgColor = color.BgBlue
+				bgColor = color.New(color.FgHiBlack).Sprintf
+			}
+
 			// Colorize private pubNames if not public
 			pubname := file.PublicName
 			if len(pubname) > 0 && !file.IsPublic {
 				pubname = color.HiMagentaString(pubname)
+			} else {
+				pubname = bgColor(pubname)
 			}
 
 			// Add items
 			rowItems := []interface{}{
-				file.ID,
-				formatFilename(file, cData.NameLen, cData),
-				units.BinarySuffix(float64(file.Size)),
+				bgColor("%d", file.ID),
+				bgColor("%s", formatFilename(file, cData.NameLen, cData)),
+				bgColor("%s", units.BinarySuffix(float64(file.Size))),
 			}
 
 			// Append public file
@@ -180,21 +189,21 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			}
 
 			// Append time
-			rowItems = append(rowItems, humanTime.Difference(time.Now(), file.CreationDate))
+			rowItems = append(rowItems, bgColor("%s", humanTime.Difference(time.Now(), file.CreationDate)))
 
 			// Show namespace on -dd
 			if cData.Details > 2 || cData.All {
-				rowItems = append(rowItems, file.Attributes.Namespace)
+				rowItems = append(rowItems, bgColor("%s", file.Attributes.Namespace))
 			}
 
 			// Show groups and tags on -d
 			if cData.Details > 1 {
 				if hasGroup {
-					rowItems = append(rowItems, strings.Join(file.Attributes.Groups, ", "))
+					rowItems = append(rowItems, bgColor("%s", strings.Join(file.Attributes.Groups, ", ")))
 				}
 
 				if hasTag {
-					rowItems = append(rowItems, strings.Join(file.Attributes.Tags, ", "))
+					rowItems = append(rowItems, bgColor("%s", strings.Join(file.Attributes.Tags, ", ")))
 				}
 			}
 
