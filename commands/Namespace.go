@@ -6,6 +6,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
@@ -68,10 +69,18 @@ func ListNamespace(cData *CommandData) {
 	if cData.OutputJSON {
 		fmt.Println(toJSON(getNamespaceResponse))
 	} else {
-		fmt.Println("Your namespaces:")
+		fmt.Printf("Namespaces(%d):\n\n", len(getNamespaceResponse.Slice))
 		sort.Strings(getNamespaceResponse.Slice)
+
 		for _, namespace := range getNamespaceResponse.Slice {
-			fmt.Println(namespace)
+			// Omit username in NS list
+			if strings.HasPrefix(namespace+"_", cData.Config.User.Username) {
+				namespace = namespace[len(cData.Config.User.Username)+1:]
+				// Make first item uppercase
+				namespace = strings.ToUpper(string(namespace[0])) + namespace[1:]
+			}
+
+			fmt.Println("- " + namespace)
 		}
 	}
 }
