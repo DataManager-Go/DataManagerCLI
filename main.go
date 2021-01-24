@@ -199,6 +199,10 @@ var (
 	viewFileID    = viewCmd.Arg("fileID", "fileID of file to view").Uint()
 	viewNoPreview = viewCmd.Flag("no-preview", "Disable preview for command").Bool()
 	viewPreview   = viewCmd.Flag("preview", "Show preview for command").Bool()
+	// -- Cat
+	catCmd      = app.Command("cat", "View something").Alias("v")
+	catFileName = catCmd.Arg("fileName", "filename of file to view").Required().String()
+	catFileID   = catCmd.Arg("fileID", "fileID of file to view").Uint()
 
 	//
 	// ---------> Tag commands --------------------------------------

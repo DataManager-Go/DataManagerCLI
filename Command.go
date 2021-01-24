@@ -30,6 +30,15 @@ func runCommand(parsed string, commandData *commands.CommandData) {
 			Preview:  *viewPreview && !*viewNoPreview,
 		})
 
+	// Cat
+	case catCmd.FullCommand():
+		filename, id := commands.GetFileCommandData(*catFileName, *catFileID)
+		commandData.ViewFile(&commands.DownloadData{
+			FileName: filename,
+			FileID:   id,
+			Preview:  false,
+		})
+
 	// Upload
 	case appUpload.FullCommand():
 		commandData.UploadItems(*fileUploadPaths, *appParallelism, &commands.UploadData{
