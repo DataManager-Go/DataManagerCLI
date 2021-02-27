@@ -1,12 +1,15 @@
 filippo.io/age v1.0.0-beta6/go.mod h1:chAuTrTb0FTTmKtvs6fQTGhYTvH9AigjN1uEUsvLdZ0=
 filippo.io/age v1.0.0-beta7 h1:RZiSK+N3KL2UwT82xiCavjYw8jJHzWMEUYePAukTpk0=
 filippo.io/age v1.0.0-beta7/go.mod h1:chAuTrTb0FTTmKtvs6fQTGhYTvH9AigjN1uEUsvLdZ0=
+filippo.io/edwards25519 v1.0.0-alpha.2 h1:EWbZLqGEPSIj2W69gx04KtNVkyPIfe3uj0DhDQJonbQ=
 filippo.io/edwards25519 v1.0.0-alpha.2/go.mod h1:X+pm78QAUPtFLi1z9PYIlS/bdDnvbCOGKtZ+ACWEf7o=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DataManager-Go/libdatamanager v1.3.5/go.mod h1:DjxzXo2LkUjUWk6ihkRpdnGkm3jmKC31oNO0KqmgrTc=
 github.com/DataManager-Go/libdatamanager v1.4.0 h1:V7PeRYTfoJz91JQuT0sRYafGtPiBUuZdzBmwUAn8TK8=
 github.com/DataManager-Go/libdatamanager v1.4.0/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
+github.com/DataManager-Go/libdatamanager v1.4.1 h1:CZI4+KljTboVSkktt0PnoMlcOIWf60CKMBz4X9M0Al4=
+github.com/DataManager-Go/libdatamanager v1.4.1/go.mod h1:fXRE+SoEBDz8UK5Zhm3QBGEQDciOwmsAbzUfg2zKHXE=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20210119222632-450826e0e44e h1:Ms0iF8Z5gMhXbAARYY+uFnFzLUxh+nqPT+Dm50HwJhY=
 github.com/DataManager-Go/libdatamanager/config v0.0.0-20210119222632-450826e0e44e/go.mod h1:YHPA+ryhCc4xY130Az+ScF9zkRNGdHuz09eZXiULhrw=
 github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28 h1:nYoIExG+Z/gSLS9Jbpu6lnrh+m6e9gTxQfGhanTsExE=
@@ -17,6 +20,7 @@ github.com/JojiiOfficial/gopool v0.0.2 h1:P1IigNO778HA5pu2JhJace0F8GAwPVGSPsu10N
 github.com/JojiiOfficial/gopool v0.0.2/go.mod h1:viHLHvE2nsz0ClIuaPveYpDBj8Nu+ayFFNjMDhurDt0=
 github.com/JojiiOfficial/shred v1.2.1 h1:658CFVTqcAkYVg815vW+guYnyJTLOIoS15tMyPTYhNo=
 github.com/JojiiOfficial/shred v1.2.1/go.mod h1:/OAxd6eYOhrXb3KW+2wmDog2BiFlUld8oJEKa+xblxU=
+github.com/PuerkitoBio/goquery v1.5.1 h1:PSPBGne8NIUWw+/7vFBV+kG2J/5MOjbzc7154OaKCSE=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
 github.com/VividCortex/ewma v1.1.1 h1:MnEK4VOv6n0RSY4vtRe3h11qjxL3+t0B8yOL8iMXdcM=
 github.com/VividCortex/ewma v1.1.1/go.mod h1:2Tkkvm3sRDVXaiyucHiACn4cqf7DpdyLvmxzcbUokwA=
@@ -30,6 +34,7 @@ github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuy
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 h1:AUNCr9CiJuwrRYS3XieqF+Z9B9gNxo/eANAJCF2eiN4=
 github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15/go.mod h1:OMCwj8VM1Kc9e19TLln2VL61YJF0x1XFtfdL4JdbSyE=
+github.com/andybalholm/cascadia v1.1.0 h1:BuuO6sSfQNFRu1LppgbD25Hr2vLYW25JvxHs5zzsLTo=
 github.com/andybalholm/cascadia v1.1.0/go.mod h1:GsXiBklL0woXo1j/WYWtSYYC4ouU9PqHO0sqidkEA4Y=
 github.com/atotto/clipboard v0.1.4 h1:EH0zSVneZPSuFR11BlR9YppQTVDbh5+16AmcJi4g1z4=
 github.com/atotto/clipboard v0.1.4/go.mod h1:ZY9tmq7sm5xIbd9bOK4onWV4S6X0u6GY7Vn0Yu86PYI=
@@ -73,6 +78,7 @@ github.com/klauspost/pgzip v1.2.5 h1:qnWYvvKqedOF2ulHpMG72XQol4ILEJ8k2wwRl/Km8oE
 github.com/klauspost/pgzip v1.2.5/go.mod h1:Ch1tH69qFZu15pkjo5kYi6mth2Zzwzt50oCQKQE9RUs=
 github.com/kr/pretty v0.1.0 h1:L/CwN0zerZDmRFUapSPitk6f+Q3+0za1rQkzVuMiMFI=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
+github.com/kr/pty v1.1.1 h1:VkoXIwSboBpnk99O/KFauAEILuNHv5DVFKZMBN/gUgw=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0 h1:45sCR5RtlFHMR4UwH9sdQ5TC8v0qDQCHnXt+kaKSTVE=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
@@ -125,6 +131,7 @@ golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83/go.mod h1:jdWPYTVW3xRLrWP
 golang.org/x/net v0.0.0-20180218175443-cbe0f9307d01/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20200202094626-16171245cfb2/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e h1:3G+cUijn7XD+S4eJFddp53Pv7+slrESplyjG25HgL+k=
 golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190222072716-a9d3bda3a223/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
@@ -141,6 +148,7 @@ golang.org/x/sys v0.0.0-20210227040730-b0d1d43c014d/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/term v0.0.0-20201117132131-f5c789dd3221/go.mod h1:Nr5EML6q2oocZ2LXRh80K7BxOlk5/8JxuGnuhpl+muw=
 golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d h1:SZxvLBoTP5yHO3Frd4z4vrF+DBX9vMVanchswa69toE=
 golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
+golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374 h1:HYG2EF1VK3UJ7Ypi5pR6tXiLopoeW4uEcluQwluIrPE=
 gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374/go.mod h1:+oJ+9LTUR8ErHg+48aSv5ssC54l5RgOIgWIIcK0GNUA=

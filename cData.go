@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/DataManager-Go/DataManagerCLI/commands"
 	libdm "github.com/DataManager-Go/libdatamanager"
@@ -66,6 +67,8 @@ func initInputKey(cData commands.CommandData) *commands.CommandData {
 				fmt.Printf("The keysize %d is invalid\n", randKeySize)
 				return nil
 			}
+
+			// TODO add age key generation
 		}
 
 		// Generate key
@@ -91,6 +94,22 @@ func initInputKey(cData commands.CommandData) *commands.CommandData {
 	// FlagInput --key
 	if len(*appFileEncrKey) > 0 {
 		cData.EncryptionKey = []byte(*appFileEncrKey)
+		switch *appFileEncryption {
+		case libdm.EncryptionCiphers[0]:
+			if !vaildAESkeylen(randKeySize) {
+				fmt.Printf("The keysize %d is invalid\n", len(*appFileEncrKey))
+				return nil
+			}
+		case libdm.EncryptionCiphers[1]:
+			if len(*appFileEncrKey) != 62 {
+				fmt.Printf("The key \"%s\" is invalid (Invalid keysize)\n", *appFileEncrKey)
+
+				if strings.HasPrefix(*appFileEncrKey, "/") || strings.HasPrefix(*appFileEncrKey, "~/") || strings.HasPrefix(*appFileEncrKey, "./") {
+					fmt.Println("\nDid you want to pass a file? use --keyfile")
+				}
+				return nil
+			}
+		}
 	}
 
 	return &cData
@@ -114,15 +133,19 @@ func initRandomKey(cData *commands.CommandData) error {
 
 // Read keyfile to cData.EncryptionKey
 func initKeyfile(encrKeyFile string, cData *commands.CommandData) {
-	// Check if file exists
-	_, err := os.Stat(encrKeyFile)
-	if err != nil {
-		log.Fatal(err)
+	if !fileExists(encrKeyFile) {
+		log.Fatal("Keyfile does not exists!")
 	}
 
 	// Read key
+	var err error
 	cData.EncryptionKey, err = ioutil.ReadFile(filepath.Clean(encrKeyFile))
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }
