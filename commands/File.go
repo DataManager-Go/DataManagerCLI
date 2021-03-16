@@ -219,6 +219,11 @@ func PublishFile(cData *CommandData, name string, id uint, publicName string, se
 	// Convert input
 	name, id = GetFileCommandData(name, id)
 
+	if cData.All && len(publicName) > 0 && len(name) > 0 {
+		fmt.Println("You can't set the public name of multiple files")
+		return
+	}
+
 	resp, err := cData.LibDM.PublishFile(name, id, publicName, cData.All, cData.FileAttributes)
 	if err != nil || resp == nil {
 		printResponseError(err, "publishing file")
@@ -237,11 +242,11 @@ func PublishFile(cData *CommandData, name string, id uint, publicName string, se
 				fmt.Printf("File %s with ID %d Public name: %s\n", file.Filename, file.FileID, file.PublicFilename)
 			}
 		} else {
-			pubName := (resp.(libdm.PublishResponse)).PublicFilename
-			fmt.Printf(cData.Config.GetPreviewURL(pubName))
+			rs := (resp).(libdm.BulkPublishResponse)
+			fmt.Printf(cData.Config.GetPreviewURL(rs.Files[0].PublicFilename))
 
 			if setClip {
-				cData.setClipboard(pubName)
+				cData.setClipboard(rs.Files[0].PublicFilename)
 			}
 		}
 	}
@@ -284,8 +289,9 @@ func UpdateFile(cData *CommandData, name string, id uint, newName string, newNam
 		return
 	}
 
-	if response.Count > 1 {
-		fmt.Printf("Updated %d files %s\n", response.Count, color.HiGreenString("successfully"))
+	count := len(response.IDs)
+	if count > 1 {
+		fmt.Printf("Updated %d files %s\n", count, color.HiGreenString("successfully"))
 	} else {
 		fmt.Printf("The file has been %s\n", color.HiGreenString("successfully updated"))
 	}

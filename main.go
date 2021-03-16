@@ -54,7 +54,7 @@ var (
 	appVerify             = app.Flag("verify", "Verify a file using a checksum to prevent errors").Bool()
 	appNoDecrypt          = app.Flag("no-decrypt", "Don't decrypt files").Bool()
 	appForce              = app.Flag("force", "Forces an action").Short('f').Bool()
-	appFileEncryption     = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions(libdm.EncryptionCiphers...).String()
+	appFileEncryption     = app.Flag("encryption", "Encrypt/Decrypt the file").Short('e').HintOptions([]string{"age", "aes"}...).String()
 	appDisableCompression = appUpload.Flag("compressed", "Compress files while uploading").Bool()
 	appDecompress         = fileDownloadCmd.Flag("extract", "Extract a gzipped file while downloading").Bool()
 

@@ -255,7 +255,8 @@ func (uploadData *UploadData) toUploadRequest(cData *CommandData) *libdatamanage
 
 	// Encrypt file
 	if len(cData.Encryption) > 0 {
-		uploadRequest.Encrypted(cData.Encryption, cData.EncryptionKey)
+		encryption := libdm.ChiperToInt(cData.Encryption)
+		uploadRequest.Encrypted(encryption, cData.EncryptionKey)
 	}
 
 	// Publish file
