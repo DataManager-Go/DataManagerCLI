@@ -206,7 +206,7 @@ func filenameAddEmojis(filename string, file *libdm.FileResponseItem) string {
 	}
 
 	// Encryption lock
-	if len(file.Encryption) != 0 {
+	if file.Encryption > 0 {
 		filename = addEmoji(filename, "lock", !added)
 		added = true
 	}
