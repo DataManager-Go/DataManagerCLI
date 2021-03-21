@@ -89,6 +89,10 @@ func GetTempFile(fileName string) string {
 	return filepath.Join(os.TempDir(), fmt.Sprintf("%s-%s", gaw.RandString(10), fileName))
 }
 
+func IsPreviewType(filetype string) bool {
+	return filetype != "" && filetype != "text/plain"
+}
+
 // previewFile opens a locally stored file
 func (cData *CommandData) previewFile(filepath string) {
 	// Windows

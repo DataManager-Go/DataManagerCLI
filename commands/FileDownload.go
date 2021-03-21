@@ -35,7 +35,7 @@ func (cData *CommandData) ViewFile(downloadData *DownloadData) {
 		return
 	}
 
-	if downloadData.Preview {
+	if downloadData.Preview || IsPreviewType(resp.FileType) {
 		// Display file using a GUI application
 		tmpFile := GetTempFile(resp.ServerFileName)
 
