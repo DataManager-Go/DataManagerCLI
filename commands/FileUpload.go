@@ -148,7 +148,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 	isURL := isHTTPURL(uri)
 
 	// Get uri info
-	if !isURL {
+	if !isURL && !uploadData.FromStdIn {
 		s, err := os.Stat(uri)
 		if err != nil {
 			printError(err, "reading file")

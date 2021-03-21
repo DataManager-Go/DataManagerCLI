@@ -478,3 +478,8 @@ func getLongestItem(sarr []string) int {
 
 	return max
 }
+
+func IsPiped() bool {
+	fi, err := os.Stdout.Stat()
+	return err == nil && (fi.Mode()&os.ModeCharDevice) == 0
+}

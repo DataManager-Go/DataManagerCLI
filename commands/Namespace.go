@@ -21,24 +21,24 @@ var (
 
 // CreateNamespace creates a namespace
 func CreateNamespace(cData *CommandData, name string, customNS bool) {
-	createResponse, err := cData.LibDM.CreateNamespace(name)
+	_, err := cData.LibDM.CreateNamespace(name)
 	if err != nil {
 		printResponseError(err, "creating namespace")
 		return
 	}
 
-	fmt.Printf("%s created namespace '%s'\n", GreenSuccessfully, createResponse.String)
+	fmt.Printf("%s created namespace '%s'\n", GreenSuccessfully, name)
 }
 
 // UpdateNamespace update a namespace
 func UpdateNamespace(cData *CommandData, name, newName string, customNS bool) {
-	updateResponse, err := cData.LibDM.UpdateNamespace(name, newName)
+	_, err := cData.LibDM.UpdateNamespace(name, newName)
 	if err != nil {
 		printResponseError(err, "updating namespace")
 		return
 	}
 
-	fmt.Printf("%s updated namespace '%s'\n", GreenSuccessfully, updateResponse.String)
+	fmt.Printf("%s updated namespace '%s'\n", GreenSuccessfully, name)
 }
 
 // DeleteNamespace update a namespace
@@ -49,13 +49,13 @@ func DeleteNamespace(cData *CommandData, name string) {
 		}
 	}
 
-	deleteResponse, err := cData.LibDM.DeleteNamespace(name)
+	_, err := cData.LibDM.DeleteNamespace(name)
 	if err != nil {
 		printResponseError(err, "deleting namespace")
 		return
 	}
 
-	fmt.Printf("%s deleted namespace '%s'\n", GreenSuccessfully, deleteResponse.String)
+	fmt.Printf("%s deleted namespace '%s'\n", GreenSuccessfully, name)
 }
 
 // ListNamespace lists your namespace

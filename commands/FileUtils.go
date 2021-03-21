@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	libdm "github.com/DataManager-Go/libdatamanager"
 	"github.com/JojiiOfficial/gaw"
@@ -45,7 +46,11 @@ func (cData *CommandData) printChecksumError(resp *libdm.FileDownloadResponse) {
 func parseURIArgUploadCommand(uris []string, noCompress bool) []string {
 	var newURIList []string
 	for i := range uris {
-		uriPath := gaw.ResolveFullPath(uris[i])
+		uriPath, err := filepath.Abs(uris[i])
+		if err != nil {
+			fmt.Println("Skipping", uriPath, err.Error())
+			continue
+		}
 
 		// Skip urls
 		if isHTTPURL(uris[i]) {

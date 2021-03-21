@@ -71,7 +71,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 	}
 
 	// Request user confirmation if files are too much
-	if uint16(len(resp.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
+	if !IsPiped() && uint16(len(resp.Files)) > cData.Config.Client.MinFilesToDisplay && !cData.Yes {
 		if y, _ := gaw.ConfirmInput("Do you want to view all? (y/n) > ", bufio.NewReader(os.Stdin)); !y {
 			return
 		}
@@ -141,6 +141,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 		// Show namespace on -dd
 		if cData.Details > 2 || cData.All {
 			header = append(header, headingColor.Sprintf("Namespace"))
+			header = append(header, headingColor.Sprintf("Checksum"))
 		}
 
 		// Show groups and tags on -d
@@ -194,6 +195,7 @@ func ListFiles(cData *CommandData, name string, id uint, sOrder string) {
 			// Show namespace on -dd
 			if cData.Details > 2 || cData.All {
 				rowItems = append(rowItems, bgColor("%s", file.Attributes.Namespace))
+				rowItems = append(rowItems, bgColor("%s", file.Checksum))
 			}
 
 			// Show groups and tags on -d

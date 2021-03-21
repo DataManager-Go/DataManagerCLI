@@ -24,9 +24,7 @@ func (cData *CommandData) Stats() {
 	table.Padding = 2
 
 	table.AddRow(itemHeadingColor("Files"))
-	table.AddRow(itemColor("Amount:"), stats.FileCount)
-	table.AddRow(itemColor("Total:"), stats.FilesUploaded)
-	table.AddRow(itemColor("Deleted:"), stats.DeletedFiles)
+	table.AddRow(itemColor("Amount:"), stats.FilesUploaded)
 	table.AddRow(itemColor("Overall size:"), units.BinarySuffix(float64(stats.TotalFileSize)))
 	table.AddRow()
 
