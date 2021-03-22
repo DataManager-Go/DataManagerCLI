@@ -1,12 +1,12 @@
 # DataManagerClient
-This is the client for the [DataManagerServer](https://github.com/JojiiOfficial/DataManagerServer). It supports uploading, downloading, editing, deleting, moving and en/decrypting files.
+This is the client for the [DataVaultServer](https://github.com/DataManager-Go/DataVault)
 
 # Screenshots
 ## Listview
-![Listview](https://files.jojii.de/preview/raw/PZtqdgIdpNGJkE3v8FgQU0rZp)
+![Listview](https://camo.githubusercontent.com/d136ebb9c04b5d5b004ce014682d16c3ec6456d8dbf562fcc67d803f9e7c4b6e/68747470733a2f2f66696c65732e6a6f6a69692e64652f707265766965772f7261772f505a747164674964704e474a6b453376384667515530725a70)
 
 ## Treeview
-![Treeview](https://files.jojii.de/preview/raw/4uZP3dmTlKXihymZ5tTPjlneS)
+![Treeview](https://camo.githubusercontent.com/b3a0a4727a4499bebac57d7f3815fa24fc773c3d1481c58b0ff571cc34060961/68747470733a2f2f66696c65732e6a6f6a69692e64652f707265766965772f7261772f34755a5033646d546c4b586968796d5a357454506a6c6e6553)
 
 # Installation
 
