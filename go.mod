@@ -3,8 +3,8 @@ module github.com/DataManager-Go/DataManagerCLI
 go 1.16
 
 require (
-	github.com/DataManager-Go/libdatamanager v1.4.3
-	github.com/DataManager-Go/libdatamanager/config v0.0.0-20210319101221-7300fb9d92db
+	github.com/DataManager-Go/libdatamanager v1.4.4
+	github.com/DataManager-Go/libdatamanager/config v0.0.0-20210321232448-806859584db7
 	github.com/JojiiOfficial/configService v0.0.0-20200219132202-6e71512e2e28
 	github.com/JojiiOfficial/gaw v1.2.8
 	github.com/JojiiOfficial/gopool v0.0.2
@@ -23,7 +23,7 @@ require (
 	github.com/sbani/go-humanizer v0.3.1
 	github.com/vbauerster/mpb/v5 v5.4.0
 	github.com/zalando/go-keyring v0.1.1
-	golang.org/x/crypto v0.0.0-20210317152858-513c2a44f670
+	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/sys v0.0.0-20210320140829-1e4c9ba3b0c4 // indirect
 	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
 	gopkg.in/benweidig/cli-table.v2 v2.0.0-20180519085552-8b9fa48fb374
