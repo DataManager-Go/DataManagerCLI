@@ -132,7 +132,6 @@ func (cData *CommandData) runUploadPool(uploadData *UploadData, uris []string, t
 // Upload upload a URI
 func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ bool) {
 	var uploadResponse *libdm.UploadResponse
-	var err error
 
 	// Set name to filename if not set
 	if len(uploadData.Name) == 0 {
@@ -171,13 +170,7 @@ func (cData *CommandData) uploadEntity(uploadData UploadData, uri string) (succ 
 		// We checked if url.Parse is
 		// successful in isHTTPURL
 		u, _ := url.Parse(uri)
-		uploadResponse, err = uploadRequest.UploadURL(u)
-		if err != nil {
-			printResponseError(err, "uploading url")
-			return
-		}
-
-		printSuccess("uploaded URL: %s", uri)
+		uploadResponse = execUploader.uploadURL(*u)
 	} else if !uploadData.FromStdIn {
 		// Call required lib func.
 		if uploadData.uploadAsArchive {
@@ -393,6 +386,13 @@ func (uploader *uploader) upload(uploadFunc uploadFunc) (uploadResponse *libdm.U
 func (uploader *uploader) uploadFromReader(r io.Reader, size int64) *libdm.UploadResponse {
 	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
 		return uploader.uploadRequest.UploadFromReader(r, size, done, nil)
+	})
+}
+
+// Upload from reader
+func (uploader *uploader) uploadURL(u url.URL) *libdm.UploadResponse {
+	return uploader.upload(func(done chan string, uri string) (*libdm.UploadResponse, error) {
+		return uploader.uploadRequest.UploadURL(&u, done, nil)
 	})
 }
 
