@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/vbauerster/mpb/v5"
-	"github.com/vbauerster/mpb/v5/decor"
+	"github.com/vbauerster/mpb/v6"
+	"github.com/vbauerster/mpb/v6/decor"
 )
 
 // BarTask for the bar to do
@@ -158,7 +158,7 @@ type ProgressView struct {
 // AddBar to ProgressView
 func (pv *ProgressView) AddBar(bbar *Bar) *mpb.Bar {
 	// Add bar to render queue
-	bar := pv.ProgressContainer.Add(bbar.total, mpb.NewBarFiller(bbar.style, false), bbar.options...)
+	bar := pv.ProgressContainer.Add(bbar.total, mpb.NewBarFiller(bbar.style), bbar.options...)
 
 	// Set Bars mpb.Bar to allow it
 	// to increase
